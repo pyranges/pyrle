@@ -4,9 +4,10 @@ A first stab at ultrafast nucleotide-level genome arithmetic in Python using Cyt
 
 ## TODO
 
+- Write tests that generate random vectors and compares the results from pyrle and S4Vectors.
 - Unit-tests
 - Test that works in multi-cpu code (pickling)
-- Add more operations (minus, multiply, divide)
+- Add more operations (multiply, divide)
 - Make some repetitive code-patterns inline functions
 - Function that makes pandas df into Rle, like S4Vectors coverage
 
@@ -14,7 +15,7 @@ A first stab at ultrafast nucleotide-level genome arithmetic in Python using Cyt
 
 ```
 import numpy as np
-from rle import Rle
+from pyrle import Rle
 import pandas as pd
 
 r = pd.Series([1, 2, 3, 4], dtype=np.int16)

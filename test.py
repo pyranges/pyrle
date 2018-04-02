@@ -1,5 +1,5 @@
 import numpy as np
-from rle import Rle
+from pyrle import Rle
 import pandas as pd
 
 r = pd.Series([1, 2, 3, 4], dtype=np.int16)
