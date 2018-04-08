@@ -40,3 +40,34 @@ print(r4.values.dtype)
 
 print(r4.runs.shape)
 print(r4.values.shape)
+
+def resize_test():
+    """
+    test of workign with a numpy array that needs to be re-sized.
+    """
+    # create an ndarray and a memview to work with it.
+    cdef cnp.ndarray[double, ndim=1, mode="c"] arr
+    cdef double[:] memview
+
+    ## allocate the array:
+    arr = np.zeros( (1,) )
+
+    ## Assign the memview to it:
+    memview = arr
+
+    ## manipulate it
+    memview[0] = 3.14
+
+    ## resize the array
+    arr.resize((4,), refcheck = False)
+
+    ## re-assign the memview -- so you get the new post-resize pointer
+    memview = arr
+
+    ## now use it
+    memview[1] = 5.6
+    memview[2] = 7.1
+    memview[3] = 4.3
+
+    ## return the numpy array
+    return arr

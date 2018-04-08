@@ -1,8 +1,9 @@
 # pyrle
 
-A first stab at ultrafast nucleotide-level genome arithmetic in Python using Cython. Inspired by the Rle class in R's S4Vectors. Not ready for use.
+A first stab at ultrafast run length arithmetic in Python using Cython. Inspired
+by the Rle class in R's S4Vectors. Not ready for use.
 
-In constructed degenerate cases, the arithmetic operations are O(n^2).
+As opposed to S4Vectors, pyrle does not rotate the shortest vector, but rather extends the shorter Rle with zeroes. This is likely the desired behavior in almost all cases.
 
 ## Develop
 
@@ -41,3 +42,7 @@ print("Values:", r3.values)
 #   Lengths:  1  1  1  3  4  2  8
 #   Values :  3  4  6  7 10  6  8
 ```
+
+## When not to use Rles
+
+In constructed degenerate cases, the arithmetic operations are O(n^2). This is when your data is wildly heterogenous and Rles aren't applicable.

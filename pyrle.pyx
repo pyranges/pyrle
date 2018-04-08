@@ -29,12 +29,16 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     cdef int x1 = 0
     cdef int x2 = 0
     cdef int xn = 0
+    cdef int nr = 0
+    cdef double nv = 0
     cdef double diff = 0
     cdef int l1 = len(runs1)
     cdef int l2 = len(runs2)
-    cdef double r1 = runs1[x1]
-    cdef double r2 = runs2[x2]
-    nrs = np.zeros(len(runs1) + len(runs2), dtype=np.int32)
+    cdef long r1 = runs1[x1]
+    cdef long r2 = runs2[x2]
+    # cdef long[:]
+    nrs = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    # cdef double[:]
     nvs = np.zeros(len(runs1) + len(runs2), dtype=np.double)
 
     while(x1 < l1 and x2 < l2):
@@ -90,8 +94,7 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
         if diff < 0:
-            nv = r2
-            nrs[xn] = nv
+            nrs[xn] = r2
             nvs[xn] += values2[x2]
             xn += 1
             x2 += 1
@@ -111,13 +114,12 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
             nrs.resize(len(nvs) + (l1 - x1) + 1)
 
         if diff > 0:
-            nv = r1
-            nrs[xn] = nv
+            nrs[xn] = r1
             nvs[xn] += values1[x1]
             xn += 1
             x1 += 1
 
-        if values1[x1] == nv:
+        if values1[x1] == nvs[xn - 1]:
             nrs[xn - 1] += runs1[x1]
             x1 += 1
 
@@ -140,12 +142,16 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     cdef int x1 = 0
     cdef int x2 = 0
     cdef int xn = 0
+    cdef int nr = 0
+    cdef double nv = 0
     cdef double diff = 0
     cdef int l1 = len(runs1)
     cdef int l2 = len(runs2)
-    cdef double r1 = runs1[x1]
-    cdef double r2 = runs2[x2]
-    nrs = np.zeros(len(runs1) + len(runs2), dtype=np.int32)
+    cdef long r1 = runs1[x1]
+    cdef long r2 = runs2[x2]
+    # cdef long[:]
+    nrs = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    # cdef double[:]
     nvs = np.zeros(len(runs1) + len(runs2), dtype=np.double)
 
     while(x1 < l1 and x2 < l2):
@@ -201,8 +207,7 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
         if diff < 0:
-            nv = r2
-            nrs[xn] = nv
+            nrs[xn] = r2
             nvs[xn] -= values2[x2]
             xn += 1
             x2 += 1
@@ -222,13 +227,12 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
             nrs.resize(len(nvs) + (l1 - x1) + 1)
 
         if diff > 0:
-            nv = r1
-            nrs[xn] = nv
+            nrs[xn] = r1
             nvs[xn] += values1[x1]
             xn += 1
             x1 += 1
 
-        if values1[x1] == nv:
+        if values1[x1] == nvs[xn - 1]:
             nrs[xn - 1] += runs1[x1]
             x1 += 1
 
