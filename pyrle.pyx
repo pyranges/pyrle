@@ -36,10 +36,14 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     cdef int l2 = len(runs2)
     cdef long r1 = runs1[x1]
     cdef long r2 = runs2[x2]
-    # cdef long[:]
-    nrs = np.zeros(len(runs1) + len(runs2), dtype=np.long)
-    # cdef double[:]
-    nvs = np.zeros(len(runs1) + len(runs2), dtype=np.double)
+    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    nvs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.double)
+
+    cdef long[:] nrs
+    cdef double[:] nvs
+
+    nrs = nrs_arr
+    nvs = nvs_arr
 
     while(x1 < l1 and x2 < l2):
 
@@ -79,8 +83,11 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
                 xn += 1
             # if we have no space left in our old array, double the size
             else:
-                nrs.resize(1, len(nrs) * 2)
-                nvs.resize(1, len(nvs) * 2)
+                nrs_arr.resize(1, len(nrs) * 2, refcheck=False)
+                nvs_arr.resize(1, len(nvs) * 2, refcheck=False)
+                nrs = nrs_arr
+                nvs = nvs_arr
+
                 nrs[xn] = nr
                 nvs[xn] = nv
 
@@ -88,8 +95,10 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     # (If other had largest sum of lengths.)
     if x1 == l1 and not x2 == l2:
         if not (xn + (l2 - x2) + 1 < len(nvs)):
-            nvs.resize((len(nvs) + (l2 - x2) + 1))
-            nrs.resize((len(nvs) + (l2 - x2) + 1))
+            nvs_arr.resize((len(nvs) + (l2 - x2) + 1), refcheck=False)
+            nrs_arr.resize((len(nvs) + (l2 - x2) + 1), refcheck=False)
+            nrs = nrs_arr
+            nvs = nvs_arr
 
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
@@ -110,8 +119,10 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
         if not (xn + (l1 - x1) + 1 < len(nvs)) and diff > 0:
-            nvs.resize(len(nvs) + (l1 - x1) + 1)
-            nrs.resize(len(nvs) + (l1 - x1) + 1)
+            nvs_arr.resize(len(nvs) + (l1 - x1) + 1, refcheck=False)
+            nrs_arr.resize(len(nvs) + (l1 - x1) + 1, refcheck=False)
+            nrs = nrs_arr
+            nvs = nvs_arr
 
         if diff > 0:
             nrs[xn] = r1
@@ -129,10 +140,10 @@ cpdef add_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
             xn += 1
 
     # Must use resize because initial guess for array was likely way too large
-    nrs.resize(xn)
-    nvs.resize(xn)
+    nrs_arr.resize(xn, refcheck=False)
+    nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs, nvs)
+    return Rle(nrs_arr, nvs_arr)
 
 
 @cython.boundscheck(False)
@@ -149,10 +160,14 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     cdef int l2 = len(runs2)
     cdef long r1 = runs1[x1]
     cdef long r2 = runs2[x2]
-    # cdef long[:]
-    nrs = np.zeros(len(runs1) + len(runs2), dtype=np.long)
-    # cdef double[:]
-    nvs = np.zeros(len(runs1) + len(runs2), dtype=np.double)
+    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    nvs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.double)
+
+    cdef long[:] nrs
+    cdef double[:] nvs
+
+    nrs = nrs_arr
+    nvs = nvs_arr
 
     while(x1 < l1 and x2 < l2):
 
@@ -192,8 +207,11 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
                 xn += 1
             # if we have no space left in our old array, double the size
             else:
-                nrs.resize(1, len(nrs) * 2)
-                nvs.resize(1, len(nvs) * 2)
+                nrs_arr.resize(1, len(nrs) * 2, refcheck=False)
+                nvs_arr.resize(1, len(nvs) * 2, refcheck=False)
+                nrs = nrs_arr
+                nvs = nvs_arr
+
                 nrs[xn] = nr
                 nvs[xn] = nv
 
@@ -201,8 +219,10 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     # (If other had largest sum of lengths.)
     if x1 == l1 and not x2 == l2:
         if not (xn + (l2 - x2) + 1 < len(nvs)):
-            nvs.resize((len(nvs) + (l2 - x2) + 1))
-            nrs.resize((len(nvs) + (l2 - x2) + 1))
+            nvs_arr.resize((len(nvs) + (l2 - x2) + 1), refcheck=False)
+            nrs_arr.resize((len(nvs) + (l2 - x2) + 1), refcheck=False)
+            nrs = nrs_arr
+            nvs = nvs_arr
 
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
@@ -223,8 +243,10 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
         if not (xn + (l1 - x1) + 1 < len(nvs)) and diff > 0:
-            nvs.resize(len(nvs) + (l1 - x1) + 1)
-            nrs.resize(len(nvs) + (l1 - x1) + 1)
+            nvs_arr.resize(len(nvs) + (l1 - x1) + 1, refcheck=False)
+            nrs_arr.resize(len(nvs) + (l1 - x1) + 1, refcheck=False)
+            nrs = nrs_arr
+            nvs = nvs_arr
 
         if diff > 0:
             nrs[xn] = r1
@@ -242,8 +264,8 @@ cpdef sub_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
             xn += 1
 
     # Must use resize because initial guess for array was likely way too large
-    nrs.resize(xn)
-    nvs.resize(xn)
+    nrs_arr.resize(xn, refcheck=False)
+    nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs, nvs)
+    return Rle(nrs_arr, nvs_arr)
 

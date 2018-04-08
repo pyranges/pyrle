@@ -56,13 +56,13 @@ def test_add_simple(simple_rle, simple_rle2):
     assert all(np.equal(result.runs, expected_runs))
     assert all(np.equal(result.values, expected_values))
 
-    # result2 = simple_rle2 + simple_rle
+    result2 = simple_rle2 + simple_rle
 
-    # print(result2.runs)
-    # print(result2.values)
+    print(result2.runs)
+    print(result2.values)
 
-    # assert all(np.equal(result2.runs, expected_runs))
-    # assert all(np.equal(result2.values, expected_values))
+    assert all(np.equal(result2.runs, expected_runs))
+    assert all(np.equal(result2.values, expected_values))
 
 
 def test_add_advanced(shorter_rle, long_rle):
