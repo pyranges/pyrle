@@ -2,6 +2,14 @@
 
 A first stab at ultrafast nucleotide-level genome arithmetic in Python using Cython. Inspired by the Rle class in R's S4Vectors. Not ready for use.
 
+In constructed degenerate cases, the arithmetic operations are O(n^2).
+
+## Develop
+
+```
+python build_code.py; python setup.py build_ext --inplace; py.test -f tests/
+```
+
 ## TODO
 
 - Write tests that generate random vectors and compares the results from pyrle and S4Vectors.
