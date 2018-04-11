@@ -12,126 +12,106 @@ from io import StringIO
 
 from heapq import heappush, heappop, heapify
 
-def coverage(df, is_sorted=False):
 
-    if not is_sorted:
-        df = df.sort_values(["Start", "End"])
+def coverage(ranges):
 
-    starts = df.Start.astype(np.int)
-    ends = df.End.astype(np.int)
+    try:
+        df = ranges.df
+    except:
+        df = ranges
 
-    cv_rle = _coverage(starts, ends)
+    starts = (df.Start).tolist()
+    ends = (df.End).tolist()
 
-    return cv_rle
-
-
-def unwind_minq(last_start, minq, counter):
-
-    values, runs = [], []
-
-    last_min_val = last_start
-    print(minq)
-    while minq:
-        min_val = heappop(minq)
-        values.append(counter)
-        counter -= 1
-        while minq:
-            if minq[0] == min_val:
-                print("minq[0] == min_val " * 3)
-                counter -= 1
-                heappop(minq)
-            else:
-                break
-
-
-        print("Hiya")
-        print("min_val, last_min_val", min_val, last_min_val)
-
-        next_length = min_val - last_min_val
-
-        print("next value, last value", counter, values[-1])
-        if runs:
-            print("next length, last length", next_length, runs[-1])
-        runs.append(next_length)
-
-        if counter == 0:
-            return runs, values
-
-        last_min_val = min_val
-
-    return runs, values
-
-
-
-def _coverage(starts, ends):
-
-    se = iter(zip(starts, ends))
-    start, end = next(se)
+    heapify(starts), heapify(ends)
     counter = 0
+    last_counter = 0
+    pos = 0
 
-    if start != 0:
-        runs = [start]
-        values = [0]
+    runs = []
+    values = []
+
+    if starts[0] < ends[0]:
+        pos = heappop(starts)
+        runs.append(pos)
+        values.append(counter)
         counter += 1
-        minq = [end]
-        heapify(minq)
-        last_start = start
-    else:
-        runs = []
-        values = []
-        last_start = 0
+    if starts[0] == ends[0] and starts[0] != 0:
+        pos = heappop(starts)
+        heappop(ends)
+        runs.append(pos)
+        values.append(counter)
 
-    print("Here")
-    for start, end in se:
+    print("starts")
+    print(runs)
+    print(values)
+    while len(starts) > 0:
+
+        min_start, min_end = starts[0], ends[0]
+        min_pos = min(min_start, min_end)
+        rl = min_pos - pos
+        runs.append(rl)
+        values.append(counter)
+
+        if min_start < min_end:
+            counter += 1
+            next_pos = heappop(starts)
+            pos = next_pos
+        elif min_start > min_end:
+            counter -= 1
+            next_pos = heappop(ends)
+            pos = next_pos
+        else:
+            next_pos = heappop(starts)
+            heappop(ends)
+
+        if min_start == min_end:
+            counter += 1
+
+    print(counter)
+    print(runs)
+    print(values)
+    print("Unwinding ends")
+    i = 0
+    print(pos)
+    while len(ends) > 0:
+        print("iter", i)
+        i += 1
+
+        next_pos = heappop(ends)
+        rl = next_pos - pos
+        print("rl", rl)
+        pos = next_pos
+
+        print("counter", counter)
+        if counter == values[-1]:
+            runs.append(rl)
+        values.append(counter)
 
         counter -= 1
-        print("Now evaluating", start, end)
-        heappush(minq, end)
-        if minq:
-            print("In minq")
-            peek = minq[0]
-            print("Peek:", peek)
-            if start < peek:
-                print("Start < peek")
-                print(start, "<", peek)
-                counter += 1
-                next_length = start - last_start
-                last_start = start
-                values.append(counter)
-            elif start > peek:
-                print("Start > peek")
-                print(start, ">", peek)
-                min_end = heappop(minq)
-                next_length = start - last_start + 1
-                values.append(counter + 1)
-                counter -= 1
-            else:
-                print("Start = peek")
-                counter += 1
-                next_length = start - last_start
-                last_start = start
-                values.append(counter)
+        while len(ends) > 0 and ends[0] == pos:
+            counter -= 1
+            heappop(ends)
 
-            runs.append(next_length)
-            last_start = start
-
-        else:
-            raise Exception("Not in minq")
-
-        counter += 1
-
-    last_start -= 1
-
-    print("When done runs are", runs, "and values are", values, "while counter is", counter)
-    print("Last start", last_start, "Heap", minq)
-
-    last_min_val = last_start
-    final_runs, final_values = unwind_minq(last_start, minq, counter)
-
-    runs = runs + final_runs
-    values = values + final_values
+    print(ends)
+    if counter == 1:
+        runs.append(1)
+        values.append(1)
 
     return Rle(runs, values)
+
+
+
+
+
+
+
+def test_coverage():
+
+
+    pass
+
+
 
 
 @pytest.fixture
@@ -207,6 +187,7 @@ def test_simple_bed(simple_bed, expected_result_simple_bed):
     result = coverage(simple_bed)
     print(result.runs, expected_result_simple_bed.runs)
     print(result.values, expected_result_simple_bed.values)
+    assert 0
 
     assert np.allclose(result.runs, expected_result_simple_bed.runs)
     assert np.allclose(result.values, expected_result_simple_bed.values)
@@ -214,163 +195,63 @@ def test_simple_bed(simple_bed, expected_result_simple_bed):
 
 
 
-@pytest.fixture
-def simple_bed2():
-
-    c = """Start End
-3 6
-5 7
-6 6"""
-
-    return pd.read_table(StringIO(c), sep="\s+", header=0)
-
-
-@pytest.fixture()
-def expected_result_simple_bed2():
-
-    runs = np.array([3, 2, 1, 1, 1], dtype=np.int)
-    values = np.array([0, 1, 2, 3, 1], dtype=np.float)
-
-    return Rle(runs, values)
-
-
-def test_simple_bed2(simple_bed2, expected_result_simple_bed2):
-
-    result = coverage(simple_bed2)
-    print(result.runs, expected_result_simple_bed2.runs)
-    print(result.values, expected_result_simple_bed2.values)
-
-    assert np.allclose(result.runs, expected_result_simple_bed2.runs)
-    assert np.allclose(result.values, expected_result_simple_bed2.values)
-    # assert 0
-
-
-
-@pytest.fixture
-def simple_bed3():
-
-    c = """Start End
-3 5
-5 6
-6 7"""
-
-    return pd.read_table(StringIO(c), sep="\s+", header=0)
-
-
-@pytest.fixture()
-def expected_result_simple_bed3():
-
-    runs = np.array([3, 2, 2, 1], dtype=np.int)
-    values = np.array([0, 1, 2, 1], dtype=np.float)
-
-    return Rle(runs, values)
-
-
-def test_simple_bed3(simple_bed3, expected_result_simple_bed3):
-
-    result = coverage(simple_bed3)
-    print(result.runs, expected_result_simple_bed3.runs)
-    print(result.values, expected_result_simple_bed3.values)
-
-    assert np.allclose(result.runs, expected_result_simple_bed3.runs)
-    assert np.allclose(result.values, expected_result_simple_bed3.values)
-
-
-def test_unwind_minq_simple_bed1():
-
-    # last_start, minq, counter
-    l = [6, 7, 6]
-    heapify(l)
-    runs, values = unwind_minq(4, l, 3)
-    print(runs, values)
-
-    assert runs == [2, 1]
-    assert values == [3, 1]
-
-
-def test_unwind_minq_simple_bed2():
-
-    # last_start, minq, counter
-    l = [6, 7, 6]
-    heapify(l)
-    runs, values = unwind_minq(5, l, 3)
-    print(runs, values)
-
-    assert runs == [1, 1]
-    assert values == [3, 1]
-
-
-def test_unwind_minq_simple_bed3():
-
-    runs, values = unwind_minq(5, [6, 7], 1)
-
-    assert runs == [1]
-    assert values == [1]
-
-
 # @pytest.fixture
-# def simple_bed4():
+# def simple_bed2():
 
 #     c = """Start End
-# 127471196 127472363
-# 127472363 127473530
-# 127473530 127474697"""
+# 3 6
+# 5 7
+# 6 6"""
 
 #     return pd.read_table(StringIO(c), sep="\s+", header=0)
 
 
 # @pytest.fixture()
-# def expected_result_simple_bed4():
+# def expected_result_simple_bed2():
 
-#     runs = np.array([127471196, 1167, 1, 1167], dtype=np.int)
+#     runs = np.array([3, 2, 1, 1, 1], dtype=np.int)
+#     values = np.array([0, 1, 2, 3, 1], dtype=np.float)
+
+#     return Rle(runs, values)
+
+
+# def test_simple_bed2(simple_bed2, expected_result_simple_bed2):
+
+#     result = coverage(simple_bed2)
+#     print(result.runs, expected_result_simple_bed2.runs)
+#     print(result.values, expected_result_simple_bed2.values)
+
+#     assert np.allclose(result.runs, expected_result_simple_bed2.runs)
+#     assert np.allclose(result.values, expected_result_simple_bed2.values)
+#     # assert 0
+
+
+
+# @pytest.fixture
+# def simple_bed3():
+
+#     c = """Start End
+# 3 5
+# 5 6
+# 6 7"""
+
+#     return pd.read_table(StringIO(c), sep="\s+", header=0)
+
+
+# @pytest.fixture()
+# def expected_result_simple_bed3():
+
+#     runs = np.array([3, 2, 2, 1], dtype=np.int)
 #     values = np.array([0, 1, 2, 1], dtype=np.float)
 
 #     return Rle(runs, values)
 
 
-# def test_simple_bed4(simple_bed4, expected_result_simple_bed4):
+# def test_simple_bed3(simple_bed3, expected_result_simple_bed3):
 
-#     result = coverage(simple_bed4)
-#     print(result.runs, expected_result_simple_bed4.runs)
-#     print(result.values, expected_result_simple_bed4.values)
-#     assert 0
+#     result = coverage(simple_bed3)
+#     print(result.runs, expected_result_simple_bed3.runs)
+#     print(result.values, expected_result_simple_bed3.values)
 
-#     assert np.allclose(result.runs, expected_result_simple_bed4.runs)
-#     assert np.allclose(result.values, expected_result_simple_bed4.values)
-
-
-# @pytest.fixture
-# def medium_bed3():
-
-#     c = """Start End
-# 127471196 127472363
-# 127472363 127473530
-# 127473530 127474697
-# 127474697 127475864
-# 127475864 127477031
-# 127477031 127478198
-# 127478198 127479365
-# 127479365 127480532
-# 127480532 127481699"""
-
-#     return pd.read_table(StringIO(c), sep="\s+", header=0)
-
-
-# @pytest.fixture()
-# def expected_result_medium_bed3():
-
-#     runs = np.array([127471196, 1167, 1, 1166, 1, 1166, 1, 1166, 1, 1166, 1, 1166, 1, 1166, 1, 1166, 1, 1167], dtype=np.int)
-#     values = np.array([0, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1], dtype=np.float)
-
-#     return Rle(runs, values)
-
-
-# def test_medium_bed3(medium_bed3, expected_result_medium_bed3):
-
-#     result = coverage(medium_bed3)
-#     print(result.runs, expected_result_medium_bed3.runs)
-#     print(result.values, expected_result_medium_bed3.values)
-#     assert 0
-
-    # assert np.allclose(result.runs, expected_result_medium_bed3.runs)
-    # assert np.allclose(result.values, expected_result_medium_bed3.values)
+#     assert np.allclose(result.runs, expected_result_simple_bed3.runs)
+#     assert np.allclose(result.values, expected_result_simple_bed3.values)

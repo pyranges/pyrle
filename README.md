@@ -45,4 +45,4 @@ print("Values:", r3.values)
 
 ## When not to use Rles
 
-In constructed degenerate cases, the arithmetic operations are O(n^2). This is when your data is wildly heterogenous and Rles aren't applicable.
+In constructed degenerate cases, the arithmetic operations are n^2. This is when your data is wildly heterogenous and Rles aren't applicable.
