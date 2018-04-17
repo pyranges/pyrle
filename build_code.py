@@ -13,4 +13,4 @@ code = j2_env.get_template(template).render(
     configs=d.values()
 )
 
-open("pyrle.pyx", "w+").write(code)
+open("pyrle/pyrle.pyx", "w+").write(code)

@@ -10,37 +10,62 @@ import numpy as np
 from pyrle import Rle
 from io import StringIO
 
-def coverage(ranges, value_col=None):
 
-    try:
-        df = ranges.df
-    except:
-        df = ranges
+from pyrle import coverage
 
-    if value_col:
-        starts = df[["Start"] + [value_col]]
-        ends = df[["End"] + [value_col]]
-        # spurious warning
-        pd.options.mode.chained_assignment = None
-        ends.loc[:, value_col] = ends.loc[:, value_col] * - 1
-        pd.options.mode.chained_assignment = "warn"
-        columns = ["Position"] + [value_col]
-    else:
-        starts = pd.concat([df.Start, pd.Series(np.ones(len(df)))], axis=1)
-        ends = pd.concat([df.End, -1 * pd.Series(np.ones(len(df)))], axis=1)
-        columns = "Position Value".split()
-        value_col = "Value"
+# expected result for whole chr21 according to Rle
+#   [1] 9739215      25  463205      25 3069430      25    9143      25  993038
+#  [10]      25  142071      25  260968      25   71512      25   18072      25
+#  [19]  103292      25  211969      25  275065      25  337961      25   28264
+#  [28]      25   85316      25 1327122      25  942292      25  515321      25
+#  [37]   51031      25  505279      25  106831      25  525295      25  428835
+#  [46]      25 1075916      25   59077      25  397488      25  146032      25
+#  [55]  241044      25   40723      25    6325      25  790758      25  636326
+#  [64]      25  265715      25  707648      25  442479      25  623307      25
+#  [73]   39301      25   56624      25   37674      25    6412      25   75632
+#  [82]      25    7020      25   91867      25  516098      25  455342      25
+#  [91]  207316      25   89376      25  220415      25   63873      25  178563
+# [100]      25  208833      25  231384      25  233483      25  210876      25
+# [109]   13625      25  698897      25    9427      25  199410      25 1334739
+# [118]      25  181942      25   17516      25  186634      25   18445      25
+# [127]   56362      25    6113      25    8690      25  314362      25  427565
+# [136]      25  194922      25   25119      25   96491      25  814824      25
+# [145]  329690      25   77988      25  715491      25   23244      25  305720
+# [154]      25   45296      25  332040      25  174008      25  163489      25
+# [163]   51692      25  622758      25  582426      25  167975      25   99400
+# [172]      25   14499      25  481575      25  224239      25  109893      25
+# [181]  229084      25  481166      25   76961      25  104924      25  262629
+# [190]      25  123925      25   72451      25  423954      25  622114      25
+# [199]  870208      25  291275      25   58970      25  189900      25  972143
+# [208]      25  532150      25  157577      25  360979      25  122030      25
+# [217]  365189      25 1376353      25  251038      25  338889      25
 
-    starts.columns, ends.columns = columns, columns
-    runs = pd.concat([starts, ends], ignore_index=True)
-    values = runs.groupby("Position").sum().reset_index().drop_duplicates()[value_col]
-    first_value = values.iloc[0] if starts.Position.min() == 0 else 0
-    run_lengths = (runs.Position - runs.Position.shift().fillna(0))[:-1]
 
-    values = values.cumsum().shift()
-    values[0] = first_value
+@pytest.fixture()
+def df():
 
-    return Rle(run_lengths, values)
+    c = """chr21	9739215	9739240	U0	0	-
+chr21	10202445	10202470	U0	0	+
+chr21	13271900	13271925	U0	0	-
+chr21	13281068	13281093	U0	0	-
+chr21	14274131	14274156	U0	0	-
+chr21	14416227	14416252	U0	0	+
+chr21	14677220	14677245	U0	0	-
+chr21	14748757	14748782	U0	0	+
+chr21	14766854	14766879	U0	0	+
+chr21	14870171	14870196	U0	0	-"""
+
+    return pd.read_table(StringIO(c), header=None, names="Chromosome Start End Name Score Strand".split())
+
+def test_coverage(df):
+
+    result = coverage(df)
+
+    print(result.runs)
+    print(result.values)
+
+    assert 0
+
 
 
 @pytest.fixture

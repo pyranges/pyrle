@@ -1,6 +1,15 @@
+import pyranges as pr
+gr = pr.load_dataset("chipseq")
+rle = gr["chr21"].coverage()
+print(rle.runs)
+print(rle.values)
+
+raise
 import numpy as np
 from pyrle import Rle
 import pandas as pd
+
+
 
 r = pd.Series([1, 2, 3, 4], dtype=np.int16)
 # v = pd.Series([-1, 2.3, 3, 4.976], dtype=np.float)
@@ -46,28 +55,28 @@ def resize_test():
     test of workign with a numpy array that needs to be re-sized.
     """
     # create an ndarray and a memview to work with it.
-    cdef cnp.ndarray[double, ndim=1, mode="c"] arr
-    cdef double[:] memview
+    # cdef cnp.ndarray[double, ndim=1, mode="c"] arr
+    # cdef double[:] memview
 
-    ## allocate the array:
-    arr = np.zeros( (1,) )
+    # ## allocate the array:
+    # arr = np.zeros( (1,) )
 
-    ## Assign the memview to it:
-    memview = arr
+    # ## Assign the memview to it:
+    # memview = arr
 
-    ## manipulate it
-    memview[0] = 3.14
+    # ## manipulate it
+    # memview[0] = 3.14
 
-    ## resize the array
-    arr.resize((4,), refcheck = False)
+    # ## resize the array
+    # arr.resize((4,), refcheck = False)
 
-    ## re-assign the memview -- so you get the new post-resize pointer
-    memview = arr
+    # ## re-assign the memview -- so you get the new post-resize pointer
+    # memview = arr
 
-    ## now use it
-    memview[1] = 5.6
-    memview[2] = 7.1
-    memview[3] = 4.3
+    # ## now use it
+    # memview[1] = 5.6
+    # memview[2] = 7.1
+    # memview[3] = 4.3
 
-    ## return the numpy array
-    return arr
+    # ## return the numpy array
+    # return arr
