@@ -1,7 +1,3 @@
-"""
-This code is silly bad and erroneus. Still checking out ways to do it in pure python.
-"""
-
 import pytest
 
 import pandas as pd
@@ -10,8 +6,7 @@ import numpy as np
 from pyrle import Rle
 from io import StringIO
 
-
-from pyrle import coverage
+from pyrle.methods import coverage
 
 # expected result for whole chr21 according to Rle
 #   [1] 9739215      25  463205      25 3069430      25    9143      25  993038
@@ -41,6 +36,17 @@ from pyrle import coverage
 # [217]  365189      25 1376353      25  251038      25  338889      25
 
 
+
+@pytest.fixture()
+def expected_result_coverage():
+
+    runs = """9739215      25  463205      25 3069430      25    9143      25  993038 25  142071      25  260968      25   71512      25   18072      25 103292 25""".split()
+    runs = [int(s) for s in runs]
+    values = [0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1., 0., 1.]
+
+    return runs, values
+
+
 @pytest.fixture()
 def df():
 
@@ -57,14 +63,25 @@ chr21	14870171	14870196	U0	0	-"""
 
     return pd.read_table(StringIO(c), header=None, names="Chromosome Start End Name Score Strand".split())
 
-def test_coverage(df):
+
+def test_coverage(df, expected_result_coverage):
+
+    expected_runs, expected_values = expected_result_coverage
 
     result = coverage(df)
 
     print(result.runs)
     print(result.values)
 
-    assert 0
+
+    print(len(result.runs))
+    print(len(result.values))
+
+    print(expected_runs)
+    print(expected_values)
+
+    assert list(result.runs) == expected_runs
+    assert list(result.values) == expected_values
 
 
 
