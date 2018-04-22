@@ -12,11 +12,3 @@ subtract_double:
   op2: +
   value_dtype: double
   run_dtype: long
-
-
-divide_double:
-  operation: div
-  op: /
-  op2: +
-  value_dtype: double
-  run_dtype: long
