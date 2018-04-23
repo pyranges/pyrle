@@ -10,10 +10,30 @@ from io import StringIO
 from pyrle import GRles
 from pyrle.methods import coverage
 
+import pyranges as pr
+
 
 def test_create_grles():
 
-    gr = pr.load_dataset()
+    gr = pr.load_dataset("chipseq")
+
+    grles = GRles(gr)
+
+    print(grles)
+
+
+
+def test_create_stranded_grles():
+
+    gr = pr.load_dataset("chipseq")
+
+    grles = GRles(gr, stranded=True)
+
+    print(grles)
+
+
+
+
 
 
 

@@ -25,14 +25,16 @@ class GRles():
             except:
                 df = ranges
 
-            print("in __init__: ", df)
 
             chromosomes = df.Chromosome.drop_duplicates()
 
             if n_jobs > 1:
                 _rles = Parallel(n_jobs=n_jobs)(delayed(methods.coverage)(df[df.Chromosome == c]) for c in chromosomes)
             else:
-                _rles = [methods.coverage(df[df.Chromosome == c]) for c in chromosomes]
+                _rles = []
+                for c in chromosomes:
+                    cv = methods.coverage(df[df.Chromosome == c])
+                    _rles.append(cv)
 
             self.rles = {c: r for c, r in zip(chromosomes, _rles)}
 
@@ -43,17 +45,21 @@ class GRles():
             except:
                 df = ranges
 
-            print("in __init__: ", df)
 
             cs = df["Chromosome Strand".split()].drop_duplicates()
-            cs = zip(cs.Chromosome.tolist(), cs.Strand.tolist())
+            cs = list(zip(cs.Chromosome.tolist(), cs.Strand.tolist()))
 
             if n_jobs > 1:
                 _rles = Parallel(n_jobs=n_jobs)(delayed(methods.coverage)(df[(df.Chromosome == c) & (df.Strand == s)]) for c, s in cs)
             else:
-                _rles = [methods.coverage(df[df.Chromosome == c]) for c in chromosomes]
+                _rles = []
+                for c, s in cs:
+                    sub_df = df[(df.Chromosome == c) & (df.Strand == s)]
+                    print("sub_df.head()")
+                    print(sub_df.head())
+                    _rles.append(methods.coverage(sub_df))
 
-            self.rles = {c: r for c, r in zip(chromosomes, _rles)}
+            self.rles = {c: r for c, r in zip(cs, _rles)}
 
 
     def add(self, other):
@@ -65,6 +71,7 @@ class GRles():
     def __str__(self):
 
         keys = natsorted(self.rles.keys())
+        print("keys " * 5, keys)
         stranded = True if len(list(keys)[0]) == 2 else False
 
         if not stranded:
@@ -91,25 +98,25 @@ class GRles():
 
         else:
             if len(keys) > 2:
-                str_list = [keys[0],
+                str_list = [" ".join(keys[0]),
                     str(self.rles[keys[0]]),
                     "...",
-                    keys[-1],
+                    " ".join(keys[-1]),
                     str(self.rles[keys[-1]]),
-                    "GRles object with {} chromosomes and strand pairs.".format(len(self.rles.keys()))]
+                    "GRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
             elif len(keys) == 2:
-                str_list = [keys[0],
+                str_list = [" ".join(keys[0]),
                             "-" * len(keys[0]),
                             str(self.rles[keys[0]]),
                             "",
-                            keys[-1],
+                            " ".join(keys[-1]),
                             "-" * len(keys[-1]),
                             str(self.rles[keys[-1]]),
-                            "GRles object with {} chromosomes and strand pairs.".format(len(self.rles.keys()))]
+                            "GRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
             else:
-                str_list = [keys[0],
+                str_list = [" ".join(keys[0]),
                             str(self.rles[keys[0]]),
-                            "GRles object with {} chromosome and strand pairs.".format(len(self.rles.keys()))]
+                            "GRles object with {} chromosome/strand pairs.".format(len(self.rles.keys()))]
 
         outstr = "\n".join(str_list)
 
