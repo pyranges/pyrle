@@ -15,8 +15,10 @@ python build_code.py; python setup.py build_ext --inplace; py.test -f tests/
 
 - Write tests that generate random vectors and compares the results from pyrle and S4Vectors.
 - Unit-tests
-- Test that works in multi-cpu code (pickling)
-- Add more operations (multiply, divide)
+- Implement getattribute
+- Add pseudocounts-option when dividing?
+- Test that from GRanges to GRles to Granges gives original GRanges
+- Add options to easily get keys and values from GRles
 
 ## Example
 
