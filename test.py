@@ -1,8 +1,8 @@
 import pyranges as pr
-gr = pr.load_dataset("chipseq")
-rle = gr["chr21"].coverage()
-print(rle.runs)
-print(rle.values)
+gr = pr.load_dataset("epigenome_roadmap")
+rle = gr["chr1"].coverage()
+print(list(rle.runs)[:20])
+print(list(rle.values)[:20])
 
 raise
 import numpy as np

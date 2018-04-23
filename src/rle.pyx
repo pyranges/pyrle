@@ -563,7 +563,6 @@ cpdef div_rles(long [:] runs1, double [:] values1, long [:] runs2, double [:] va
                 nvs[xn] = nv
                 xn += 1
 
-                        
     # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)

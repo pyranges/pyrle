@@ -11,6 +11,11 @@ from pyrle import GRles
 from pyrle.methods import coverage
 
 
+def test_create_grles():
+
+    gr = pr.load_dataset()
+
+
 
 @pytest.fixture()
 def expected_result_coverage():
