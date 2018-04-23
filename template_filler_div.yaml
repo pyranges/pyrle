@@ -1,0 +1,13 @@
+
+
+div_nonzeroes:
+  name: nonzeroes
+  nv: "nv = values1[x1] / values2[x2]"
+
+div_zeroes:
+  name: zeroes
+  nv: "\n\
+\        if values2[x2] != 0:\n\
+\             nv = values1[x1] / values2[x2]\n\
+\        else:\n\
+\             nv = np.inf * np.sign(values1[x1])\n"
