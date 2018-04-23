@@ -17,8 +17,6 @@ python build_code.py; python setup.py build_ext --inplace; py.test -f tests/
 - Unit-tests
 - Test that works in multi-cpu code (pickling)
 - Add more operations (multiply, divide)
-- Make some repetitive code-patterns inline functions
-- Function that makes pandas df into Rle, like S4Vectors coverage
 
 ## Example
 
@@ -42,7 +40,3 @@ print("Values:", r3.values)
 #   Lengths:  1  1  1  3  4  2  8
 #   Values :  3  4  6  7 10  6  8
 ```
-
-## When not to use Rles
-
-In constructed degenerate cases, the arithmetic operations are n^2. This is when your data is wildly heterogenous and Rles aren't applicable.
