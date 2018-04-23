@@ -58,6 +58,10 @@ def coverage(ranges, value_col=None):
     except:
         df = ranges
 
+    df = df.reset_index(drop=True)
+
+    df = df.sort_values("Start End".split())
+
     if value_col:
         starts = df[["Start"] + [value_col]]
         ends = df[["End"] + [value_col]]
@@ -81,5 +85,12 @@ def coverage(ranges, value_col=None):
 
     values = values.cumsum().shift()
     values[0] = first_value
+
+
+    # print(len(run_lengths), "len runs")
+    # print(len(values), "len values")
+
+    # print(run_lengths.tail().values)
+    # print(values.tail().values)
 
     return Rle(run_lengths, values)
