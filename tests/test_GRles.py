@@ -32,6 +32,15 @@ def test_create_stranded_grles():
     print(grles)
 
 
+def test_create_stranded_grles_multicpu():
+
+    gr = pr.load_dataset("chipseq")
+
+    grles = GRles(gr, stranded=True, n_jobs=5)
+
+    print(grles)
+
+
 
 
 
