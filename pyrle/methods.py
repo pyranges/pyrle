@@ -94,3 +94,50 @@ def coverage(ranges, value_col=None):
     # print(values.tail().values)
 
     return Rle(run_lengths, values)
+
+def to_ranges(grles):
+
+    from pyranges import GRanges
+
+    if grles.stranded:
+
+        for (chromosome, strand), grle in grles.items():
+            print(chromosome, strand)
+
+    else:
+
+        dfs = []
+        for chromosome, rle in grles.items():
+            res = _to_ranges(rle)
+            print(chromosome)
+            print(res[1][:5])
+            print(res[2][:5])
+            df = pd.concat([pd.Series(r) for r in res], axis=1)
+            df.columns = "Start End Score".split()
+            df.insert(0, "Chromosome", chromosome)
+            dfs.append(df)
+
+        return GRanges(pd.concat(dfs))
+
+
+
+def _to_ranges(rle):
+
+    cs = pd.Series(rle.runs).shift()
+    cs[0] = 0
+    cs = cs.cumsum()
+    print("cs " * 3, cs)
+    starts = cs[0::2]
+    ends = cs[1::2]
+
+    values = rle.values[1::2]
+    print("values " * 3, values)
+
+    return starts, ends, values
+
+
+# def to_ranges(grles):
+
+#     if grles.stranded:
+
+#         for (chromosome, strand), grle in grles.items():

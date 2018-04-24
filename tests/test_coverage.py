@@ -8,6 +8,8 @@ from io import StringIO
 
 from pyrle.methods import coverage
 
+import pyranges as pr
+
 # expected result for whole chr21 according to Rle
 #   [1] 9739215      25  463205      25 3069430      25    9143      25  993038
 #  [10]      25  142071      25  260968      25   71512      25   18072      25
@@ -34,6 +36,21 @@ from pyrle.methods import coverage
 # [199]  870208      25  291275      25   58970      25  189900      25  972143
 # [208]      25  532150      25  157577      25  360979      25  122030      25
 # [217]  365189      25 1376353      25  251038      25  338889      25
+
+
+# def test_chr2_to_coverage():
+
+#     gr = pr.load_dataset("chipseq")
+#     gr_chr2 = gr["chr2"]
+
+#     # print(gr_chr2)
+#     # gr_chr2.df.to_csv("gr_chr2", sep=" ", index=False)
+
+#     coverage(gr_chr2)
+
+#     assert 0
+
+
 
 
 

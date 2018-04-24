@@ -55,8 +55,6 @@ class GRles():
                 _rles = []
                 for c, s in cs:
                     sub_df = df[(df.Chromosome == c) & (df.Strand == s)]
-                    print("sub_df.head()")
-                    print(sub_df.head())
                     _rles.append(methods.coverage(sub_df))
 
             self.rles = {c: r for c, r in zip(cs, _rles)}
@@ -64,14 +62,30 @@ class GRles():
 
     def add(self, other):
 
-
         return methods._add(self, other)
+
+
+    @property
+    def stranded(self):
+
+        return len(self.keys()[0]) == 2
+
+    def keys(self):
+
+        return natsorted(list(self.rles.keys()))
+
+    def values(self):
+
+        return natsorted(list(self.rles.values()))
+
+    def items(self):
+
+        return natsorted(list(self.rles.items()))
 
 
     def __str__(self):
 
         keys = natsorted(self.rles.keys())
-        print("keys " * 5, keys)
         stranded = True if len(list(keys)[0]) == 2 else False
 
         if not stranded:
