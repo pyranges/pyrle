@@ -127,8 +127,9 @@ def _to_ranges(rle):
     cs[0] = 0
     cs = cs.cumsum()
     print("cs " * 3, cs)
-    starts = cs[0::2]
-    ends = cs[1::2]
+    print(starts)
+    # starts = cs[0::2]
+    # ends = cs[1::2]
 
     values = rle.values[1::2]
     print("values " * 3, values)

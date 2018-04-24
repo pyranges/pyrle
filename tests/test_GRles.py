@@ -165,6 +165,7 @@ def test_roundtrip_to_ranges_single_rle_problematic(problematic_gr):
     print("scores")
     print(scores[:5])
 
+    assert 0, "Do starts.shift(-1) to get ends!" * 10
     assert 0, "Add runlength function! " * 10
 
     assert gr.df.Start.sort_values().tolist() == sorted(list(starts))
