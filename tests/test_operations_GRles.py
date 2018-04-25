@@ -35,6 +35,7 @@ chr2 0 1 +"""
 def expected_result():
 
     c = """Chromosome  Start  End  Score
+chr1      0    1    0.0
 chr1      1    2   -1.0
 chr1      2    3   -2.0
 chr1      3    4   -1.0
@@ -48,6 +49,7 @@ chr2      1    3    1.0"""
 
     return grles
 
+
 def test_subtraction(chip, background, expected_result):
 
     result = chip - background
@@ -56,9 +58,12 @@ def test_subtraction(chip, background, expected_result):
     print("expected_result\n", expected_result)
     assert result == expected_result
 
+
+
+
 def test_subtraction_multicpu(chip, background, expected_result):
 
-    result = chip.sub(background, n_jobs=2)
+    result = chip.sub(background, n_jobs=5)
 
     print("result\n", result, "\n")
     print("expected_result\n", expected_result)

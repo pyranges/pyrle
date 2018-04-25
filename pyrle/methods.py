@@ -30,11 +30,16 @@ def __add(self, other):
     return self + other
 
 
-def _add(self, other, n_jobs=1):
+def binary_operation(operation, self, other, n_jobs=1):
+
+    func = {"div": __div, "mul": __mul, "add": __add, "sub": __sub}[operation]
 
     chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
 
-    _rles = Parallel(n_jobs=n_jobs)(delayed(__add)(self.rles[c], other.rles[c]) for c in chromosomes_in_both)
+    _rles = []
+    for c in chromosomes_in_both:
+        _rles.append(func(self.rles[c], other.rles[c]))
+
 
     rles = {c: r for c, r in zip(chromosomes_in_both, _rles)}
 
@@ -51,22 +56,13 @@ def __sub(self, other):
 
     return self - other
 
+def __div(self, other):
 
-def _sub(self, other, n_jobs=1):
+    return self / other
 
-    chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
+def __mul(self, other):
 
-    _rles = Parallel(n_jobs=n_jobs)(delayed(__sub)(self.rles[c], other.rles[c]) for c in chromosomes_in_both)
-
-    rles = {c: r for c, r in zip(chromosomes_in_both, _rles)}
-
-    for c in chromosomes_in_self_not_other:
-        rles[c] = self.rles[c]
-
-    for c in chromosomes_in_other_not_self:
-        rles[c] = other.rles[c]
-
-    return GRles(rles)
+    return self * other
 
 
 
@@ -120,14 +116,18 @@ def to_ranges(grles):
 
     from pyranges import GRanges
 
+    dfs = []
     if grles.stranded:
 
-        for (chromosome, strand), grle in grles.items():
-            print(chromosome, strand)
-
+        for (chromosome, strand), rle in grles.items():
+            starts, ends, values = _to_ranges(rle)
+            df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
+            df.columns = "Start End Score".split()
+            df.insert(0, "Chromosome", chromosome)
+            df.insert(df.shape[1], "Strand", strand)
+            dfs.append(df)
     else:
 
-        dfs = []
         for chromosome, rle in grles.items():
             starts, ends, values = _to_ranges(rle)
             df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
@@ -135,7 +135,7 @@ def to_ranges(grles):
             df.insert(0, "Chromosome", chromosome)
             dfs.append(df)
 
-        return GRanges(pd.concat(dfs))
+    return GRanges(pd.concat(dfs))
 
 
 def _to_ranges(rle):

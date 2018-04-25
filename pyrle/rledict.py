@@ -34,10 +34,6 @@ class GRles():
                 _rles = []
                 for c in chromosomes:
                     cv = m.coverage(df[df.Chromosome == c], value_col=value_col)
-                    # if c == "chr2":
-                        # print(df[df.Chromosome == c])
-                        # print(cv)
-                        # raise
                     _rles.append(cv)
 
             self.rles = {c: r for c, r in zip(chromosomes, _rles)}
@@ -64,17 +60,40 @@ class GRles():
             self.rles = {c: r for c, r in zip(cs, _rles)}
 
 
-    def add(self, other):
+    def add(self, other, n_jobs=1):
 
-        return m._add(self, other)
+        return m.binary_operation("add", self, other, n_jobs=n_jobs)
+
+    def __add__(self, other, n_jobs=1):
+
+        return m.binary_operation("add", self, other)
 
     def sub(self, other, n_jobs=1):
 
-        return m._sub(self, other, n_jobs)
+        return m.binary_operation("sub", self, other, n_jobs=n_jobs)
 
     def __sub__(self, other):
 
-        return m._sub(self, other, n_jobs=1)
+        return m.binary_operation("sub", self, other)
+
+    def mul(self, other, n_jobs=1):
+
+        return m.binary_operation("mul", self, other, n_jobs=n_jobs)
+
+    def __mul__(self, other):
+
+        return m.binary_operation("mul", self, other)
+
+    __rmul__ = __mul__
+
+    def div(self, other, n_jobs=1):
+
+        return m.binary_operation("div", self, other, n_jobs=n_jobs)
+
+    def __div__(self, other):
+
+        return m.binary_operation("div", self, other)
+
 
     def to_ranges(self):
 
@@ -105,13 +124,15 @@ class GRles():
 
     def __getitem__(self, key):
 
-        if len(key) == 1 and stranded and key not in ["+", "-"]:
+        key_is_string = isinstance(key, str)
+
+        if key_is_string and self.stranded and key not in ["+", "-"]:
             plus = self.rles.get((key, "+"), Rle([1], [0]))
             rev = self.rles.get((key, "-"), Rle([1], [0]))
 
             return GRles({(key, "+"): plus, (key, "-"): rev})
 
-        elif len(key) == 1 and stranded and key in ["+", "-"]:
+        elif key_is_string and self.stranded and key in ["+", "-"]:
             to_return = dict()
             for (c, s), rle in self.items():
                 if s == key:
@@ -119,12 +140,15 @@ class GRles():
 
             return GRles(to_return)
 
+        elif key_is_string:
+
+            return self.rles[key]
+
         elif len(key) == 2:
 
             return GRles({key: self.rles[key]})
 
         else:
-
             raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from GRles.")
 
 

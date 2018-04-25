@@ -247,7 +247,7 @@ def test_create_stranded_grles_multicpu(chipseq_dataset):
 
 
 
-@pytest.fixture()
+@pytest.fixture
 def expected_result_coverage():
 
     runs = """9739215      25  463205      25 3069430      25    9143      25  993038 25  142071      25  260968      25   71512      25   18072      25 103292 25""".split()
@@ -257,7 +257,7 @@ def expected_result_coverage():
     return runs, values
 
 
-@pytest.fixture()
+@pytest.fixture
 def df():
 
     c = """chr21	9739215	9739240	U0	0	-
@@ -274,7 +274,7 @@ chr21	14870171	14870196	U0	0	-"""
     return pd.read_table(StringIO(c), header=None, names="Chromosome Start End Name Score Strand".split())
 
 
-@pytest.fixture()
+@pytest.fixture
 def grle1():
 
     r1 = Rle([1, 5, 10], [1, 2, 3])
@@ -282,8 +282,14 @@ def grle1():
 
     d = {"chr1": r1, "chr2": r2}
     print(d)
+    g = GRles(d)
+    print(g)
+    return g
 
-    return GRles(d)
+@pytest.fixture
+def grle1_stranded(grle1):
+
+    return GRles({("chr1", "+"): grle1["chr1"], ("chr1", "-"): grle1["chr1"], ("chr2", "-"): grle1["chr2"]})
 
 
 @pytest.fixture()
@@ -334,6 +340,13 @@ def test_add_GRles(grle1, grle2, expected_result):
     print(expected_result)
 
     assert result == expected_result
+
+
+def test_create_stranded_grles(grle1_stranded):
+
+    result = to_ranges(grle1_stranded)
+
+
 
 
 # df = read.table(text="Chromosome Start End Name Score Strand

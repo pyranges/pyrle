@@ -131,10 +131,6 @@ chr2 0 1 +"""
     return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
 
 
-def expected_result_same_start():
-
-    pass
-
 def test_subtract_result_same_start(chip, background):
 
     result = chip - background
