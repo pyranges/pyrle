@@ -46,13 +46,19 @@ chr2      1    3    1.0"""
 
     grles =  GRles(pd.read_table(StringIO(c), sep="\s+"), value_col="Score")
 
-    print(grles)
-
-    assert 0
+    return grles
 
 def test_subtraction(chip, background, expected_result):
 
     result = chip - background
+
+    print("result\n", result, "\n")
+    print("expected_result\n", expected_result)
+    assert result == expected_result
+
+def test_subtraction_multicpu(chip, background, expected_result):
+
+    result = chip.sub(background, n_jobs=2)
 
     print("result\n", result, "\n")
     print("expected_result\n", expected_result)

@@ -109,19 +109,19 @@ def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, exp
 
     gr = teensy_duplicated
     cv = coverage(teensy_duplicated)
-    print(cv.values)
+    # print(cv.values)
 
     starts, ends, values = _to_ranges(cv)
 
-    print(gr)
-    print(pr.GRanges(gr.df.drop_duplicates()))
-    print("len(starts)", len(starts))
-    print("starts")
-    print(starts[:5])
-    print(starts[-5:])
-    print("ends")
-    print(ends[:5])
-    print(ends[-5:])
+    # print(gr)
+    # print(pr.GRanges(gr.df.drop_duplicates()))
+    # print("len(starts)", len(starts))
+    # print("starts")
+    # print(starts[:5])
+    # print(starts[-5:])
+    # print("ends")
+    # print(ends[:5])
+    # print(ends[-5:])
 
     assert list(starts) == [0, 42058716, 42058741, 42130511, 42130536, 42593165, 42593190, 42635413, 42635438, 43357333, 43357358, 43854685]
     assert list(ends) == [42058716, 42058741, 42130511, 42130536, 42593165, 42593190, 42635413, 42635438, 43357333, 43357358, 43854685, 43854710]
