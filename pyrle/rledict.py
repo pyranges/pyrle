@@ -3,14 +3,14 @@ from pyrle import Rle
 
 from joblib import Parallel, delayed
 
-from pyrle import methods
+from pyrle import methods as m
 
 from natsort import natsorted
 
 
 class GRles():
 
-    def __init__(self, ranges, n_jobs=1, stranded=False):
+    def __init__(self, ranges, n_jobs=1, stranded=False, value_col=None):
 
         # Construct GRles from dict of rles
         if isinstance(ranges, dict):
@@ -29,11 +29,15 @@ class GRles():
             chromosomes = df.Chromosome.drop_duplicates()
 
             if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(methods.coverage)(df[df.Chromosome == c]) for c in chromosomes)
+                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[df.Chromosome == c]) for c in chromosomes)
             else:
                 _rles = []
                 for c in chromosomes:
-                    cv = methods.coverage(df[df.Chromosome == c])
+                    cv = m.coverage(df[df.Chromosome == c], value_col=value_col)
+                    # if c == "chr2":
+                        # print(df[df.Chromosome == c])
+                        # print(cv)
+                        # raise
                     _rles.append(cv)
 
             self.rles = {c: r for c, r in zip(chromosomes, _rles)}
@@ -50,20 +54,31 @@ class GRles():
             cs = list(zip(cs.Chromosome.tolist(), cs.Strand.tolist()))
 
             if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(methods.coverage)(df[(df.Chromosome == c) & (df.Strand == s)]) for c, s in cs)
+                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[(df.Chromosome == c) & (df.Strand == s)]) for c, s in cs)
             else:
                 _rles = []
                 for c, s in cs:
                     sub_df = df[(df.Chromosome == c) & (df.Strand == s)]
-                    _rles.append(methods.coverage(sub_df))
+                    _rles.append(m.coverage(sub_df, value_col=value_col))
 
             self.rles = {c: r for c, r in zip(cs, _rles)}
 
 
     def add(self, other):
 
-        return methods._add(self, other)
+        return m._add(self, other)
 
+    def sub(self, other, n_jobs=1):
+
+        return m._sub(self, other, n_jobs)
+
+    def __sub__(self, other):
+
+        return m._sub(self, other, n_jobs=1)
+
+    def to_ranges(self):
+
+        return m.to_ranges(self)
 
     @property
     def stranded(self):
@@ -81,6 +96,36 @@ class GRles():
     def items(self):
 
         return natsorted(list(self.rles.items()))
+
+    def add_pseudocounts(self, pseudo=0.01):
+
+        for k, rle in self.items():
+
+            rle.values.loc[rle.values == 0] = pseudo
+
+    def __getitem__(self, key):
+
+        if len(key) == 1 and stranded and key not in ["+", "-"]:
+            plus = self.rles.get((key, "+"), Rle([1], [0]))
+            rev = self.rles.get((key, "-"), Rle([1], [0]))
+
+            return GRles({(key, "+"): plus, (key, "-"): rev})
+
+        elif len(key) == 1 and stranded and key in ["+", "-"]:
+            to_return = dict()
+            for (c, s), rle in self.items():
+                if s == key:
+                    to_return[c, s] = rle
+
+            return GRles(to_return)
+
+        elif len(key) == 2:
+
+            return GRles({key: self.rles[key]})
+
+        else:
+
+            raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from GRles.")
 
 
     def __str__(self):
@@ -150,17 +195,9 @@ class GRles():
         return True
 
 
+
+
+
     def __repr__(self):
 
         return str(self)
-
-
-    # def __add__(self, other):
-
-    #     rle = _add(self, other)
-    #     return rle
-
-    # def __sub__(self, other):
-
-    #     rle = _sub(self, other)
-    #     return rle

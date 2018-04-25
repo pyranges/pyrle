@@ -47,8 +47,27 @@ def _add(self, other, n_jobs=1):
     return GRles(rles)
 
 
-def _sub(self, other, njobs):
-    pass
+def __sub(self, other):
+
+    return self - other
+
+
+def _sub(self, other, n_jobs=1):
+
+    chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
+
+    _rles = Parallel(n_jobs=n_jobs)(delayed(__sub)(self.rles[c], other.rles[c]) for c in chromosomes_in_both)
+
+    rles = {c: r for c, r in zip(chromosomes_in_both, _rles)}
+
+    for c in chromosomes_in_self_not_other:
+        rles[c] = self.rles[c]
+
+    for c in chromosomes_in_other_not_self:
+        rles[c] = other.rles[c]
+
+    return GRles(rles)
+
 
 
 def coverage(ranges, value_col=None):
@@ -67,7 +86,7 @@ def coverage(ranges, value_col=None):
         ends = df[["End"] + [value_col]]
         # spurious warning
         pd.options.mode.chained_assignment = None
-        ends.loc[:, value_col] = ends.loc[:, value_col] * - 1
+        ends.loc[:, value_col] = ends[value_col] * - 1
         pd.options.mode.chained_assignment = "warn"
         columns = ["Position"] + [value_col]
     else:
@@ -80,20 +99,22 @@ def coverage(ranges, value_col=None):
     runs = pd.concat([starts, ends], ignore_index=True).sort_values("Position")
     values = runs.groupby("Position").sum().reset_index()[value_col]
     runs = runs.drop_duplicates("Position")
+
     first_value = values.iloc[0] if starts.Position.min() == 0 else 0
+
     run_lengths = (runs.Position - runs.Position.shift().fillna(0))
 
     values = values.cumsum().shift()
     values[0] = first_value
 
-
-    # print(len(run_lengths), "len runs")
-    # print(len(values), "len values")
-
-    # print(run_lengths.tail().values)
-    # print(values.tail().values)
+    # the hack that sets the first value might lead to two consecutive equal values; if so, fix
+    if len(values) > 1 and first_value == values[1]:
+        run_lengths[1] += run_lengths[0]
+        values = values[1:]
+        run_lengths = run_lengths[1:]
 
     return Rle(run_lengths, values)
+
 
 def to_ranges(grles):
 
@@ -108,11 +129,8 @@ def to_ranges(grles):
 
         dfs = []
         for chromosome, rle in grles.items():
-            starts_ends = _to_ranges(rle)
-            # print(chromosome)
-            # print(res[1][:5])
-            # print(res[2][:5])
-            df = pd.concat([pd.Series(r) for r in starts_ends + [rle.values]], axis=1)
+            starts, ends, values = _to_ranges(rle)
+            df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
             df.columns = "Start End Score".split()
             df.insert(0, "Chromosome", chromosome)
             dfs.append(df)
@@ -120,10 +138,8 @@ def to_ranges(grles):
         return GRanges(pd.concat(dfs))
 
 
-
 def _to_ranges(rle):
 
-    print(rle)
     runs = pd.Series(rle.runs)
     starts = pd.Series([0] + list(runs)).cumsum()
 

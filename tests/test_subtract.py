@@ -3,7 +3,12 @@ import pytest
 import pandas as pd
 import numpy as np
 
+from io import StringIO
+
 from pyrle import Rle
+from pyrle.methods import _to_ranges, coverage
+
+from pyranges import GRanges
 
 @pytest.fixture
 def simple_rle():
@@ -105,3 +110,33 @@ def test_subtract_advanced(shorter_rle, long_rle):
 
     assert all(np.equal(result2.runs, expected_runs))
     assert all(np.equal(result2.values, expected_values2))
+
+
+@pytest.fixture
+def chip():
+
+    c = """Chromosome Start End Strand
+chr2 1 3 +"""
+
+    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+
+
+
+@pytest.fixture
+def background():
+
+    c = """Chromosome Start End Strand
+chr2 0 1 +"""
+
+    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+
+
+def expected_result_same_start():
+
+    pass
+
+def test_subtract_result_same_start(chip, background):
+
+    result = chip - background
+
+    assert result == Rle([1, 2], [-1, 1])

@@ -50,6 +50,20 @@ import pyranges as pr
 
 #     assert 0
 
+@pytest.fixture
+def simple():
+  c = """Chromosome Start End Score
+chr2      0    1   -1.0
+chr2      1    3    1.0"""
+
+  return pd.read_table(StringIO(c), sep="\s+")
+
+
+def test_coverage_simple(simple):
+
+    result = coverage(simple, value_col="Score")
+
+    assert result == Rle([1, 2], [-1, 1])
 
 
 
