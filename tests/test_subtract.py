@@ -136,3 +136,35 @@ def test_subtract_result_same_start(chip, background):
     result = chip - background
 
     assert result == Rle([1, 2], [-1, 1])
+
+
+
+
+@pytest.fixture
+def chip_chr1():
+
+    c = """Chromosome Start End Strand
+chr1 5 7 +
+chr1 3 10 -"""
+
+    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+
+
+@pytest.fixture
+def background_chr1():
+
+    c = """Chromosome Start End Strand
+chr1 1 4 +
+chr1 2 5 -"""
+
+    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+
+
+
+def test_subtract_result_chr1(chip_chr1, background_chr1):
+
+    result = chip_chr1 - background_chr1
+
+    print(result)
+
+    assert len(result.values) == 7
