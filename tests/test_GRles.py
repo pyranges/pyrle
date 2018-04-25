@@ -55,13 +55,20 @@ def test_roundtrip_to_ranges_single_rle_teensy(teensy):
     cv = coverage(teensy, value_col="Score")
     print(cv.values)
 
-    start, ends, scores = _to_ranges(cv)
+    starts, ends = _to_ranges(cv)
 
-    print(start, ends, scores)
+    df = pd.concat([pd.Series(a) for a in [starts, ends, cv.values]], axis=1)
+    df.columns = "Start End Score".split()
+    df.insert(0, "Chromosome", "chr2")
 
-    assert (start == teensy.df.Start).all()
-    assert (ends == teensy.df.End).all()
-    assert (scores == teensy.df.Score).all()
+    gr = pr.GRanges(df)
+    print(gr)
+    # print(starts)
+    # print(ends)
+    # print(teensy.df.Start)
+    # print(teensy.df.End)
+
+    assert 0
 
 
 @pytest.fixture
@@ -108,7 +115,7 @@ def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, exp
     cv = coverage(teensy_duplicated)
     print(cv.values)
 
-    starts, ends, scores = _to_ranges(cv)
+    starts, ends = _to_ranges(cv)
 
     print(gr)
     print(pr.GRanges(gr.df.drop_duplicates()))
@@ -119,14 +126,10 @@ def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, exp
     print("ends")
     print(ends[:5])
     print(ends[-5:])
-    print("scores")
-    print(scores[:5])
-    print(scores[-5:])
 
 
     assert (starts == expected_result_teensy_duplicated.df.Start).all()
     assert (ends == expected_result_teensy_duplicated.df.End).all()
-    assert (scores == expected_result_teensy_duplicated.df.Score).all()
 
 
 @pytest.fixture
@@ -136,7 +139,7 @@ def expected_result_single_chromosome(chipseq_dataset):
 
 
 @pytest.fixture
-def problematic_gr():
+def overlapping_gr():
 
     c = """Chromosome      Start        End Name  Score Strand
 chr2  1  7   U0      0      -
@@ -147,29 +150,30 @@ chr2  4  10   U0      0      +"""
     return pr.GRanges(df)
 
 
-def test_roundtrip_to_ranges_single_rle_problematic(problematic_gr):
+def test_roundtrip_to_ranges_single_rle_overlapping(overlapping_gr):
 
-    gr = problematic_gr
+    gr = overlapping_gr
+    print(gr)
     cv = coverage(gr)
     print(cv)
 
-    starts, ends, scores = _to_ranges(cv)
+    starts, ends = _to_ranges(cv)
 
-    print(gr)
-    print(pr.GRanges(gr.df.drop_duplicates()))
-    print("len(starts)", len(starts))
-    print("starts")
-    print(starts[:5])
-    print("ends")
-    print(ends[:5])
-    print("scores")
-    print(scores[:5])
+    df = pd.concat([pd.Series(a) for a in [starts, ends, cv.values]], axis=1)
+    df.columns = "Start End Score".split()
+    df.insert(0, "Chromosome", "chr2")
+    print(pr.GRanges(df))
+    # print(gr)
+    # print(pr.GRanges(gr.df.drop_duplicates()))
+    # print("len(starts)", len(starts))
+    # print("starts")
+    # print(starts[:5])
+    # print("ends")
+    # print(ends[:5])
 
-    assert 0, "Do starts.shift(-1) to get ends!" * 10
-    assert 0, "Add runlength function! " * 10
 
-    assert gr.df.Start.sort_values().tolist() == sorted(list(starts))
-    assert gr.df.End.sort_values().tolist() == sorted(list(ends))
+    assert list(starts) == [0, 1, 4, 7]
+    assert list(ends) == [1, 4, 7, 10]
 
     # assert (starts == expected_result_problematic_gr.df.Start).all()
     # assert (ends == expected_result_problematic_gr.df.End).all()
@@ -341,4 +345,10 @@ def test_add_GRles(grle1, grle2, expected_result):
 # 625 chr2 175474407 175474432 U0 0 -
 # 626 chr2 175474427 175474452 U0 0 +", sep=" ")
 
-# IRanges(cumsum(c(runLength(cv)[-nrun(cv)])), width=runLength(cv))
+# ir = IRanges(start=df$Start, end=df$End)
+
+# cv = coverage(ir)
+
+
+# ir2 = IRanges(cumsum(c(0,runLength(cv)[-nrun(cv)])),
+#               width=runLength(cv))

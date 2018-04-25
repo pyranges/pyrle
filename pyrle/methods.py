@@ -108,11 +108,11 @@ def to_ranges(grles):
 
         dfs = []
         for chromosome, rle in grles.items():
-            res = _to_ranges(rle)
-            print(chromosome)
-            print(res[1][:5])
-            print(res[2][:5])
-            df = pd.concat([pd.Series(r) for r in res], axis=1)
+            starts_ends = _to_ranges(rle)
+            # print(chromosome)
+            # print(res[1][:5])
+            # print(res[2][:5])
+            df = pd.concat([pd.Series(r) for r in starts_ends + [rle.values]], axis=1)
             df.columns = "Start End Score".split()
             df.insert(0, "Chromosome", chromosome)
             dfs.append(df)
@@ -123,18 +123,24 @@ def to_ranges(grles):
 
 def _to_ranges(rle):
 
-    cs = pd.Series(rle.runs).shift()
-    cs[0] = 0
-    cs = cs.cumsum()
-    print("cs " * 3, cs)
-    print(starts)
-    # starts = cs[0::2]
-    # ends = cs[1::2]
+    print(rle)
+    runs = pd.Series(rle.runs)
+    starts = pd.Series([0] + list(runs)).cumsum()
 
-    values = rle.values[1::2]
-    print("values " * 3, values)
+    ends = starts + runs
 
-    return starts, ends, values
+
+
+    print("rle.values", pd.Series(rle.values))
+    print("starts", starts)
+    print("len(rle.values)", len(rle.values))
+    print("len(starts)", len(starts))
+    values = pd.Series(rle.values)
+    # nonzero = values[values != 0]
+    # starts = starts.loc[nonzero.index].reset_index(drop=True)
+    # ends = ends.loc[nonzero.index].reset_index(drop=True)
+
+    return starts[:-1], ends[:-1]
 
 
 # def to_ranges(grles):
