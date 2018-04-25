@@ -129,18 +129,16 @@ def _to_ranges(rle):
 
     ends = starts + runs
 
-
-
-    print("rle.values", pd.Series(rle.values))
-    print("starts", starts)
-    print("len(rle.values)", len(rle.values))
-    print("len(starts)", len(starts))
     values = pd.Series(rle.values)
-    # nonzero = values[values != 0]
-    # starts = starts.loc[nonzero.index].reset_index(drop=True)
-    # ends = ends.loc[nonzero.index].reset_index(drop=True)
 
-    return starts[:-1], ends[:-1]
+    start_idx = values[values.shift(-1) != values].index
+    end_idx = values[values.shift(1) != values].index
+
+    starts = starts.loc[start_idx]
+    ends = ends.loc[end_idx]
+    values = values[start_idx].reset_index(drop=True)
+
+    return starts.astype(int).reset_index(drop=True), ends.astype(int).reset_index(drop=True), values
 
 
 # def to_ranges(grles):

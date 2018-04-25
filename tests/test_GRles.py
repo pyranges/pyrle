@@ -55,20 +55,16 @@ def test_roundtrip_to_ranges_single_rle_teensy(teensy):
     cv = coverage(teensy, value_col="Score")
     print(cv.values)
 
-    starts, ends = _to_ranges(cv)
+    starts, ends, values = _to_ranges(cv)
 
-    df = pd.concat([pd.Series(a) for a in [starts, ends, cv.values]], axis=1)
+    df = pd.concat([pd.Series(a) for a in [starts, ends, values]], axis=1)
     df.columns = "Start End Score".split()
     df.insert(0, "Chromosome", "chr2")
 
     gr = pr.GRanges(df)
-    print(gr)
-    # print(starts)
-    # print(ends)
-    # print(teensy.df.Start)
-    # print(teensy.df.End)
 
-    assert 0
+    assert list(starts) == [0, 13611, 13636, 32620, 32645, 33241, 788293, 1150665]
+    assert list(ends) == [13611, 13636, 32620, 32645, 33241, 33266, 788268, 1150690]
 
 
 @pytest.fixture
@@ -115,7 +111,7 @@ def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, exp
     cv = coverage(teensy_duplicated)
     print(cv.values)
 
-    starts, ends = _to_ranges(cv)
+    starts, ends, values = _to_ranges(cv)
 
     print(gr)
     print(pr.GRanges(gr.df.drop_duplicates()))
@@ -127,9 +123,8 @@ def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, exp
     print(ends[:5])
     print(ends[-5:])
 
-
-    assert (starts == expected_result_teensy_duplicated.df.Start).all()
-    assert (ends == expected_result_teensy_duplicated.df.End).all()
+    assert list(starts) == [0, 42058716, 42058741, 42130511, 42130536, 42593165, 42593190, 42635413, 42635438, 43357333, 43357358, 43854685]
+    assert list(ends) == [42058716, 42058741, 42130511, 42130536, 42593165, 42593190, 42635413, 42635438, 43357333, 43357358, 43854685, 43854710]
 
 
 @pytest.fixture
@@ -157,7 +152,7 @@ def test_roundtrip_to_ranges_single_rle_overlapping(overlapping_gr):
     cv = coverage(gr)
     print(cv)
 
-    starts, ends = _to_ranges(cv)
+    starts, ends, values = _to_ranges(cv)
 
     df = pd.concat([pd.Series(a) for a in [starts, ends, cv.values]], axis=1)
     df.columns = "Start End Score".split()
