@@ -29,7 +29,7 @@ class GRles():
             chromosomes = df.Chromosome.drop_duplicates()
 
             if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[df.Chromosome == c]) for c in chromosomes)
+                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[df.Chromosome == c], value_col=value_col) for c in chromosomes)
             else:
                 _rles = []
                 for c in chromosomes:
@@ -50,7 +50,7 @@ class GRles():
             cs = list(zip(cs.Chromosome.tolist(), cs.Strand.tolist()))
 
             if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[(df.Chromosome == c) & (df.Strand == s)]) for c, s in cs)
+                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[(df.Chromosome == c) & (df.Strand == s)], value_col=value_col) for c, s in cs)
             else:
                 _rles = []
                 for c, s in cs:
@@ -217,10 +217,6 @@ class GRles():
                 return False
 
         return True
-
-
-
-
 
     def __repr__(self):
 
