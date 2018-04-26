@@ -72,6 +72,62 @@ def __mul(self, other):
     return self * other
 
 
+# @profile
+# def coverage(ranges, value_col=None):
+
+#     try:
+#         df = ranges.df
+#     except:
+#         df = ranges
+#         df = df.reset_index(drop=True)
+
+#     if value_col:
+#         starts = df[["Start"] + [value_col]]
+#         ends = df[["End"] + [value_col]]
+#         # spurious warning
+#         pd.options.mode.chained_assignment = None
+#         ends.loc[:, value_col] = ends[value_col] * - 1
+#         pd.options.mode.chained_assignment = "warn"
+#         columns = ["Position"] + [value_col]
+#     else:
+#         starts = pd.concat([df.Start, pd.Series(np.ones(len(df)))], axis=1)
+#         ends = pd.concat([df.End, -1 * pd.Series(np.ones(len(df)))], axis=1)
+#         columns = "Position Value".split()
+#         value_col = "Value"
+
+#     starts.columns, ends.columns = columns, columns
+#     runs = pd.concat([starts, ends], ignore_index=True)
+#     print("\n")
+#     print("Before sort value\n", runs.head())
+#     runs = runs.sort_values("Position")
+#     print("Before groupby sum\n", runs.head())
+#     values = runs.groupby("Position").sum()
+#     print("Before reset index value col: values", values.head())
+#     values = values.reset_index()[value_col]
+#     print("Before drop duplicates\n", runs.head())
+#     runs = runs.drop_duplicates("Position")
+#     print("After drop duplicates", runs.head())
+#     first_value = values.iloc[0] if starts.Position.min() == 0 else 0
+
+#     run_lengths = (runs.Position - runs.Position.shift().fillna(0))
+
+#     # print("before " * 3, values)
+#     values = values.cumsum()
+#     # print("middle " * 3, values)
+#     values = values.shift()
+#     # print("after " * 3, values)
+#     values[0] = first_value
+
+#     # the hack that sets the first value might lead to two consecutive equal values; if so, fix
+#     if len(values) > 1 and first_value == values[1]:
+#         run_lengths[1] += run_lengths[0]
+#         values = values[1:]
+#         run_lengths = run_lengths[1:]
+
+#     return Rle(run_lengths, values)
+
+
+
 @profile
 def coverage(ranges, value_col=None):
 
@@ -79,40 +135,51 @@ def coverage(ranges, value_col=None):
         df = ranges.df
     except:
         df = ranges
-        df = df.reset_index(drop=True)
+        # df = df.reset_index(drop=True)
 
     if value_col:
-        starts = df[["Start"] + [value_col]]
-        ends = df[["End"] + [value_col]]
-        # spurious warning
-        pd.options.mode.chained_assignment = None
-        ends.loc[:, value_col] = ends[value_col] * - 1
-        pd.options.mode.chained_assignment = "warn"
-        columns = ["Position"] + [value_col]
+        values = df[value_col].tolist()
     else:
-        starts = pd.concat([df.Start, pd.Series(np.ones(len(df)))], axis=1)
-        ends = pd.concat([df.End, -1 * pd.Series(np.ones(len(df)))], axis=1)
-        columns = "Position Value".split()
-        value_col = "Value"
+        values = [1] * len(df)
 
-    starts.columns, ends.columns = columns, columns
-    runs = pd.concat([starts, ends], ignore_index=True).sort_values("Position")
-    values = runs.groupby("Position").sum().reset_index()[value_col]
-    runs = runs.drop_duplicates("Position")
-    first_value = values.iloc[0] if starts.Position.min() == 0 else 0
+    starts = df.Start.tolist()
+    ends = df.End.tolist()
 
-    run_lengths = (runs.Position - runs.Position.shift().fillna(0))
+    d = {}
 
+    for start, value in zip(starts, values):
+        if start in d:
+            d[start] = d[start] + value
+        else:
+            d[start] = value
+
+    for end, value in zip(ends, values):
+        if end in d:
+            d[end] = d[end] - value
+        else:
+            d[end] = -value
+
+    if 0 not in d:
+        d[0] = 0
+
+    sorted_items = sorted(d.items())
+    runs = pd.Series([i[0] for i in sorted_items])
+    values = pd.Series([i[1] for i in sorted_items])
+
+    first_value = values[0]
     values = values.cumsum().shift()
     values[0] = first_value
 
-    # the hack that sets the first value might lead to two consecutive equal values; if so, fix
-    if len(values) > 1 and first_value == values[1]:
-        run_lengths[1] += run_lengths[0]
-        values = values[1:]
-        run_lengths = run_lengths[1:]
+    runs = (runs - runs.shift().fillna(0))
 
-    return Rle(run_lengths, values)
+    if len(values) > 1 and first_value == values[1]:
+        runs[1] += runs[0]
+        values = values[1:]
+        runs = runs[1:]
+
+    return Rle(runs, values)
+
+
 
 
 def to_ranges(grles):

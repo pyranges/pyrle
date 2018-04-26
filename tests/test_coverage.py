@@ -99,6 +99,7 @@ def test_coverage(df, expected_result_coverage):
 
     expected_runs, expected_values = expected_result_coverage
 
+    # result = coverage(df)
     result = coverage(df)
 
     print(result.runs)
@@ -111,6 +112,7 @@ def test_coverage(df, expected_result_coverage):
     print(expected_runs)
     print(expected_values)
 
+    # assert 0
     assert list(result.runs) == expected_runs
     assert list(result.values) == expected_values
 

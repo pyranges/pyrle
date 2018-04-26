@@ -15,7 +15,7 @@ except:
 
 class GRles():
 
-    @profile
+    # @profile
     def __init__(self, ranges, n_jobs=1, stranded=False, value_col=None):
 
         # Construct GRles from dict of rles
@@ -232,7 +232,6 @@ if __name__ == "__main__":
 
     "kernprof -l pyrle/rledict.py && python -m line_profiler coverage.py.lprof"
 
-
     from time import time
     import datetime
 
@@ -244,7 +243,7 @@ if __name__ == "__main__":
 
     start = time()
 
-    result = GRles(df)
+    result = GRles(df, n_jobs=25)
 
     end = time()
     total = end - start
