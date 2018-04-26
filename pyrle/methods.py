@@ -10,6 +10,13 @@ from sys import stderr
 
 from joblib import Parallel, delayed
 
+try:
+    dummy = profile
+except:
+    profile = lambda x: x
+
+
+
 def chromosomes_in_both_self_other(self, other):
 
     chromosomes_in_both = set(self.rles.keys()).intersection(other.rles.keys())
@@ -65,17 +72,14 @@ def __mul(self, other):
     return self * other
 
 
-
+@profile
 def coverage(ranges, value_col=None):
 
     try:
         df = ranges.df
     except:
         df = ranges
-
-    df = df.reset_index(drop=True)
-
-    df = df.sort_values("Start End".split())
+        df = df.reset_index(drop=True)
 
     if value_col:
         starts = df[["Start"] + [value_col]]
@@ -95,7 +99,6 @@ def coverage(ranges, value_col=None):
     runs = pd.concat([starts, ends], ignore_index=True).sort_values("Position")
     values = runs.groupby("Position").sum().reset_index()[value_col]
     runs = runs.drop_duplicates("Position")
-
     first_value = values.iloc[0] if starts.Position.min() == 0 else 0
 
     run_lengths = (runs.Position - runs.Position.shift().fillna(0))

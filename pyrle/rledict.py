@@ -7,9 +7,15 @@ from pyrle import methods as m
 
 from natsort import natsorted
 
+try:
+    dummy = profile
+except:
+    profile = lambda x: x
+
 
 class GRles():
 
+    @profile
     def __init__(self, ranges, n_jobs=1, stranded=False, value_col=None):
 
         # Construct GRles from dict of rles
@@ -25,18 +31,17 @@ class GRles():
             except:
                 df = ranges
 
-
-            chromosomes = df.Chromosome.drop_duplicates()
+            grpby = list(df.groupby("Chromosome"))
 
             if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[df.Chromosome == c], value_col=value_col) for c in chromosomes)
+                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(cdf, value_col=value_col) for _, cdf in grpby)
             else:
                 _rles = []
-                for c in chromosomes:
-                    cv = m.coverage(df[df.Chromosome == c], value_col=value_col)
+                for _, cdf in grpby:
+                    cv = m.coverage(cdf, value_col=value_col)
                     _rles.append(cv)
 
-            self.rles = {c: r for c, r in zip(chromosomes, _rles)}
+            self.rles = {c: r for c, r in zip([c for c, _ in grpby], _rles)}
 
         else:
 
@@ -45,19 +50,19 @@ class GRles():
             except:
                 df = ranges
 
-
             cs = df["Chromosome Strand".split()].drop_duplicates()
             cs = list(zip(cs.Chromosome.tolist(), cs.Strand.tolist()))
 
+            grpby = df.groupby("Chromosome Strand".split())
+
             if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(df[(df.Chromosome == c) & (df.Strand == s)], value_col=value_col) for c, s in cs)
+                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(csdf, value_col=value_col) for cs, csdf in grpby)
             else:
                 _rles = []
-                for c, s in cs:
-                    sub_df = df[(df.Chromosome == c) & (df.Strand == s)]
-                    _rles.append(m.coverage(sub_df, value_col=value_col))
+                for cs, csdf in grpby:
+                    _rles.append(m.coverage(csdf, value_col=value_col))
 
-            self.rles = {c: r for c, r in zip(cs, _rles)}
+            self.rles = {cs: r for cs, r in zip([cs for cs, _ in grpby], _rles)}
 
 
     def add(self, other, n_jobs=1):
@@ -221,3 +226,32 @@ class GRles():
     def __repr__(self):
 
         return str(self)
+
+
+if __name__ == "__main__":
+
+    "kernprof -l pyrle/rledict.py && python -m line_profiler coverage.py.lprof"
+
+
+    from time import time
+    import datetime
+
+    import pandas as pd
+
+    df = pd.read_table("/mnt/scratch/endrebak/genomes/chip/UCSD.Aorta.Input.STL002.bed.gz",
+                     sep="\t", usecols=[0, 1, 2, 5], header=None,
+                     names="Chromosome Start End Strand".split())
+
+    start = time()
+
+    result = GRles(df)
+
+    end = time()
+    total = end - start
+
+    total_dt = datetime.datetime.fromtimestamp(total)
+
+    minutes_seconds = total_dt.strftime('%M\t%S\n')
+
+    print(result)
+    print(minutes_seconds)
