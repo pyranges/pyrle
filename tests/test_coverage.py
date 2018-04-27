@@ -63,6 +63,8 @@ def test_coverage_simple(simple):
 
     result = coverage(simple, value_col="Score")
 
+    print(result)
+
     assert result == Rle([1, 2], [-1, 1])
 
 

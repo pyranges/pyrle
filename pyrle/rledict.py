@@ -237,13 +237,16 @@ if __name__ == "__main__":
 
     import pandas as pd
 
-    df = pd.read_table("/mnt/scratch/endrebak/genomes/chip/UCSD.Aorta.Input.STL002.bed.gz",
-                     sep="\t", usecols=[0, 1, 2, 5], header=None,
-                     names="Chromosome Start End Strand".split())
+    test_file = "/mnt/scratch/endrebak/genomes/chip/UCSD.Aorta.Input.STL002.bed.gz"
 
+    df = pd.read_table(test_file, sep="\t", usecols=[0, 1, 2, 5], header=None,
+                       names="Chromosome Start End Strand".split(), nrows=None)
+
+
+    print("Done reading")
     start = time()
 
-    result = GRles(df, n_jobs=25)
+    result = GRles(df, n_jobs=1)
 
     end = time()
     total = end - start

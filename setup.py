@@ -1,15 +1,29 @@
 
 # setup.py
 
-from distutils.core import setup, Extension
-from setuptools import find_packages
+from distutils.core import setup
+# from distutils.extension import Extension
+from setuptools import find_packages, Extension, Command
 from Cython.Build import cythonize
 
+from Cython.Compiler.Options import get_directive_defaults
+directive_defaults = get_directive_defaults()
+directive_defaults['linetrace'] = True
+directive_defaults['binding'] = True
+
 # example_module = Extension('convolve', sources=['convolve.c'])
+e1 = Extension("src.rle", ["src/rle.pyx"], define_macros = [("CYTHON_TRACE", "1")] )
+e2 = Extension("src.coverage", ["src/coverage.pyx"], define_macros = [("CYTHON_TRACE", "1")] )
+# ,
+# e2 =
+# print(type(e1))
+extensions = [e1, e2]
 
 setup(name='rle',
       packages=find_packages(),
-      ext_modules=cythonize("src/rle.pyx"), py_modules=["rle"],
+      ext_modules=cythonize(extensions),
+      # , "1")],
+      # py_modules=["rle"],
       include_dirs=["."])
 
 
