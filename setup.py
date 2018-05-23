@@ -27,7 +27,7 @@ extensions = [e1, e2]
 install_requires = ["cython", "pandas", "tabulate", "numpy"]
 
 setup(name='pyrle',
-      version="0.0.1",
+      version="0.0.2",
       packages=find_packages(),
       ext_modules=cythonize(extensions),
       install_requires=install_requires,
@@ -46,8 +46,7 @@ setup(name='pyrle',
           "Operating System :: MacOS :: MacOS X",
           "Topic :: Scientific/Engineering"
       ],
-      # , "1")],
-      # py_modules=["rle"],
+      package_data={'': ['*.pyx', '*.pxd', '*.h', '*.c']},
       include_dirs=["."])
 
 

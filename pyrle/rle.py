@@ -61,8 +61,11 @@ class Rle:
         df.index.name = "Runs"
 
         outstr = tabulate(df, tablefmt='psql', showindex=True, headers="keys")
+        length = np.sum(self.runs)
+        elements = len(self.runs)
+        info = "\nRle of length {} containing {} elements".format(str(length), str(elements))
 
-        return outstr
+        return outstr + info
 
 
     def __repr__(self):

@@ -133,7 +133,12 @@ chr2 0 1 +"""
 
 def test_subtract_result_same_start(chip, background):
 
+    print(chip)
+    print(background)
+
     result = chip - background
+
+    print(result)
 
     assert result == Rle([1, 2], [-1, 1])
 

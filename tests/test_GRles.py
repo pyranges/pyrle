@@ -53,7 +53,6 @@ chr2 1150665 1150690 U0 -1 -"""
 def test_roundtrip_to_ranges_single_rle_teensy(teensy):
 
     cv = coverage(teensy, value_col="Score")
-    print(cv.values)
 
     starts, ends, values = _to_ranges(cv)
 
@@ -63,8 +62,10 @@ def test_roundtrip_to_ranges_single_rle_teensy(teensy):
 
     gr = pr.PyRanges(df)
 
-    assert list(starts) == [0, 13611, 13636, 32620, 32645, 33241, 788293, 1150665]
-    assert list(ends) == [13611, 13636, 32620, 32645, 33241, 33266, 788268, 1150690]
+    # print(", ".join(str(i) for i in starts))
+    # print(", ".join(str(f) for f in ends))
+    assert list(starts) == [0, 13611, 13636, 32620, 32645, 33241, 33266, 1150665]
+    assert list(ends) == [13611, 13636, 32620, 32645, 33241, 33266, 1150665, 1150690]
 
 
 @pytest.fixture
