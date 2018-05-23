@@ -16,4 +16,4 @@ code = j2_env.get_template(template).render(
     configs_div=d_div.values(),
 )
 
-open("src/rle.pyx", "w+").write(code)
+open("pyrle/src/rle.pyx", "w+").write(code)

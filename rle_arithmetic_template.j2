@@ -4,67 +4,6 @@ import numpy as np
 
 cimport cython
 
-class Rle:
-
-    def __init__(self, runs, values):
-        assert len(runs) == len(values)
-
-        self.runs = np.array(runs, dtype=np.int)
-        self.values = np.array(values, dtype=np.double)
-
-
-    def __add__(self, other):
-
-        new_rle = add_rles(self.runs, self.values, other.runs, other.values)
-        return new_rle
-
-
-    def __sub__(self, other):
-        new_rle = sub_rles(self.runs, self.values, other.runs, other.values)
-        return new_rle
-
-    def __mul__(self, other):
-        new_rle = mul_rles(self.runs, self.values, other.runs, other.values)
-        return new_rle
-
-    __rmul__ = __mul__
-
-    def __truediv__(self, other):
-        if (other.values == 0).any():
-            new_rle = div_rles_zeroes(self.runs, self.values, other.runs, other.values)
-        else:
-            new_rle = div_rles_nonzeroes(self.runs, self.values, other.runs, other.values)
-
-        return new_rle
-
-    def __eq__(self, other):
-        runs_equal = np.equal(self.runs, other.runs).all()
-        values_equal = np.allclose(self.values, other.values)
-        return runs_equal and values_equal
-
-    def __str__(self):
-
-        if len(self.runs) > 10:
-            runs = " ".join([str(i) for i in self.runs[:5]]) + \
-                " ... " + " ".join(["{0:.3f}".format(i) for i in self.runs[-5:]])
-            values = " ".join([str(i) for i in self.values[:5]]) + \
-                    " ... " + " ".join(["{0:.3f}".format(i) for i in self.values[-5:]])
-        else:
-            runs = " ".join([str(i) for i in self.runs])
-            values = " ".join(["{0:.3f}".format(i) for i in self.values])
-
-        runs = "Runs: " + runs
-        values = "Values: " + values
-
-        outstr = "\n".join([runs, values, "Length: " + str(len(self.runs))])
-
-        return outstr
-
-    def __repr__(self):
-
-        return str(self)
-
-
 
 
 {% for config_add_sub in configs_add_sub %}
@@ -121,28 +60,13 @@ cpdef {{config_add_sub.operation}}_rles(long [::1] runs1, {{config_add_sub.value
         if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
-            if xn < len(nvs_arr):
-                nrs[xn] = nr
-                nvs[xn] = nv
-                xn += 1
-            # if we have no space left in our old array, double the size
-            else:
-                nrs_arr.resize(1, len(nrs_arr) * 2, refcheck=False)
-                nvs_arr.resize(1, len(nvs_arr) * 2, refcheck=False)
-                nrs = nrs_arr
-                nvs = nvs_arr
-
-                nrs[xn] = nr
-                nvs[xn] = nv
+            nrs[xn] = nr
+            nvs[xn] = nv
+            xn += 1
 
     # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
     # (If other had largest sum of lengths.)
     if x1 == l1 and not x2 == l2:
-        if not (xn + (l2 - x2) + 1 < len(nvs_arr)):
-            nvs_arr.resize((len(nvs_arr) + (l2 - x2) + 1), refcheck=False)
-            nrs_arr.resize((len(nrs_arr) + (l2 - x2) + 1), refcheck=False)
-            nrs = nrs_arr
-            nvs = nvs_arr
 
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
@@ -162,11 +86,6 @@ cpdef {{config_add_sub.operation}}_rles(long [::1] runs1, {{config_add_sub.value
             xn += 1
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
-        if not (xn + (l1 - x1) + 1 < len(nvs_arr)) and diff > 0:
-            nvs_arr.resize(len(nvs_arr) + (l1 - x1) + 1, refcheck=False)
-            nrs_arr.resize(len(nrs_arr) + (l1 - x1) + 1, refcheck=False)
-            nrs = nrs_arr
-            nvs = nvs_arr
 
         if diff > 0:
             nrs[xn] = r1
@@ -187,7 +106,7 @@ cpdef {{config_add_sub.operation}}_rles(long [::1] runs1, {{config_add_sub.value
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr
 
 {% endfor %}
 
@@ -246,28 +165,13 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
         if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
-            if xn < len(nvs_arr):
-                nrs[xn] = nr
-                nvs[xn] = nv
-                xn += 1
-            # if we have no space left in our old array, double the size
-            else:
-                nrs_arr.resize(1, len(nrs_arr) * 2, refcheck=False)
-                nvs_arr.resize(1, len(nvs_arr) * 2, refcheck=False)
-                nrs = nrs_arr
-                nvs = nvs_arr
-
-                nrs[xn] = nr
-                nvs[xn] = nv
+            nrs[xn] = nr
+            nvs[xn] = nv
+            xn += 1
 
     # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
     # (If other had largest sum of lengths.)
     if x1 == l1 and not x2 == l2:
-        if not (xn + (l2 - x2) + 1 < len(nvs_arr)):
-            nvs_arr.resize((len(nvs_arr) + (l2 - x2) + 1), refcheck=False)
-            nrs_arr.resize((len(nvs_arr) + (l2 - x2) + 1), refcheck=False)
-            nrs = nrs_arr
-            nvs = nvs_arr
 
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
@@ -288,12 +192,6 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
                 xn += 1
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
-        if not (xn + (l1 - x1) + 1 < len(nvs_arr)) and diff > 0:
-            nvs_arr.resize(len(nvs_arr) + (l1 - x1) + 1, refcheck=False)
-            nrs_arr.resize(len(nvs_arr) + (l1 - x1) + 1, refcheck=False)
-            nrs = nrs_arr
-            nvs = nvs_arr
-
 
         if diff > 0:
             nrs[xn] = r1
@@ -315,7 +213,7 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr
 
 {% endfor %}
 
@@ -373,28 +271,13 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
-            if xn < len(nvs_arr):
                 nrs[xn] = nr
                 nvs[xn] = nv
                 xn += 1
-            # if we have no space left in our old array, double the size
-            else:
-                nrs_arr.resize(1, len(nrs_arr) * 2, refcheck=False)
-                nvs_arr.resize(1, len(nvs_arr) * 2, refcheck=False)
-                nrs = nrs_arr
-                nvs = nvs_arr
-
-                nrs[xn] = nr
-                nvs[xn] = nv
 
     # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
     # (If other had largest sum of lengths.)
     if x1 == l1 and not x2 == l2:
-        if not (xn + (l2 - x2) + 1 < len(nvs_arr)):
-            nvs_arr.resize((len(nvs_arr) + (l2 - x2) + 1), refcheck=False)
-            nrs_arr.resize((len(nvs_arr) + (l2 - x2) + 1), refcheck=False)
-            nrs = nrs_arr
-            nvs = nvs_arr
 
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
@@ -410,11 +293,6 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
-        if not (xn + (l1 - x1) + 1 < len(nvs_arr)) and diff > 0:
-            nvs_arr.resize(len(nvs_arr) + (l1 - x1) + 1, refcheck=False)
-            nrs_arr.resize(len(nrs_arr) + (l1 - x1) + 1, refcheck=False)
-            nrs = nrs_arr
-            nvs = nvs_arr
 
         if diff > 0:
             nrs[xn] = r1
@@ -430,4 +308,4 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr
