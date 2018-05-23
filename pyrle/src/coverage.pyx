@@ -81,7 +81,6 @@ def _coverage(long [::1] starts, long [::1] ends, double [::1] values, int lengt
         value_series = value_series[1:]
         runs = runs[1:]
 
-
     cdef long[::1] _runs
     cdef double[::1] _vals
 
@@ -135,4 +134,67 @@ def _coverage(long [::1] starts, long [::1] ends, double [::1] values, int lengt
         nvs[counter] = old_val
         counter += 1
 
-    return nrs[:counter], nvs[:counter]
+    return nrs_arr[:counter], nvs_arr[:counter]
+
+
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def _remove_dupes(long [::1] runs, double [::1] values, int length):
+
+    cdef long[::1] _runs
+    cdef double[::1] _vals
+
+    _runs = runs
+    _vals = values
+
+    i = 0
+    cdef int counter = 0
+    cdef double old_val = _vals[i]
+    cdef int old_run = _runs[i]
+    cdef int run
+
+    nrs_arr = np.zeros(len(runs), dtype=np.long)
+    nvs_arr = np.zeros(len(runs), dtype=np.double)
+
+    cdef long[::1] nrs
+    cdef double[::1] nvs
+
+    nrs = nrs_arr
+    nvs = nvs_arr
+
+
+    # print("values", values)
+    for i in range(1, len(values)):
+
+        run = _runs[i]
+        value = _vals[i]
+        # print("old_val", old_val)
+        # print("old_run", old_run)
+        # print("run", run)
+        # print("value", value)
+
+        if value == old_val:
+            # print("in equal")
+            old_run += run
+        else:
+            # print("new")
+            nrs[counter] = old_run
+            nvs[counter] = old_val
+            old_run = run
+            old_val = value
+            counter += 1
+
+    if len(values) == 1:
+        # print("len value series one")
+        return runs.values, values.values
+
+    if value == old_val:
+        # print("value == old val")
+        nrs[counter] = old_run
+        nvs[counter] = old_val
+        counter += 1
+
+    return nrs_arr[:counter], nvs_arr[:counter]

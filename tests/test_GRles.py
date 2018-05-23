@@ -7,7 +7,7 @@ import numpy as np
 from pyrle import Rle
 from io import StringIO
 
-from pyrle import GRles
+from pyrle import PyRles
 from pyrle.methods import coverage, _to_ranges, to_ranges
 
 import pyranges as pr
@@ -36,7 +36,7 @@ chr2 1150665 1150690 U0 -1 -"""
 
 # def test_roundtrip_to_ranges_grles(chipseq_dataset):
 
-#     cv = GRles(chipseq_dataset)
+#     cv = PyRles(chipseq_dataset)
 
 #     chipseq_dataset.df.to_csv("input_dataset.txt", sep=" ")
 #     gr = to_ranges(cv)
@@ -218,7 +218,7 @@ def test_roundtrip_to_ranges_single_rle_overlapping(overlapping_gr):
 
 def test_create_grles(chipseq_dataset):
 
-    grles = GRles(chipseq_dataset)
+    grles = PyRles(chipseq_dataset)
 
     print(grles)
 
@@ -227,7 +227,7 @@ def test_create_grles(chipseq_dataset):
 def test_create_stranded_grles(chipseq_dataset):
 
 
-    grles = GRles(chipseq_dataset, stranded=True)
+    grles = PyRles(chipseq_dataset, stranded=True)
 
     print(grles)
 
@@ -235,7 +235,7 @@ def test_create_stranded_grles(chipseq_dataset):
 def test_create_stranded_grles_multicpu(chipseq_dataset):
 
 
-    grles = GRles(chipseq_dataset, stranded=True, n_jobs=5)
+    grles = PyRles(chipseq_dataset, stranded=True, n_jobs=5)
 
     print(grles)
 
@@ -283,14 +283,14 @@ def grle1():
 
     d = {"chr1": r1, "chr2": r2}
     print(d)
-    g = GRles(d)
+    g = PyRles(d)
     print(g)
     return g
 
 @pytest.fixture
 def grle1_stranded(grle1):
 
-    return GRles({("chr1", "+"): grle1["chr1"], ("chr1", "-"): grle1["chr1"], ("chr2", "-"): grle1["chr2"]})
+    return PyRles({("chr1", "+"): grle1["chr1"], ("chr1", "-"): grle1["chr1"], ("chr2", "-"): grle1["chr2"]})
 
 
 @pytest.fixture()
@@ -301,7 +301,7 @@ def grle2():
 
     d = {"chr1": r1, "chr2": r2}
 
-    return GRles(d)
+    return PyRles(d)
 
 @pytest.fixture
 def expected_result():
@@ -311,7 +311,7 @@ def expected_result():
 
     d = {"chr1": r1, "chr2": r2}
 
-    return GRles(d)
+    return PyRles(d)
 
 
 @pytest.fixture
@@ -326,14 +326,14 @@ def d1():
     return d
 
 
-def test_create_GRles(d1):
+def test_create_PyRles(d1):
 
     # No errors
-    result = GRles(d1)
+    result = PyRles(d1)
 
 
 
-def test_add_GRles(grle1, grle2, expected_result):
+def test_add_PyRles(grle1, grle2, expected_result):
 
     result = grle1.add(grle2)
     print(result)

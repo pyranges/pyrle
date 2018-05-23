@@ -1,4 +1,5 @@
 from pyrle.src.rle import sub_rles, add_rles, mul_rles, div_rles_zeroes, div_rles_nonzeroes
+from pyrle.src.coverage import _remove_dupes
 
 import pandas as pd
 import numpy as np
@@ -10,8 +11,15 @@ class Rle:
     def __init__(self, runs, values):
         assert len(runs) == len(values)
 
-        self.runs = np.array(runs, dtype=np.int)
-        self.values = np.array(values, dtype=np.double)
+        runs = np.array(runs, dtype=np.int)
+        values = np.array(values, dtype=np.double)
+        s = pd.Series(values, dtype=np.double)
+
+        if (s.shift() == s).any():
+            runs, values = _remove_dupes(runs, values, len(values))
+
+        self.runs = runs
+        self.values = values
 
 
     def __add__(self, other):

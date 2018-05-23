@@ -13,17 +13,17 @@ except:
     profile = lambda x: x
 
 
-class GRles():
+class PyRles():
 
     # @profile
     def __init__(self, ranges, n_jobs=1, stranded=False, value_col=None):
 
-        # Construct GRles from dict of rles
+        # Construct PyRles from dict of rles
         if isinstance(ranges, dict):
 
             self.rles = ranges
-
-        # Construct GRles from ranges
+            self.__dict__["stranded"] = True if len(list(ranges.keys())[0]) == 2 else False
+        # Construct PyRles from ranges
         elif not stranded:
 
             try:
@@ -42,6 +42,7 @@ class GRles():
                     _rles.append(cv)
 
             self.rles = {c: r for c, r in zip([c for c, _ in grpby], _rles)}
+            self.__dict__["stranded"] = False
 
         else:
 
@@ -63,7 +64,7 @@ class GRles():
                     _rles.append(m.coverage(csdf, value_col=value_col))
 
             self.rles = {cs: r for cs, r in zip([cs for cs, _ in grpby], _rles)}
-
+            self.__dict__["stranded"] = True
 
     def add(self, other, n_jobs=1):
 
@@ -135,7 +136,7 @@ class GRles():
             plus = self.rles.get((key, "+"), Rle([1], [0]))
             rev = self.rles.get((key, "-"), Rle([1], [0]))
 
-            return GRles({(key, "+"): plus, (key, "-"): rev})
+            return PyRles({(key, "+"): plus, (key, "-"): rev})
 
         elif key_is_string and self.stranded and key in ["+", "-"]:
             to_return = dict()
@@ -143,7 +144,7 @@ class GRles():
                 if s == key:
                     to_return[c, s] = rle
 
-            return GRles(to_return)
+            return PyRles(to_return)
 
         elif key_is_string:
 
@@ -151,10 +152,10 @@ class GRles():
 
         elif len(key) == 2:
 
-            return GRles({key: self.rles[key]})
+            return PyRles({key: self.rles[key]})
 
         else:
-            raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from GRles.")
+            raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from PyRles.")
 
 
     def __str__(self):
@@ -169,7 +170,7 @@ class GRles():
                     "...",
                     keys[-1],
                     str(self.rles[keys[-1]]),
-                    "Unstranded GRles object with {} chromosomes.".format(len(self.rles.keys()))]
+                    "Unstranded PyRles object with {} chromosomes.".format(len(self.rles.keys()))]
             elif len(keys) == 2:
                 str_list = [keys[0],
                             "-" * len(keys[0]),
@@ -178,11 +179,11 @@ class GRles():
                             keys[-1],
                             "-" * len(keys[-1]),
                             str(self.rles[keys[-1]]),
-                            "Unstranded GRles object with {} chromosomes.".format(len(self.rles.keys()))]
+                            "Unstranded PyRles object with {} chromosomes.".format(len(self.rles.keys()))]
             else:
                 str_list = [keys[0],
                             str(self.rles[keys[0]]),
-                            "Unstranded GRles object with {} chromosome.".format(len(self.rles.keys()))]
+                            "Unstranded PyRles object with {} chromosome.".format(len(self.rles.keys()))]
 
         else:
             if len(keys) > 2:
@@ -191,7 +192,7 @@ class GRles():
                     "...",
                     " ".join(keys[-1]),
                     str(self.rles[keys[-1]]),
-                    "GRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
+                    "PyRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
             elif len(keys) == 2:
                 str_list = [" ".join(keys[0]),
                             "-" * len(keys[0]),
@@ -200,11 +201,11 @@ class GRles():
                             " ".join(keys[-1]),
                             "-" * len(keys[-1]),
                             str(self.rles[keys[-1]]),
-                            "GRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
+                            "PyRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
             else:
                 str_list = [" ".join(keys[0]),
                             str(self.rles[keys[0]]),
-                            "GRles object with {} chromosome/strand pairs.".format(len(self.rles.keys()))]
+                            "PyRles object with {} chromosome/strand pairs.".format(len(self.rles.keys()))]
 
         outstr = "\n".join(str_list)
 
@@ -247,7 +248,7 @@ if __name__ == "__main__":
     print("Done reading")
     start = time()
 
-    result = GRles(df, n_jobs=25)
+    result = PyRles(df, n_jobs=25)
 
     end = time()
     total = end - start

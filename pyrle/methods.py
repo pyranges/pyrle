@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from pyrle import Rle
-from pyrle.rledict import GRles
+from pyrle.rledict import PyRles
 from pyrle.src.coverage import _coverage
 
 from natsort import natsorted
@@ -11,11 +11,41 @@ from sys import stderr
 
 from joblib import Parallel, delayed
 
+from collections import defaultdict
+
 try:
     dummy = profile
 except:
     profile = lambda x: x
 
+def _merge_rles(rle):
+
+    new_dict = {}
+    dd = defaultdict(list)
+    for chromosome, strand in rle.rles.keys():
+        dd[chromosome].append(strand)
+
+    for c, s in dd.items():
+        if len(s) == 1:
+            new_dict[c] = rle.rles[c, s[0]]
+        else:
+            new_dict[c] = rle.rles[c, "+"] + rle.rles[c, "-"]
+            # print("c", c)
+            # print("rle.rles[c, '+']\n", rle.rles[c, "+"])
+            # print("rle.rles[c, '-']\n", rle.rles[c, "-"])
+
+    return new_dict
+
+
+def ensure_both_or_none_stranded(self, other):
+
+    # means other not stranded
+    if self.stranded:
+        self.rles = _merge_rles(self)
+    else:
+        other.rles = _merge_rles(other)
+
+    return self, other
 
 
 def chromosomes_in_both_self_other(self, other):
@@ -33,14 +63,13 @@ def chromosomes_in_both_self_other(self, other):
     return chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self
 
 
-def __add(self, other):
-
-    return self + other
-
-
 def binary_operation(operation, self, other, n_jobs=1):
 
     func = {"div": __div, "mul": __mul, "add": __add, "sub": __sub}[operation]
+
+    if self.stranded != other.stranded:
+        print("ensure both or none " * 3)
+        self, other = ensure_both_or_none_stranded(self, other)
 
     chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
 
@@ -57,8 +86,11 @@ def binary_operation(operation, self, other, n_jobs=1):
     for c in chromosomes_in_other_not_self:
         rles[c] = other.rles[c]
 
-    return GRles(rles)
+    return PyRles(rles)
 
+def __add(self, other):
+
+    return self + other
 
 def __sub(self, other):
 
