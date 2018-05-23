@@ -3,66 +3,6 @@ import numpy as np
 
 cimport cython
 
-class Rle:
-
-    def __init__(self, runs, values):
-        assert len(runs) == len(values)
-
-        self.runs = np.array(runs, dtype=np.int)
-        self.values = np.array(values, dtype=np.double)
-
-
-    def __add__(self, other):
-
-        new_rle = add_rles(self.runs, self.values, other.runs, other.values)
-        return new_rle
-
-
-    def __sub__(self, other):
-        new_rle = sub_rles(self.runs, self.values, other.runs, other.values)
-        return new_rle
-
-    def __mul__(self, other):
-        new_rle = mul_rles(self.runs, self.values, other.runs, other.values)
-        return new_rle
-
-    __rmul__ = __mul__
-
-    def __truediv__(self, other):
-        if (other.values == 0).any():
-            new_rle = div_rles_zeroes(self.runs, self.values, other.runs, other.values)
-        else:
-            new_rle = div_rles_nonzeroes(self.runs, self.values, other.runs, other.values)
-
-        return new_rle
-
-    def __eq__(self, other):
-        runs_equal = np.equal(self.runs, other.runs).all()
-        values_equal = np.allclose(self.values, other.values)
-        return runs_equal and values_equal
-
-    def __str__(self):
-
-        if len(self.runs) > 10:
-            runs = " ".join([str(i) for i in self.runs[:5]]) + \
-                " ... " + " ".join(["{0:.3f}".format(i) for i in self.runs[-5:]])
-            values = " ".join([str(i) for i in self.values[:5]]) + \
-                    " ... " + " ".join(["{0:.3f}".format(i) for i in self.values[-5:]])
-        else:
-            runs = " ".join([str(i) for i in self.runs])
-            values = " ".join(["{0:.3f}".format(i) for i in self.values])
-
-        runs = "Runs: " + runs
-        values = "Values: " + values
-
-        outstr = "\n".join([runs, values, "Length: " + str(len(self.runs))])
-
-        return outstr
-
-    def __repr__(self):
-
-        return str(self)
-
 
 
 
@@ -185,7 +125,7 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr
 
 
 @cython.boundscheck(False)
@@ -306,7 +246,7 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr
 
 
 
@@ -432,7 +372,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr
 
 
 @cython.boundscheck(False)
@@ -561,7 +501,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr
 
 
 
@@ -674,4 +614,4 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 
-    return Rle(nrs_arr, nvs_arr)
+    return nrs_arr, nvs_arr

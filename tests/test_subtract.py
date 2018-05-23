@@ -8,7 +8,7 @@ from io import StringIO
 from pyrle import Rle
 from pyrle.methods import _to_ranges, coverage
 
-from pyranges import GRanges
+from pyranges import PyRanges
 
 @pytest.fixture
 def simple_rle():
@@ -118,7 +118,7 @@ def chip():
     c = """Chromosome Start End Strand
 chr2 1 3 +"""
 
-    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+    return coverage(PyRanges(pd.read_table(StringIO(c), sep="\s+")))
 
 
 
@@ -128,7 +128,7 @@ def background():
     c = """Chromosome Start End Strand
 chr2 0 1 +"""
 
-    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+    return coverage(PyRanges(pd.read_table(StringIO(c), sep="\s+")))
 
 
 def test_subtract_result_same_start(chip, background):
@@ -147,7 +147,7 @@ def chip_chr1():
 chr1 5 7 +
 chr1 3 10 -"""
 
-    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+    return coverage(PyRanges(pd.read_table(StringIO(c), sep="\s+")))
 
 
 @pytest.fixture
@@ -157,7 +157,7 @@ def background_chr1():
 chr1 1 4 +
 chr1 2 5 -"""
 
-    return coverage(GRanges(pd.read_table(StringIO(c), sep="\s+")))
+    return coverage(PyRanges(pd.read_table(StringIO(c), sep="\s+")))
 
 
 

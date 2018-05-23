@@ -31,7 +31,7 @@ chr2 33241 33266 U0 1 +
 chr2 788268 788293 U0 0 -
 chr2 1150665 1150690 U0 -1 -"""
 
-    return pr.GRanges(pd.read_table(StringIO(c), sep="\s+"))
+    return pr.PyRanges(pd.read_table(StringIO(c), sep="\s+"))
 
 
 # def test_roundtrip_to_ranges_grles(chipseq_dataset):
@@ -61,7 +61,7 @@ def test_roundtrip_to_ranges_single_rle_teensy(teensy):
     df.columns = "Start End Score".split()
     df.insert(0, "Chromosome", "chr2")
 
-    gr = pr.GRanges(df)
+    gr = pr.PyRanges(df)
 
     assert list(starts) == [0, 13611, 13636, 32620, 32645, 33241, 788293, 1150665]
     assert list(ends) == [13611, 13636, 32620, 32645, 33241, 33266, 788268, 1150690]
@@ -83,7 +83,7 @@ def teensy_duplicated():
 
     df = pd.read_table(StringIO(c), sep="\s+")
 
-    return pr.GRanges(df)
+    return pr.PyRanges(df)
 
 
 
@@ -102,7 +102,7 @@ def expected_result_teensy_duplicated():
 
     df = pd.read_table(StringIO(c), sep="\s+")
 
-    return pr.GRanges(df)
+    return pr.PyRanges(df)
 
 
 def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, expected_result_teensy_duplicated):
@@ -114,7 +114,7 @@ def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, exp
     starts, ends, values = _to_ranges(cv)
 
     # print(gr)
-    # print(pr.GRanges(gr.df.drop_duplicates()))
+    # print(pr.PyRanges(gr.df.drop_duplicates()))
     # print("len(starts)", len(starts))
     # print("starts")
     # print(starts[:5])
@@ -130,7 +130,7 @@ def test_roundtrip_to_ranges_single_rle_teensy_duplicated(teensy_duplicated, exp
 @pytest.fixture
 def expected_result_single_chromosome(chipseq_dataset):
 
-    return pr.GRanges(chipseq_dataset["chr2"].df.drop_duplicates())
+    return pr.PyRanges(chipseq_dataset["chr2"].df.drop_duplicates())
 
 
 @pytest.fixture
@@ -142,7 +142,7 @@ chr2  4  10   U0      0      +"""
 
     df = pd.read_table(StringIO(c), sep="\s+")
 
-    return pr.GRanges(df)
+    return pr.PyRanges(df)
 
 
 def test_roundtrip_to_ranges_single_rle_overlapping(overlapping_gr):
@@ -157,9 +157,9 @@ def test_roundtrip_to_ranges_single_rle_overlapping(overlapping_gr):
     df = pd.concat([pd.Series(a) for a in [starts, ends, cv.values]], axis=1)
     df.columns = "Start End Score".split()
     df.insert(0, "Chromosome", "chr2")
-    print(pr.GRanges(df))
+    print(pr.PyRanges(df))
     # print(gr)
-    # print(pr.GRanges(gr.df.drop_duplicates()))
+    # print(pr.PyRanges(gr.df.drop_duplicates()))
     # print("len(starts)", len(starts))
     # print("starts")
     # print(starts[:5])
@@ -174,7 +174,7 @@ def test_roundtrip_to_ranges_single_rle_overlapping(overlapping_gr):
     # assert (ends == expected_result_problematic_gr.df.End).all()
     # assert (scores == expected_result_problematic_gr.df.Score).all()
 
-# gr = GRanges('toyChr',IRanges(cumsum(c(0,runLength(toyData)[-nrun(toyData)])),
+# gr = PyRanges('toyChr',IRanges(cumsum(c(0,runLength(toyData)[-nrun(toyData)])),
 #                               width=runLength(toyData)),
 #              toyData = runValue(toyData))
 
@@ -196,7 +196,7 @@ def test_roundtrip_to_ranges_single_rle_overlapping(overlapping_gr):
 #     print(starts[183])
 #     print(ends[183])
 
-#     # gr = pr.GRanges(pd.concat([chr2.df.head(5), chr2.df.tail(5)]))
+#     # gr = pr.PyRanges(pd.concat([chr2.df.head(5), chr2.df.tail(5)]))
 #     # print(gr)
 #     print("len(starts)", len(starts))
 #     print("starts")

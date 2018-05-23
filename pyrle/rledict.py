@@ -230,6 +230,7 @@ class GRles():
 
 if __name__ == "__main__":
 
+    # Must turn on macros in setup.py for line tracing to work
     "kernprof -l pyrle/rledict.py && python -m line_profiler coverage.py.lprof"
 
     from time import time
@@ -246,7 +247,7 @@ if __name__ == "__main__":
     print("Done reading")
     start = time()
 
-    result = GRles(df, n_jobs=1)
+    result = GRles(df, n_jobs=25)
 
     end = time()
     total = end - start

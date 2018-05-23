@@ -1,4 +1,4 @@
-from src.rle import Rle
+from pyrle.rle import Rle
 from pyrle.methods import coverage
 from pyrle.rledict import GRles
 

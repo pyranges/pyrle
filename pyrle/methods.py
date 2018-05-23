@@ -3,7 +3,7 @@ import numpy as np
 
 from pyrle import Rle
 from pyrle.rledict import GRles
-from src.coverage import _coverage
+from pyrle.src.coverage import _coverage
 
 from natsort import natsorted
 
@@ -74,7 +74,6 @@ def __mul(self, other):
 
 
 
-@profile
 def coverage(ranges, value_col=None):
 
     try:
@@ -102,7 +101,7 @@ def coverage(ranges, value_col=None):
 
 def to_ranges(grles):
 
-    from pyranges import GRanges
+    from pyranges import PyRanges
 
     dfs = []
     if grles.stranded:
@@ -123,7 +122,7 @@ def to_ranges(grles):
             df.insert(0, "Chromosome", chromosome)
             dfs.append(df)
 
-    return GRanges(pd.concat(dfs))
+    return PyRanges(pd.concat(dfs))
 
 
 def _to_ranges(rle):
@@ -143,10 +142,3 @@ def _to_ranges(rle):
     values = values[start_idx].reset_index(drop=True)
 
     return starts.astype(int).reset_index(drop=True), ends.astype(int).reset_index(drop=True), values
-
-
-# def to_ranges(grles):
-
-#     if grles.stranded:
-
-#         for (chromosome, strand), grle in grles.items():

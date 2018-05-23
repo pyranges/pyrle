@@ -61,6 +61,8 @@ def test_add_simple(simple_rle, simple_rle2):
     print(result2.runs)
     print(result2.values)
 
+    print(result2)
+
     assert all(np.equal(result2.runs, expected_runs))
     assert all(np.equal(result2.values, expected_values))
 

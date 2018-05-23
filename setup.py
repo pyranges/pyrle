@@ -6,22 +6,30 @@ from distutils.core import setup
 from setuptools import find_packages, Extension, Command
 from Cython.Build import cythonize
 
-from Cython.Compiler.Options import get_directive_defaults
-directive_defaults = get_directive_defaults()
-directive_defaults['linetrace'] = True
-directive_defaults['binding'] = True
 
 # example_module = Extension('convolve', sources=['convolve.c'])
-e1 = Extension("src.rle", ["src/rle.pyx"], define_macros = [("CYTHON_TRACE", "1")] )
-e2 = Extension("src.coverage", ["src/coverage.pyx"], define_macros = [("CYTHON_TRACE", "1")] )
+macros = [("CYTHON_TRACE", "1")]
+macros = None
+
+if macros:
+    from Cython.Compiler.Options import get_directive_defaults
+    directive_defaults = get_directive_defaults()
+    directive_defaults['linetrace'] = True
+    directive_defaults['binding'] = True
+
+e1 = Extension("pyrle.src.rle", ["pyrle/src/rle.pyx"], define_macros = macros)
+e2 = Extension("pyrle.src.coverage", ["pyrle/src/coverage.pyx"], define_macros = macros)
 # ,
 # e2 =
 # print(type(e1))
 extensions = [e1, e2]
 
+install_requires = ["cython", "pandas", "tabulate", "numpy"]
+
 setup(name='rle',
       packages=find_packages(),
       ext_modules=cythonize(extensions),
+      install_requires=install_requires,
       # , "1")],
       # py_modules=["rle"],
       include_dirs=["."])
@@ -49,7 +57,7 @@ setup(name='rle',
 
 #     # scripts=["bin/featurefetch"],
 #     version=__version__,
-#     description="GRanges for Python.",
+#     description="PyRanges for Python.",
 #     author="Endre Bakken Stovner",
 #     author_email="endrebak85@gmail.com",
 #     url="http://github.com/endrebak/pyranges",
