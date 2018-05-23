@@ -26,10 +26,26 @@ extensions = [e1, e2]
 
 install_requires = ["cython", "pandas", "tabulate", "numpy"]
 
-setup(name='rle',
+setup(name='pyrle',
+      version="0.0.1",
       packages=find_packages(),
       ext_modules=cythonize(extensions),
       install_requires=install_requires,
+      author="Endre Bakken Stovner",
+      author_email="endrebak85@gmail.com",
+      url="https://github.com/endrebak/pyrle",
+      license=["MIT"],
+      classifiers=[
+          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3",
+          "Development Status :: 4 - Beta",
+          "Environment :: Other Environment", "Intended Audience :: Developers",
+          "Intended Audience :: Science/Research",
+          "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+          "Operating System :: POSIX :: Linux",
+          "Operating System :: MacOS :: MacOS X",
+          "Topic :: Scientific/Engineering"
+      ],
       # , "1")],
       # py_modules=["rle"],
       include_dirs=["."])
