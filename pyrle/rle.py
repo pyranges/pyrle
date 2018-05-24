@@ -6,6 +6,8 @@ import numpy as np
 
 from tabulate import tabulate
 
+from numbers import Number
+
 class Rle:
 
     def __init__(self, runs, values):
@@ -22,23 +24,54 @@ class Rle:
         self.values = values
 
 
+    def __radd__(self, other):
+
+        return Rle(self.runs, self.values + other)
+
+    def __rmul__(self, other):
+
+        return Rle(self.runs, self.values * other)
+
+    def __rsub__(self, other):
+
+        return Rle(self.runs, other - self.values)
+
+    def __rtruediv__(self, other):
+
+        return Rle(self.runs, other / self.values)
+
     def __add__(self, other):
+
+        if isinstance(other, Number):
+            return Rle(self.runs, self.values + other)
 
         runs, values = add_rles(self.runs, self.values, other.runs, other.values)
         return Rle(runs, values)
 
 
     def __sub__(self, other):
+
+        if isinstance(other, Number):
+            return Rle(self.runs, self.values - other)
+
         runs, values = sub_rles(self.runs, self.values, other.runs, other.values)
         return Rle(runs, values)
 
     def __mul__(self, other):
+
+        if isinstance(other, Number):
+            return Rle(self.runs, self.values * other)
+
         runs, values = mul_rles(self.runs, self.values, other.runs, other.values)
         return Rle(runs, values)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
+
+        if isinstance(other, Number):
+            return Rle(self.runs, self.values / other)
+
         if (other.values == 0).any():
             runs, values = div_rles_zeroes(self.runs, self.values, other.runs, other.values)
         else:

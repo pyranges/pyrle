@@ -1,5 +1,7 @@
 from pyrle import Rle
 
+from numbers import Number
+
 # from joblib import Parallel, delayed
 
 from pyrle import methods as m
@@ -72,7 +74,14 @@ class PyRles():
 
     def __add__(self, other, n_jobs=1):
 
+        if isinstance(other, Number):
+            return PyRles({cs: v + other for cs, v in self.items()})
+
         return m.binary_operation("add", self, other)
+
+    def __radd__(self, other):
+
+        return PyRles({cs: other + v for cs, v in self.items()})
 
     def sub(self, other, n_jobs=1):
 
@@ -80,13 +89,27 @@ class PyRles():
 
     def __sub__(self, other):
 
+        if isinstance(other, Number):
+            return PyRles({cs: v - other for cs, v in self.items()})
+
         return m.binary_operation("sub", self, other)
+
+    def __rsub__(self, other):
+
+        return PyRles({cs: other - v for cs, v in self.items()})
 
     def mul(self, other, n_jobs=1):
 
         return m.binary_operation("mul", self, other, n_jobs=n_jobs)
 
+    def __rmul__(self, other):
+
+        return PyRles({cs: other * v for cs, v in self.items()})
+
     def __mul__(self, other):
+
+        if isinstance(other, Number):
+            return PyRles({cs: v * other for cs, v in self.items()})
 
         return m.binary_operation("mul", self, other)
 
@@ -96,7 +119,14 @@ class PyRles():
 
         return m.binary_operation("div", self, other, n_jobs=n_jobs)
 
-    def __div__(self, other):
+    def __rtruediv__(self, other):
+
+        return PyRles({cs: other / v for cs, v in self.items()})
+
+    def __truediv__(self, other):
+
+        if isinstance(other, Number):
+            return PyRles({cs: v / other for cs, v in self.items()})
 
         return m.binary_operation("div", self, other)
 

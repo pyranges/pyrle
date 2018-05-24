@@ -53,11 +53,11 @@ def chromosomes_in_both_self_other(self, other):
     chromosomes_in_self_not_other = set(self.rles.keys()) - set(other.rles.keys())
     chromosomes_in_other_not_self = set(other.rles.keys()) - set(self.rles.keys())
 
-    if chromosomes_in_self_not_other:
-        print(", ".join(natsorted(chromosomes_in_self_not_other)) + " missing from other.", file=stderr)
+    # if chromosomes_in_self_not_other:
+    #     print(", ".join(natsorted(chromosomes_in_self_not_other)) + " missing from other.", file=stderr)
 
-    if chromosomes_in_other_not_self:
-        print(", ".join(natsorted(chromosomes_in_other_not_self)) + " missing from self.", file=stderr)
+    # if chromosomes_in_other_not_self:
+    #     print(", ".join(natsorted(chromosomes_in_other_not_self)) + " missing from self.", file=stderr)
 
     return chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self
 
@@ -67,7 +67,6 @@ def binary_operation(operation, self, other, n_jobs=1):
     func = {"div": __div, "mul": __mul, "add": __add, "sub": __sub}[operation]
 
     if self.stranded != other.stranded:
-        print("ensure both or none " * 3)
         self, other = ensure_both_or_none_stranded(self, other)
 
     chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
