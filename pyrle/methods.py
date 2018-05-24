@@ -9,7 +9,6 @@ from natsort import natsorted
 
 from sys import stderr
 
-from joblib import Parallel, delayed
 
 from collections import defaultdict
 

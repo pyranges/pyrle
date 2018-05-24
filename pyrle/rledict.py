@@ -1,7 +1,6 @@
-
 from pyrle import Rle
 
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 
 from pyrle import methods as m
 
@@ -23,6 +22,7 @@ class PyRles():
 
             self.rles = ranges
             self.__dict__["stranded"] = True if len(list(ranges.keys())[0]) == 2 else False
+
         # Construct PyRles from ranges
         elif not stranded:
 
@@ -33,13 +33,13 @@ class PyRles():
 
             grpby = list(df.groupby("Chromosome"))
 
-            if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(cdf, value_col=value_col) for _, cdf in grpby)
-            else:
-                _rles = []
-                for _, cdf in grpby:
-                    cv = m.coverage(cdf, value_col=value_col)
-                    _rles.append(cv)
+            # if n_jobs > 1:
+            #     _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(cdf, value_col=value_col) for _, cdf in grpby)
+            # else:
+            _rles = []
+            for _, cdf in grpby:
+                cv = m.coverage(cdf, value_col=value_col)
+                _rles.append(cv)
 
             self.rles = {c: r for c, r in zip([c for c, _ in grpby], _rles)}
             self.__dict__["stranded"] = False
@@ -56,12 +56,12 @@ class PyRles():
 
             grpby = df.groupby("Chromosome Strand".split())
 
-            if n_jobs > 1:
-                _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(csdf, value_col=value_col) for cs, csdf in grpby)
-            else:
-                _rles = []
-                for cs, csdf in grpby:
-                    _rles.append(m.coverage(csdf, value_col=value_col))
+            # if n_jobs > 1:
+            # _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(csdf, value_col=value_col) for cs, csdf in grpby)
+            # else:
+            _rles = []
+            for cs, csdf in grpby:
+                _rles.append(m.coverage(csdf, value_col=value_col))
 
             self.rles = {cs: r for cs, r in zip([cs for cs, _ in grpby], _rles)}
             self.__dict__["stranded"] = True

@@ -19,15 +19,13 @@ if macros:
 
 e1 = Extension("pyrle.src.rle", ["pyrle/src/rle.pyx"], define_macros = macros)
 e2 = Extension("pyrle.src.coverage", ["pyrle/src/coverage.pyx"], define_macros = macros)
-# ,
-# e2 =
-# print(type(e1))
+
 extensions = [e1, e2]
 
-install_requires = ["cython", "pandas", "tabulate", "numpy"]
+install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort"]
 
 setup(name='pyrle',
-      version="0.0.3",
+      version="0.0.5",
       packages=find_packages(),
       ext_modules=cythonize(extensions),
       install_requires=install_requires,
