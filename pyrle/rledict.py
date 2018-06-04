@@ -168,6 +168,7 @@ class PyRles():
 
             return PyRles({(key, "+"): plus, (key, "-"): rev})
 
+        # only return particular strand, but from all chromos
         elif key_is_string and self.stranded and key in ["+", "-"]:
             to_return = dict()
             for (c, s), rle in self.items():
@@ -182,7 +183,7 @@ class PyRles():
 
         elif len(key) == 2:
 
-            return PyRles({key: self.rles[key]})
+            return self.rles[key]
 
         else:
             raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from PyRles.")

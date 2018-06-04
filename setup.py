@@ -25,7 +25,7 @@ extensions = [e1, e2]
 install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort"]
 
 setup(name='pyrle',
-      version="0.0.6",
+      version="0.0.7",
       packages=find_packages(),
       ext_modules=cythonize(extensions),
       install_requires=install_requires,

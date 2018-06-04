@@ -7,6 +7,57 @@ import numpy as np
 from pyrle import Rle
 
 @pytest.fixture
+def hypothesis_rle():
+
+    return Rle([66561, 253], [1, np.inf])
+
+@pytest.fixture
+def hypothesis_rle2():
+
+    return Rle([66561], [1])
+
+
+@pytest.fixture
+def expected_result_hypothesis():
+
+    return Rle([66561, 253], [1, np.inf])
+
+def test_hypothesis(hypothesis_rle, hypothesis_rle2, expected_result_hypothesis):
+
+    result = hypothesis_rle / hypothesis_rle2
+
+    print("result\n", result)
+    print("expected_result\n", expected_result_hypothesis)
+
+    assert result == expected_result_hypothesis
+
+@pytest.fixture
+def hypothesis2_rle():
+
+    return Rle([9793796], [627117])
+
+@pytest.fixture
+def hypothesis2_rle2():
+
+    return Rle([1553679], [742893])
+
+
+@pytest.fixture
+def expected_result_hypothesis2():
+
+    return Rle([1553679, 8240117], [627117, np.inf])
+
+def test_hypothesis2(hypothesis2_rle, hypothesis2_rle2, expected_result_hypothesis2):
+
+    result = hypothesis2_rle / hypothesis2_rle2
+
+    print("result\n", result)
+    print("expected_result\n", expected_result_hypothesis2)
+
+    assert result == expected_result_hypothesis2
+
+
+@pytest.fixture
 def weird_rle():
 
     return Rle([10, 20, 30, 40], [1, 2, 3, 4])

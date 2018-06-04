@@ -8,10 +8,23 @@ from tabulate import tabulate
 
 from numbers import Number
 
+
+
 class Rle:
 
     def __init__(self, runs, values):
         assert len(runs) == len(values)
+
+        i = len(runs) - 1
+        while i >= 0:
+            if runs[i] != 0:
+                break
+            else:
+                i -= 1
+
+        if i != len(runs) - 1:
+            runs = runs[:i]
+            values = values[:i]
 
         runs = np.array(runs, dtype=np.int)
         values = np.array(values, dtype=np.double)
@@ -23,6 +36,8 @@ class Rle:
         self.runs = runs
         self.values = values
 
+    def __len__(self):
+        return len(self.runs)
 
     def __radd__(self, other):
 
@@ -72,14 +87,20 @@ class Rle:
         if isinstance(other, Number):
             return Rle(self.runs, self.values / other)
 
-        if (other.values == 0).any():
+        if (other.values == 0).any() or np.sum(other.runs) < np.sum(self.runs):
+            print("\ndiv zeroes")
             runs, values = div_rles_zeroes(self.runs, self.values, other.runs, other.values)
         else:
+            print("\ndiv nonzeroes")
             runs, values = div_rles_nonzeroes(self.runs, self.values, other.runs, other.values)
 
         return Rle(runs, values)
 
     def __eq__(self, other):
+
+        if len(self.runs) != len(other.runs):
+            return False
+
         runs_equal = np.equal(self.runs, other.runs).all()
         values_equal = np.allclose(self.values, other.values)
         return runs_equal and values_equal
@@ -89,11 +110,11 @@ class Rle:
         if len(self.runs) > 10:
             runs = [str(i) for i in self.runs[:5]] + \
                 [" ... "] + [str(i) for i in self.runs[-5:]]
-            values = ["{0:.3f}".format(i) for i in self.values[:5]] + \
-                    [" ... "] + ["{0:.3f}".format(i) for i in self.values[-5:]]
+            values = ["{}".format(i) for i in self.values[:5]] + \
+                    [" ... "] + ["{}".format(i) for i in self.values[-5:]]
         else:
             runs = [str(i) for i in self.runs]
-            values = ["{0:.3f}".format(i) for i in self.values]
+            values = ["{}".format(i) for i in self.values]
 
         df = pd.Series(values).to_frame().T
 

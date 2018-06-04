@@ -71,7 +71,8 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         # which must be added before we move on
         if diff < 0:
             nrs[xn] = r2
-            nvs[xn] += values2[x2]
+            nv = values2[x2]
+            nvs[xn] += nv
             xn += 1
             x2 += 1
         # if the new value is same as the old, merge
@@ -88,7 +89,8 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 
         if diff > 0:
             nrs[xn] = r1
-            nvs[xn] += values1[x1]
+            nv = values1[x1]
+            nvs[xn] += nv
             xn += 1
             x1 += 1
 
@@ -172,7 +174,8 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         # which must be added before we move on
         if diff < 0:
             nrs[xn] = r2
-            nvs[xn] -= values2[x2]
+            nv = values2[x2]
+            nvs[xn] -= nv
             xn += 1
             x2 += 1
         # if the new value is same as the old, merge
@@ -189,7 +192,8 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 
         if diff > 0:
             nrs[xn] = r1
-            nvs[xn] += values1[x1]
+            nv = values1[x1]
+            nvs[xn] += nv
             xn += 1
             x1 += 1
 
@@ -340,7 +344,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
     while(x1 < l1 and x2 < l2):
 
         diff = r1 - r2
-        
+
         if values2[x2] != 0:
              nv = values1[x1] / values2[x2]
         else:
@@ -383,12 +387,13 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
         # which must be added before we move on
         if diff < 0:
             nrs[xn] = r2
-            nvs[xn] = 0 if values2[x2] else np.nan
+            nv = 0 if np.isfinite(values2[x2]) else values2[x2]
+            nvs[xn] = nv
             xn += 1
             x2 += 1
 
         for i in range(x2, l2):
-            nv = 0 if values2[i] else np.nan
+            nv = 0 if np.isfinite(values2[i]) else values2[i]
 
             if nv == nvs[xn -1]:
                 nrs[xn - 1] += runs2[i]
@@ -399,18 +404,26 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
 
+        print("diff",diff)
         if diff > 0:
+            print("xn, r1", xn, r1)
+            print("nrs[xn]", nrs[xn])
             nrs[xn] = r1
-            nvs[xn] = np.inf * np.sign(values1[x1])
+            nv = np.inf * np.sign(values1[x1])
+            print("nv", nv)
+            nvs[xn] = nv
             xn += 1
             x1 += 1
 
         for i in range(x1, l1):
             nv = np.inf * np.sign(values1[i]) if values1[i] else np.nan
+            print("nv in for", nv)
 
             if nv == nvs[xn -1]:
+                print("nv == nvs[xn -1]", nv == nvs[xn -1])
                 nrs[xn - 1] += runs1[i]
             else:
+                print("else", nrs, runs1)
                 nrs[xn] = runs1[i]
                 nvs[xn] = nv
                 xn += 1
@@ -476,10 +489,11 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
-                nrs[xn] = nr
-                nvs[xn] = nv
-                xn += 1
+            nrs[xn] = nr
+            nvs[xn] = nv
+            xn += 1
 
+    print("multiply")
     # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
     # (If other had largest sum of lengths.)
     if x1 == l1 and not x2 == l2:
@@ -491,7 +505,6 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             nvs[xn] = 0
             x2 += 1
 
-
         xn += 1
         for i in range(x2, l2):
             nrs[xn - 1] += runs2[i]
@@ -499,16 +512,24 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
 
+        print("diff", diff)
         if diff > 0:
+            print("nrs[xn] = r1", nrs[xn], r1)
             nrs[xn] = r1
-            nvs[xn] = 0
+
+            nvs[xn] = 0 if np.isfinite(values1[x1]) else np.nan * np.sign(values1[x1])
             x1 += 1
 
         xn += 1
         for i in range(x1, l1):
+            print("in for")
+            print("runs1[i]", runs1[i])
+            print("[xn - 1]", runs1[i])
             nrs[xn - 1] += runs1[i]
+            print("nvs", nvs_arr)
+            print("nrs", nrs_arr)
 
-        # Must use resize because initial guess for array was likely way too large
+    # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
 

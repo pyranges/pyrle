@@ -72,7 +72,8 @@ cpdef {{config_add_sub.operation}}_rles(long [::1] runs1, {{config_add_sub.value
         # which must be added before we move on
         if diff < 0:
             nrs[xn] = r2
-            nvs[xn] {{config_add_sub.op}}= values2[x2]
+            nv = values2[x2]
+            nvs[xn] {{config_add_sub.op}}= nv
             xn += 1
             x2 += 1
         # if the new value is same as the old, merge
@@ -89,7 +90,8 @@ cpdef {{config_add_sub.operation}}_rles(long [::1] runs1, {{config_add_sub.value
 
         if diff > 0:
             nrs[xn] = r1
-            nvs[xn] {{config_add_sub.op2}}= values1[x1]
+            nv = values1[x1]
+            nvs[xn] += nv
             xn += 1
             x1 += 1
 
@@ -177,12 +179,13 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
         # which must be added before we move on
         if diff < 0:
             nrs[xn] = r2
-            nvs[xn] = 0 if values2[x2] else np.nan
+            nv = 0 if np.isfinite(values2[i]) else values2[i]
+            nvs[xn] = nv
             xn += 1
             x2 += 1
 
         for i in range(x2, l2):
-            nv = 0 if values2[i] else np.nan
+            nv = 0 if np.isfinite(values2[i]) else values2[i]
 
             if nv == nvs[xn -1]:
                 nrs[xn - 1] += runs2[i]
@@ -195,6 +198,7 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
 
         if diff > 0:
             nrs[xn] = r1
+            nv = 0 if np.isfinite(values2[i]) else values2[i]
             nvs[xn] = np.inf * np.sign(values1[x1])
             xn += 1
             x1 += 1
