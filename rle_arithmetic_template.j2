@@ -57,7 +57,7 @@ cpdef {{config_add_sub.operation}}_rles(long [::1] runs1, {{config_add_sub.value
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[xn - 1]:
+        if xn > 0 and np.isclose(nv, nvs[xn - 1]):
             nrs[xn - 1] += nr
         else:
             nrs[xn] = nr
@@ -164,7 +164,7 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[xn - 1]:
+        if xn > 0 and np.isclose(nv, nvs[xn - 1]):
             nrs[xn - 1] += nr
         else:
             nrs[xn] = nr
@@ -179,7 +179,7 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
         # which must be added before we move on
         if diff < 0:
             nrs[xn] = r2
-            nv = 0 if np.isfinite(values2[i]) else values2[i]
+            nv = 0 if np.isfinite(values2[x2]) else values2[x2]
             nvs[xn] = nv
             xn += 1
             x2 += 1
@@ -187,7 +187,7 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
         for i in range(x2, l2):
             nv = 0 if np.isfinite(values2[i]) else values2[i]
 
-            if nv == nvs[xn -1]:
+            if np.isclose(nv, nvs[xn - 1]):
                 nrs[xn - 1] += runs2[i]
             else:
                 nrs[xn] = runs2[i]
@@ -198,7 +198,7 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
 
         if diff > 0:
             nrs[xn] = r1
-            nv = 0 if np.isfinite(values2[i]) else values2[i]
+            nv = 0 if np.isfinite(values1[x1]) else values1[x1]
             nvs[xn] = np.inf * np.sign(values1[x1])
             xn += 1
             x1 += 1
@@ -206,7 +206,7 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
         for i in range(x1, l1):
             nv = np.inf * np.sign(values1[i]) if values1[i] else np.nan
 
-            if nv == nvs[xn -1]:
+            if np.isclose(nv, nvs[xn - 1]):
                 nrs[xn - 1] += runs1[i]
             else:
                 nrs[xn] = runs1[i]
@@ -226,7 +226,6 @@ cpdef div_rles_{{config_div.name}}(long [::1] runs1, double [::1] values1, long 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
-
     cdef int x1 = 0
     cdef int x2 = 0
     cdef int xn = 0
@@ -272,42 +271,57 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[xn - 1]:
+        if xn > 0 and np.isclose(nv, nvs[xn - 1]):
             nrs[xn - 1] += nr
         else:
-                nrs[xn] = nr
-                nvs[xn] = nv
-                xn += 1
-
+            nrs[xn] = nr
+            nvs[xn] = nv
+            xn += 1
     # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
     # (If other had largest sum of lengths.)
     if x1 == l1 and not x2 == l2:
-
         # Have some values left in one rl from the previous comparison
         # which must be added before we move on
+
+
         if diff < 0:
             nrs[xn] = r2
-            nvs[xn] = 0
+            nv = 0 if np.isfinite(values2[x2]) else np.nan
+            nvs[xn] = nv
             x2 += 1
+            xn += 1
 
 
-        xn += 1
         for i in range(x2, l2):
-            nrs[xn - 1] += runs2[i]
+            nv = 0 if np.isfinite(values2[i]) else values2[i]
+
+            if np.isclose(nv, nvs[xn - 1]):
+                nrs[xn - 1] += runs2[i]
+            else:
+                nrs[xn] += runs2[i]
+                nvs[xn] = nv
+                xn += 1
 
     # (If self had largest sum of lengths)
     elif x2 == l2 and not x1 == l1:
 
         if diff > 0:
             nrs[xn] = r1
-            nvs[xn] = 0
+            nv = 0 if np.isfinite(values1[x1]) else values1[x1] * 0
+            nvs[xn] = nv
             x1 += 1
+            xn += 1
 
-        xn += 1
         for i in range(x1, l1):
-            nrs[xn - 1] += runs1[i]
+            nv = 0 if np.isfinite(values1[i]) else np.nan
 
-    {# print("final xn", xn) #}
+            if np.isclose(nv, nvs[xn - 1]):
+                nrs[xn - 1] += runs1[i]
+            else:
+                nrs[xn] += runs1[i]
+                nvs[xn] = nv
+                xn += 1
+
     # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)

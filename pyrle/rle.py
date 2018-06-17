@@ -15,26 +15,40 @@ class Rle:
     def __init__(self, runs, values):
         assert len(runs) == len(values)
 
-        i = len(runs) - 1
-        while i >= 0:
-            if runs[i] != 0:
-                break
-            else:
-                i -= 1
+        # Why shorten Rles with length zero here? Better to just drop those entries
+        # with numpy?
+        # i = len(runs) - 1
+        # while i >= 0:
+        #     if runs[i] != 0:
+        #         break
+        #     else:
+        #         i -= 1
 
-        if i != len(runs) - 1:
-            runs = runs[:i]
-            values = values[:i]
+        # if i != len(runs) - 1:
+        #     runs = runs[:i]
+        #     values = values[:i]
 
         runs = np.array(runs, dtype=np.int)
         values = np.array(values, dtype=np.double)
         s = pd.Series(values, dtype=np.double)
+
+        zero_length_runs = runs == 0
+        if np.any(zero_length_runs):
+            runs = runs[~zero_length_runs]
+            values = values[~zero_length_runs]
 
         if (s.shift() == s).any():
             runs, values = _remove_dupes(runs, values, len(values))
 
         self.runs = runs
         self.values = values
+
+    def to_csv(self, **kwargs):
+
+        if not kwargs.get("path_or_buf"):
+            print(pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()].to_csv(**kwargs))
+        else:
+            pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()].to_csv(**kwargs)
 
     def __len__(self):
         return len(self.runs)
@@ -88,10 +102,8 @@ class Rle:
             return Rle(self.runs, self.values / other)
 
         if (other.values == 0).any() or np.sum(other.runs) < np.sum(self.runs):
-            print("\ndiv zeroes")
             runs, values = div_rles_zeroes(self.runs, self.values, other.runs, other.values)
         else:
-            print("\ndiv nonzeroes")
             runs, values = div_rles_nonzeroes(self.runs, self.values, other.runs, other.values)
 
         return Rle(runs, values)
