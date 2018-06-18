@@ -37,11 +37,19 @@ class Rle:
             runs = runs[~zero_length_runs]
             values = values[~zero_length_runs]
 
-        if (s.shift() == s).any():
+        # shifted = s.shift()
+        # if np.isclose(s.values[0], np.nan, equal_nan=True):
+        #     if len(s) > 1 and not np.isclose(s.values[1], 1):
+        #         shifted.values[0] = 1
+        #     elif len(s) > 1:
+        #         shifted.values[0] = 0
+
+
+        if (np.isclose(s.shift(), s, equal_nan=True)).any():
             runs, values = _remove_dupes(runs, values, len(values))
 
-        self.runs = runs
-        self.values = values
+        self.runs = np.copy(runs)
+        self.values = np.copy(values)
 
     def to_csv(self, **kwargs):
 

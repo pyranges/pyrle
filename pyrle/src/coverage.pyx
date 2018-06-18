@@ -144,6 +144,8 @@ def _coverage(long [::1] starts, long [::1] ends, double [::1] values, int lengt
 @cython.wraparound(False)
 def _remove_dupes(long [::1] runs, double [::1] values, int length):
 
+    print("removing dupes from", list(runs), list(values))
+
     cdef long[::1] _runs
     cdef double[::1] _vals
 
@@ -165,7 +167,6 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     nrs = nrs_arr
     nvs = nvs_arr
 
-
     # print("values", values)
     for i in range(1, len(values)):
 
@@ -173,28 +174,36 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
         value = _vals[i]
         # print("old_val", old_val)
         # print("old_run", old_run)
+        # print("old_val == value", old_val == value)
         # print("run", run)
         # print("value", value)
 
-        if value == old_val:
-            # print("in equal")
+        if np.isclose(value, old_val, equal_nan=True):
+            print("in if")
             old_run += run
         else:
+            print("in else")
             # print("new")
             nrs[counter] = old_run
             nvs[counter] = old_val
             old_run = run
             old_val = value
             counter += 1
+    # print("nrs_arr", nrs_arr)
+    # print("nvs_arr", nvs_arr)
 
     if len(values) == 1:
         # print("len value series one")
-        return runs.values, values.values
+        return runs, values
 
-    if value == old_val:
+    if np.isclose(value, old_val, equal_nan=True):
         # print("value == old val")
         nrs[counter] = old_run
         nvs[counter] = old_val
         counter += 1
+
+    # print("nrs_arr", nrs_arr)
+    # print("nvs_arr", nvs_arr)
+    # print("counter", counter)
 
     return nrs_arr[:counter], nvs_arr[:counter]
