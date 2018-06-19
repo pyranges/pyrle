@@ -1,10 +1,9 @@
-
-
 import numpy as np
 import pandas as pd
 
 cimport cython
 
+from libc.math cimport isnan
 
 # try:
 #     dummy = profile
@@ -19,53 +18,49 @@ def insort(a, b, kind='mergesort'):
     return c[flag]
 
 
-# @profile
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def _coverage(long [::1] starts, long [::1] ends, double [::1] values, int length):
+def _coverage(long [::1] positions, double [::1] values):
 
     d = {}
 
     cdef int i = 0
-    cdef int start
-    cdef int end
+    cdef int j = 0
+    cdef int pos = -1
+    cdef int oldpos = positions[0]
     cdef double value
 
-    # all_pos = insort(starts, ends)
+    inlength = len(positions)
 
-    # # print("values", np.array(values))
-    while i < length:
-        start = starts[i]
-        value = values[i]
-        # # print("start", start)
-        # # print("value", value)
-        if not start in d:
-            # # print("If starts!")
-            d[start] = value
-            # # print(d[start])
-        else:
-            d[start] = d[start] + value
-            # # print("Else starts!")
-            # # print(d[start])
-        end = ends[i]
-        value = values[i]
-        i = i + 1
-        if not end in d:
-            d[end] = -value
-        else:
-            d[end] = d[end] - value
+    unique = np.unique(positions)
+    n_unique = len(unique)
 
-    if 0 not in d:
-        d[0] = 0
+    outlength = n_unique
+    positions_arr = unique
+    if 0 == positions[0]:
+        first_value = values[0]
+    else:
+        first_value = 0
 
-    sorted_items = sorted(d.items())
-    # # print("sorted_items", sorted_items)
-    runs = pd.Series([r[0] for r in sorted_items])
-    # # print("runs\n", runs)
-    value_series = pd.Series([v[1] for v in sorted_items])
-    # # print("value_series\n", value_series)
+    values_arr = np.zeros(outlength)
 
-    first_value = value_series[0]
+    cdef long[::1] outposition
+    cdef double[::1] outvalue
+
+    outvalue = values_arr
+    outposition = positions_arr
+
+    while i < inlength:
+        if positions[i] != oldpos:
+            j += 1
+            oldpos = positions[i]
+
+        outvalue[j] += values[i]
+        i += 1
+
+    value_series = pd.Series(values_arr)
+    runs = pd.Series(positions_arr)
+
     value_series = value_series.cumsum().shift()
     value_series[0] = first_value
 
@@ -73,78 +68,17 @@ def _coverage(long [::1] starts, long [::1] ends, double [::1] values, int lengt
     shifted[0] = 0
     runs = (runs - shifted)
 
-    # print("runs", runs)
-    # print("value_series", value_series)
-
     if len(value_series) > 1 and first_value == value_series[1]:
         runs[1] += runs[0]
         value_series = value_series[1:]
         runs = runs[1:]
 
-    cdef long[::1] _runs
-    cdef double[::1] _vals
-
-    _runs = runs.astype(long).values
-    _vals = value_series.values
-
-    i = 0
-    cdef int counter = 0
-    cdef double old_val = _vals[i]
-    cdef int old_run = _runs[i]
-    cdef int run
-
-    nrs_arr = np.zeros(len(runs), dtype=np.long)
-    nvs_arr = np.zeros(len(runs), dtype=np.double)
-
-    cdef long[::1] nrs
-    cdef double[::1] nvs
-
-    nrs = nrs_arr
-    nvs = nvs_arr
-
-
-    # print("value_series", value_series)
-    for i in range(1, len(value_series)):
-
-        run = _runs[i]
-        value = _vals[i]
-        # print("old_val", old_val)
-        # print("old_run", old_run)
-        # print("run", run)
-        # print("value", value)
-
-        if value == old_val:
-            # print("in equal")
-            old_run += run
-        else:
-            # print("new")
-            nrs[counter] = old_run
-            nvs[counter] = old_val
-            old_run = run
-            old_val = value
-            counter += 1
-
-    if len(value_series) == 1:
-        # print("len value series one")
-        return runs.values, value_series.values
-
-    if value == old_val:
-        # print("value == old val")
-        nrs[counter] = old_run
-        nvs[counter] = old_val
-        counter += 1
-
-    return nrs_arr[:counter], nvs_arr[:counter]
-
-
-
+    return runs.values, value_series.values
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def _remove_dupes(long [::1] runs, double [::1] values, int length):
-
-    print("removing dupes from", list(runs), list(values))
 
     cdef long[::1] _runs
     cdef double[::1] _vals
@@ -157,6 +91,7 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     cdef double old_val = _vals[i]
     cdef int old_run = _runs[i]
     cdef int run
+    cdef float value
 
     nrs_arr = np.zeros(len(runs), dtype=np.long)
     nvs_arr = np.zeros(len(runs), dtype=np.double)
@@ -167,23 +102,16 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     nrs = nrs_arr
     nvs = nvs_arr
 
-    # print("values", values)
     for i in range(1, len(values)):
 
         run = _runs[i]
         value = _vals[i]
-        # print("old_val", old_val)
-        # print("old_run", old_run)
-        # print("old_val == value", old_val == value)
-        # print("run", run)
-        # print("value", value)
 
-        if np.isclose(value, old_val, equal_nan=True):
-            print("in if")
+        if isnan(value) and isnan(old_val):
+            old_run += run
+        elif value == old_val:
             old_run += run
         else:
-            print("in else")
-            # print("new")
             nrs[counter] = old_run
             nvs[counter] = old_val
             old_run = run

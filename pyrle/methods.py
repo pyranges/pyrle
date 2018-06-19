@@ -116,13 +116,17 @@ def coverage(ranges, value_col=None):
     else:
         values = np.ones(len(df))
 
-    # ndf = df["Start End Score".split()].sort_values("Start End".split())
-    # else ValueError: buffer source array is read-only
-    new_starts = df.Start.copy().values
-    new_ends = df.End.copy().values
+    starts_df = pd.DataFrame({"Position": df.Start, "Value": values})["Position Value".split()]
+    ends_df = pd.DataFrame({"Position": df.End, "Value": -1 * values})["Position Value".split()]
+    _df = pd.concat([starts_df, ends_df], ignore_index=True)
+    _df = _df.sort_values("Position", kind="mergesort")
 
-    runs, values = _coverage(new_starts, new_ends, values,
-                             len(df))
+    # # ndf = df["Start End Score".split()].sort_values("Start End".split())
+    # # else ValueError: buffer source array is read-only
+    # new_starts = df.Start.copy().values
+    # new_ends = df.End.copy().values
+
+    runs, values = _coverage(_df.Position.values, _df.Value.values)
 
     return Rle(runs, values)
 
