@@ -79,7 +79,7 @@ def _coverage(long [::1] positions, double [::1] values):
     return runs.values, value_series.values
 
 
-@cython.boundscheck(False)
+@cython.boundscheck(True)
 @cython.wraparound(False)
 def _remove_dupes(long [::1] runs, double [::1] values, int length):
 

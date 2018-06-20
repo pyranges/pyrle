@@ -7,8 +7,10 @@ cimport cython
 cdef float NAN = float("NaN")
 
 
+# s/boundscheck(True/boundscheck(False
+# s/boundscheck(False/boundscheck(True
 
-@cython.boundscheck(False)
+@cython.boundscheck(True)
 @cython.wraparound(False)
 cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -77,7 +79,7 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             xn += 1
             x2 += 1
         # if the new value is same as the old, merge
-        if 0 + values2[x2] == nv:
+        if x2 < l2 and 0 + values2[x2] == nv:
             nrs[xn - 1] += runs2[x2]
             x2 += 1
         # now the unwinding; add all the values missing from one Rle
@@ -95,7 +97,7 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             xn += 1
             x1 += 1
 
-        if values1[x1] == nvs[xn - 1]:
+        if xn > 0 and x1 < l1 and values1[x1] == nvs[xn - 1]:
             nrs[xn - 1] += runs1[x1]
             x1 += 1
 
@@ -111,7 +113,10 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
     return nrs_arr, nvs_arr
 
 
-@cython.boundscheck(False)
+# s/boundscheck(True/boundscheck(False
+# s/boundscheck(False/boundscheck(True
+
+@cython.boundscheck(True)
 @cython.wraparound(False)
 cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -180,7 +185,7 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             xn += 1
             x2 += 1
         # if the new value is same as the old, merge
-        if 0 - values2[x2] == nv:
+        if x2 < l2 and 0 - values2[x2] == nv:
             nrs[xn - 1] += runs2[x2]
             x2 += 1
         # now the unwinding; add all the values missing from one Rle
@@ -198,7 +203,7 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             xn += 1
             x1 += 1
 
-        if values1[x1] == nvs[xn - 1]:
+        if xn > 0 and x1 < l1 and values1[x1] == nvs[xn - 1]:
             nrs[xn - 1] += runs1[x1]
             x1 += 1
 
@@ -216,7 +221,7 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 
 
 
-@cython.boundscheck(False)
+@cython.boundscheck(True)
 @cython.wraparound(False)
 cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -296,7 +301,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
             else:
                 nv = 0 if np.isfinite(values2[x2]) else values2[x2]
 
-            if nv == nvs[xn - 1]:
+            if xn > 0 and nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs2[i]
             else:
                 nrs[xn] = runs2[i]
@@ -319,7 +324,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
             sign = np.copysign(1, values1[i])
             nv = np.inf * sign if values1[i] else NAN
 
-            if nv == nvs[xn - 1]:
+            if xn > 0 and nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs1[i]
             else:
                 nrs[xn] = runs1[i]
@@ -333,7 +338,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
     return nrs_arr, nvs_arr
 
 
-@cython.boundscheck(False)
+@cython.boundscheck(True)
 @cython.wraparound(False)
 cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -421,7 +426,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
             else:
                 nv = 0 if np.isfinite(values2[x2]) else values2[x2]
 
-            if nv == nvs[xn - 1]:
+            if xn > 0 and nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs2[i]
             else:
                 nrs[xn] = runs2[i]
@@ -444,7 +449,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
             sign = np.copysign(1, values1[i])
             nv = np.inf * sign if values1[i] else NAN
 
-            if nv == nvs[xn - 1]:
+            if xn > 0 and nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs1[i]
             else:
                 nrs[xn] = runs1[i]
@@ -460,7 +465,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
 
 
 
-@cython.boundscheck(False)
+@cython.boundscheck(True)
 @cython.wraparound(False)
 cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
     cdef int x1 = 0
@@ -532,7 +537,7 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         for i in range(x2, l2):
             nv = 0 if np.isfinite(values2[i]) else values2[i]
 
-            if nv == nvs[xn - 1]:
+            if xn > 0 and nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs2[i]
             else:
                 nrs[xn] += runs2[i]
@@ -552,7 +557,7 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         for i in range(x1, l1):
             nv = 0 if np.isfinite(values1[i]) else NAN
 
-            if nv == nvs[xn - 1]:
+            if xn > 0 and nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs1[i]
             else:
                 nrs[xn] += runs1[i]
