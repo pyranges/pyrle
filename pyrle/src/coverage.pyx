@@ -5,6 +5,9 @@ cimport cython
 
 from libc.math cimport isnan
 
+cdef extern from "math.h":
+    float INFINITY
+
 # try:
 #     dummy = profile
 # except:
@@ -92,6 +95,7 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     cdef int old_run = _runs[i]
     cdef int run
     cdef float value
+    cdef int last_different = 0
 
     nrs_arr = np.zeros(len(runs), dtype=np.long)
     nvs_arr = np.zeros(len(runs), dtype=np.double)
@@ -111,31 +115,37 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
         #print("run, value", run, value)
 
         if isnan(value) and isnan(old_val):
-            #print("if")
             old_run += run
+            last_different = 0
+        elif value == INFINITY and old_val == INFINITY:
+            #print("elif inf")
+            old_run += run
+            last_different = 0
         elif abs(value - old_val) < 1e-5:
-            #print("elif")
+            #print("elif abs")
             old_run += run
         else:
-            #print(value)
             #print("else inserting", old_run, old_val)
             nrs[counter] = old_run
             nvs[counter] = old_val
             old_run = run
             old_val = value
             counter += 1
+            last_different = 1
     #print("nrs_arr", nrs_arr)
     #print("nvs_arr", nvs_arr)
 
-    #print("old_val", old_val)
-    #print("nvs[counter]", nvs[counter])
-    #print("counter", counter)
-    if counter > 0 and not abs(old_val - nvs[counter]) < 1e-5:
+    # print("old_val", old_val)
+    # print("nvs[counter]", nvs[counter])
+    # print("counter", counter)
+    # print("last_different", last_different)
+    if last_different:
         #print("in last if " * 10)
         nvs[counter] = old_val
         nrs[counter] = old_run
         counter += 1
-    elif counter == 0:
+
+    if counter == 0:
         nvs[counter] = old_val
         nrs[counter] = old_run
         counter += 1

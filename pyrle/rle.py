@@ -45,7 +45,7 @@ class Rle:
         #         shifted.values[0] = 0
 
 
-        #print("-----------" * 5)
+        # print("-----------" * 5)
         #print("nodup runs, values", runs, values)
         if (np.isclose(s.shift(), s, equal_nan=True)).any() and len(s) > 1:
             #print("runs, values", runs, values)
