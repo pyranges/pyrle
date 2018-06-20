@@ -116,14 +116,15 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
 
         if isnan(value) and isnan(old_val):
             old_run += run
-            last_different = 0
-        elif value == INFINITY and old_val == INFINITY:
+            last_insert = 0
+        elif (value == INFINITY and old_val == INFINITY) or (value == -INFINITY and old_val == -INFINITY):
             #print("elif inf")
             old_run += run
-            last_different = 0
+            last_insert = 0
         elif abs(value - old_val) < 1e-5:
             #print("elif abs")
             old_run += run
+            last_insert = 0
         else:
             #print("else inserting", old_run, old_val)
             nrs[counter] = old_run
@@ -131,28 +132,32 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
             old_run = run
             old_val = value
             counter += 1
-            last_different = 1
-    #print("nrs_arr", nrs_arr)
-    #print("nvs_arr", nvs_arr)
-
-    # print("old_val", old_val)
-    # print("nvs[counter]", nvs[counter])
-    # print("counter", counter)
-    # print("last_different", last_different)
-    if last_different:
-        #print("in last if " * 10)
-        nvs[counter] = old_val
-        nrs[counter] = old_run
-        counter += 1
+            last_insert = 1
+    ##print("nrs_arr", nrs_arr)
+    ##print("nvs_arr", nvs_arr)
+    #print("old_val", old_val)
+    #print("nvs[counter]", nvs[counter])
+    #print("counter", counter)
+    #print("last_insert", last_insert)
 
     if counter == 0:
         nvs[counter] = old_val
         nrs[counter] = old_run
         counter += 1
+    elif not last_insert:
+        #print("in last if " * 10)
+        nvs[counter] = old_val
+        nrs[counter] = old_run
+        counter += 1
+    else:
+        nvs[counter] = value
+        nrs[counter] = run
+        counter += 1
+
 
 
     if len(values) == 1:
-        #print("len value series one")
+        ##print("len value series one")
         return runs, values
 
     # if np.isclose(value, old_val, equal_nan=True) and counter > 0:

@@ -316,7 +316,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
             x1 += 1
 
         for i in range(x1, l1):
-            sign = np.copysign(1, values1[x1])
+            sign = np.copysign(1, values1[i])
             nv = np.inf * sign if values1[i] else NAN
 
             if nv == nvs[xn - 1]:
@@ -441,7 +441,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
             x1 += 1
 
         for i in range(x1, l1):
-            sign = np.copysign(1, values1[x1])
+            sign = np.copysign(1, values1[i])
             nv = np.inf * sign if values1[i] else NAN
 
             if nv == nvs[xn - 1]:
