@@ -102,36 +102,63 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     nrs = nrs_arr
     nvs = nvs_arr
 
+    #print("indata runs", list(runs))
+    #print("indata values", list(values))
     for i in range(1, len(values)):
 
         run = _runs[i]
         value = _vals[i]
+        #print("run, value", run, value)
 
         if isnan(value) and isnan(old_val):
+            #print("if")
             old_run += run
-        elif value == old_val:
+        elif abs(value - old_val) < 1e-7:
+            #print("elif")
             old_run += run
         else:
+            #print(value)
+            #print("else inserting", old_run, old_val)
             nrs[counter] = old_run
             nvs[counter] = old_val
             old_run = run
             old_val = value
             counter += 1
-    # print("nrs_arr", nrs_arr)
-    # print("nvs_arr", nvs_arr)
+    #print("nrs_arr", nrs_arr)
+    #print("nvs_arr", nvs_arr)
 
-    if len(values) == 1:
-        # print("len value series one")
-        return runs, values
-
-    if np.isclose(value, old_val, equal_nan=True):
-        # print("value == old val")
-        nrs[counter] = old_run
+    #print("old_val", old_val)
+    #print("nvs[counter]", nvs[counter])
+    #print("counter", counter)
+    if counter > 0 and not abs(old_val - nvs[counter]) < 1e-7:
+        #print("in last if " * 10)
         nvs[counter] = old_val
+        nrs[counter] = old_run
+        counter += 1
+    elif counter == 0:
+        nvs[counter] = old_val
+        nrs[counter] = old_run
         counter += 1
 
-    # print("nrs_arr", nrs_arr)
-    # print("nvs_arr", nvs_arr)
-    # print("counter", counter)
+
+    if len(values) == 1:
+        #print("len value series one")
+        return runs, values
+
+    # if np.isclose(value, old_val, equal_nan=True) and counter > 0:
+    #     #print("value == old val and counter > 0")
+    #     nrs[counter - 1] += old_run
+    # if np.isclose(value, old_val, equal_nan=True):
+    #     #print("value == old val")
+    #     nrs[counter] = old_run
+    #     nvs[counter] = old_val
+        # counter += 1
+
+
+
+
+    #print("nrs_arr", nrs_arr)
+    #print("nvs_arr", nvs_arr)
+    #print("counter", counter)
 
     return nrs_arr[:counter], nvs_arr[:counter]

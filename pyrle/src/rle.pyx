@@ -57,7 +57,7 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[x1 - 1]:
+        if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
             nrs[xn] = nr
@@ -160,7 +160,7 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[x1 - 1]:
+        if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
             nrs[xn] = nr
@@ -266,7 +266,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[x1 - 1]:
+        if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
             nrs[xn] = nr
@@ -296,7 +296,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
             else:
                 nv = 0 if np.isfinite(values2[x2]) else values2[x2]
 
-            if nv == nvs[x1 - 1]:
+            if nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs2[i]
             else:
                 nrs[xn] = runs2[i]
@@ -319,7 +319,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
             sign = np.copysign(1, values1[x1])
             nv = np.inf * sign if values1[i] else NAN
 
-            if nv == nvs[x1 - 1]:
+            if nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs1[i]
             else:
                 nrs[xn] = runs1[i]
@@ -391,7 +391,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[x1 - 1]:
+        if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
             nrs[xn] = nr
@@ -421,7 +421,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
             else:
                 nv = 0 if np.isfinite(values2[x2]) else values2[x2]
 
-            if nv == nvs[x1 - 1]:
+            if nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs2[i]
             else:
                 nrs[xn] = runs2[i]
@@ -444,7 +444,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
             sign = np.copysign(1, values1[x1])
             nv = np.inf * sign if values1[i] else NAN
 
-            if nv == nvs[x1 - 1]:
+            if nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs1[i]
             else:
                 nrs[xn] = runs1[i]
@@ -508,7 +508,7 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
                 r2 = runs2[x2]
 
         # if the new value is the same as the old, merge the runs
-        if xn > 0 and nv == nvs[x1 - 1]:
+        if xn > 0 and nv == nvs[xn - 1]:
             nrs[xn - 1] += nr
         else:
             nrs[xn] = nr
@@ -532,7 +532,7 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         for i in range(x2, l2):
             nv = 0 if np.isfinite(values2[i]) else values2[i]
 
-            if nv == nvs[x1 - 1]:
+            if nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs2[i]
             else:
                 nrs[xn] += runs2[i]
@@ -552,7 +552,7 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
         for i in range(x1, l1):
             nv = 0 if np.isfinite(values1[i]) else NAN
 
-            if nv == nvs[x1 - 1]:
+            if nv == nvs[xn - 1]:
                 nrs[xn - 1] += runs1[i]
             else:
                 nrs[xn] += runs1[i]

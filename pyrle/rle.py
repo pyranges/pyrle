@@ -45,8 +45,12 @@ class Rle:
         #         shifted.values[0] = 0
 
 
-        if (np.isclose(s.shift(), s, equal_nan=True)).any():
+        #print("-----------" * 5)
+        #print("nodup runs, values", runs, values)
+        if (np.isclose(s.shift(), s, equal_nan=True)).any() and len(s) > 1:
+            #print("runs, values", runs, values)
             runs, values = _remove_dupes(runs, values, len(values))
+            #print("runs, values", runs, values)
 
         self.runs = np.copy(runs)
         self.values = np.copy(values)
