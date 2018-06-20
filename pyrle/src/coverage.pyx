@@ -113,7 +113,7 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
         if isnan(value) and isnan(old_val):
             #print("if")
             old_run += run
-        elif abs(value - old_val) < 1e-7:
+        elif abs(value - old_val) < 1e-5:
             #print("elif")
             old_run += run
         else:
@@ -130,7 +130,7 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     #print("old_val", old_val)
     #print("nvs[counter]", nvs[counter])
     #print("counter", counter)
-    if counter > 0 and not abs(old_val - nvs[counter]) < 1e-7:
+    if counter > 0 and not abs(old_val - nvs[counter]) < 1e-5:
         #print("in last if " * 10)
         nvs[counter] = old_val
         nrs[counter] = old_run
