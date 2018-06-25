@@ -4,13 +4,18 @@ import numpy as np
 
 cimport cython
 
-cdef float NAN = float("NaN")
+from numpy import nan
+
+
+from libc.math cimport copysign, isfinite, INFINITY, NAN
+
+cdef float inf = INFINITY
 
 
 # s/boundscheck(True/boundscheck(False
 # s/boundscheck(False/boundscheck(True
 
-@cython.boundscheck(True)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -66,46 +71,6 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             nvs[xn] = nv
             xn += 1
 
-    # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
-    # (If other had largest sum of lengths.)
-    if x1 == l1 and not x2 == l2:
-
-        # Have some values left in one rl from the previous comparison
-        # which must be added before we move on
-        if diff < 0:
-            nrs[xn] = r2
-            nv = values2[x2]
-            nvs[xn] += nv
-            xn += 1
-            x2 += 1
-        # if the new value is same as the old, merge
-        if x2 < l2 and 0 + values2[x2] == nv:
-            nrs[xn - 1] += runs2[x2]
-            x2 += 1
-        # now the unwinding; add all the values missing from one Rle
-        for i in range(x2, l2):
-            nrs[xn] = runs2[i]
-            nvs[xn] += values2[i]
-            xn += 1
-    # (If self had largest sum of lengths)
-    elif x2 == l2 and not x1 == l1:
-
-        if diff > 0:
-            nrs[xn] = r1
-            nv = values1[x1]
-            nvs[xn] += nv
-            xn += 1
-            x1 += 1
-
-        if xn > 0 and x1 < l1 and values1[x1] == nvs[xn - 1]:
-            nrs[xn - 1] += runs1[x1]
-            x1 += 1
-
-        for i in range(x1, l1):
-            nrs[xn] = runs1[i]
-            nvs[xn] = values1[i]
-            xn += 1
-
     # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
@@ -116,7 +81,7 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 # s/boundscheck(True/boundscheck(False
 # s/boundscheck(False/boundscheck(True
 
-@cython.boundscheck(True)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -172,46 +137,6 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             nvs[xn] = nv
             xn += 1
 
-    # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
-    # (If other had largest sum of lengths.)
-    if x1 == l1 and not x2 == l2:
-
-        # Have some values left in one rl from the previous comparison
-        # which must be added before we move on
-        if diff < 0:
-            nrs[xn] = r2
-            nv = values2[x2]
-            nvs[xn] -= nv
-            xn += 1
-            x2 += 1
-        # if the new value is same as the old, merge
-        if x2 < l2 and 0 - values2[x2] == nv:
-            nrs[xn - 1] += runs2[x2]
-            x2 += 1
-        # now the unwinding; add all the values missing from one Rle
-        for i in range(x2, l2):
-            nrs[xn] = runs2[i]
-            nvs[xn] -= values2[i]
-            xn += 1
-    # (If self had largest sum of lengths)
-    elif x2 == l2 and not x1 == l1:
-
-        if diff > 0:
-            nrs[xn] = r1
-            nv = values1[x1]
-            nvs[xn] += nv
-            xn += 1
-            x1 += 1
-
-        if xn > 0 and x1 < l1 and values1[x1] == nvs[xn - 1]:
-            nrs[xn - 1] += runs1[x1]
-            x1 += 1
-
-        for i in range(x1, l1):
-            nrs[xn] = runs1[i]
-            nvs[xn] = values1[i]
-            xn += 1
-
     # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
@@ -221,7 +146,8 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 
 
 
-@cython.boundscheck(True)
+@cython.cdivision(True)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -278,59 +204,6 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
             nvs[xn] = nv
             xn += 1
 
-    # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
-    # (If other had largest sum of lengths.)
-    if x1 == l1 and not x2 == l2:
-
-        # Have some values left in one rl from the previous comparison
-        # which must be added before we move on
-        if diff < 0:
-            nrs[xn] = r2
-            if values2[x2] == 0:
-                nv = NAN
-            else:
-                nv = 0 if np.isfinite(values2[x2]) else values2[x2]
-            nvs[xn] = nv
-            xn += 1
-            x2 += 1
-
-        for i in range(x2, l2):
-
-            if values2[x2] == 0:
-                nv = NAN
-            else:
-                nv = 0 if np.isfinite(values2[x2]) else values2[x2]
-
-            if xn > 0 and nv == nvs[xn - 1]:
-                nrs[xn - 1] += runs2[i]
-            else:
-                nrs[xn] = runs2[i]
-                nvs[xn] = nv
-                xn += 1
-    # (If self had largest sum of lengths)
-    elif x2 == l2 and not x1 == l1:
-
-        if diff > 0:
-            nrs[xn] = r1
-
-            sign = np.copysign(1, values1[x1])
-            nv = np.inf * sign if values1[x1] else NAN
-            nvs[xn] = nv
-
-            xn += 1
-            x1 += 1
-
-        for i in range(x1, l1):
-            sign = np.copysign(1, values1[i])
-            nv = np.inf * sign if values1[i] else NAN
-
-            if xn > 0 and nv == nvs[xn - 1]:
-                nrs[xn - 1] += runs1[i]
-            else:
-                nrs[xn] = runs1[i]
-                nvs[xn] = nv
-                xn += 1
-
     # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
@@ -338,7 +211,8 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
     return nrs_arr, nvs_arr
 
 
-@cython.boundscheck(True)
+@cython.cdivision(True)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
@@ -369,10 +243,10 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
         if values2[x2] != 0:
             nv = values1[x1] / values2[x2]
         elif values1[x1] != 0:
-            sign = np.copysign(1, values1[x1]) * np.copysign(1, values2[x2])
-            nv = np.inf * sign
+            sign = copysign(1, values1[x1]) * copysign(1, values2[x2])
+            nv = inf * sign
         else:
-            nv = np.nan
+            nv = NAN
 
         if diff < 0:
             nr = r1
@@ -403,59 +277,6 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
             nvs[xn] = nv
             xn += 1
 
-    # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
-    # (If other had largest sum of lengths.)
-    if x1 == l1 and not x2 == l2:
-
-        # Have some values left in one rl from the previous comparison
-        # which must be added before we move on
-        if diff < 0:
-            nrs[xn] = r2
-            if values2[x2] == 0:
-                nv = NAN
-            else:
-                nv = 0 if np.isfinite(values2[x2]) else values2[x2]
-            nvs[xn] = nv
-            xn += 1
-            x2 += 1
-
-        for i in range(x2, l2):
-
-            if values2[x2] == 0:
-                nv = NAN
-            else:
-                nv = 0 if np.isfinite(values2[x2]) else values2[x2]
-
-            if xn > 0 and nv == nvs[xn - 1]:
-                nrs[xn - 1] += runs2[i]
-            else:
-                nrs[xn] = runs2[i]
-                nvs[xn] = nv
-                xn += 1
-    # (If self had largest sum of lengths)
-    elif x2 == l2 and not x1 == l1:
-
-        if diff > 0:
-            nrs[xn] = r1
-
-            sign = np.copysign(1, values1[x1])
-            nv = np.inf * sign if values1[x1] else NAN
-            nvs[xn] = nv
-
-            xn += 1
-            x1 += 1
-
-        for i in range(x1, l1):
-            sign = np.copysign(1, values1[i])
-            nv = np.inf * sign if values1[i] else NAN
-
-            if xn > 0 and nv == nvs[xn - 1]:
-                nrs[xn - 1] += runs1[i]
-            else:
-                nrs[xn] = runs1[i]
-                nvs[xn] = nv
-                xn += 1
-
     # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)
     nvs_arr.resize(xn, refcheck=False)
@@ -465,7 +286,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
 
 
 
-@cython.boundscheck(True)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
     cdef int x1 = 0
@@ -519,50 +340,6 @@ cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
             nrs[xn] = nr
             nvs[xn] = nv
             xn += 1
-    # Here we unwind the rest of the values that were not added because one Rle was longer than the other.
-    # (If other had largest sum of lengths.)
-    if x1 == l1 and not x2 == l2:
-        # Have some values left in one rl from the previous comparison
-        # which must be added before we move on
-
-
-        if diff < 0:
-            nrs[xn] = r2
-            nv = 0 if np.isfinite(values2[x2]) else NAN
-            nvs[xn] = nv
-            x2 += 1
-            xn += 1
-
-
-        for i in range(x2, l2):
-            nv = 0 if np.isfinite(values2[i]) else values2[i]
-
-            if xn > 0 and nv == nvs[xn - 1]:
-                nrs[xn - 1] += runs2[i]
-            else:
-                nrs[xn] += runs2[i]
-                nvs[xn] = nv
-                xn += 1
-
-    # (If self had largest sum of lengths)
-    elif x2 == l2 and not x1 == l1:
-
-        if diff > 0:
-            nrs[xn] = r1
-            nv = 0 if np.isfinite(values1[x1]) else values1[x1] * 0
-            nvs[xn] = nv
-            x1 += 1
-            xn += 1
-
-        for i in range(x1, l1):
-            nv = 0 if np.isfinite(values1[i]) else NAN
-
-            if xn > 0 and nv == nvs[xn - 1]:
-                nrs[xn - 1] += runs1[i]
-            else:
-                nrs[xn] += runs1[i]
-                nvs[xn] = nv
-                xn += 1
 
     # Must use resize because initial guess for array was likely way too large
     nrs_arr.resize(xn, refcheck=False)

@@ -1,7 +1,6 @@
 add_double:
   operation: add
   op: +
-  op2: +
   value_dtype: double
   run_dtype: long
 
@@ -9,6 +8,5 @@ add_double:
 subtract_double:
   operation: sub
   op: "-"
-  op2: +
   value_dtype: double
   run_dtype: long

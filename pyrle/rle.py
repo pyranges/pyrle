@@ -9,6 +9,30 @@ from tabulate import tabulate
 from numbers import Number
 
 
+def make_rles_equal_length(func):
+
+    def extension(self, other, **kwargs):
+
+        if not isinstance(other, Number):
+            ls = np.sum(self.runs)
+            lo = np.sum(other.runs)
+
+            if ls > lo:
+                new_runs = np.append(other.runs, ls - lo)
+                new_values = np.append(other.values, 0)
+                other = Rle(new_runs, new_values)
+            elif lo > ls:
+                new_runs = np.append(self.runs, lo - ls)
+                new_values = np.append(self.values, 0)
+                self = Rle(new_runs, new_values)
+
+            return func(self, other)
+        else:
+            return func(self, other)
+
+    return extension
+
+
 
 class Rle:
 
@@ -81,6 +105,7 @@ class Rle:
 
         return Rle(self.runs, other / self.values)
 
+    @make_rles_equal_length
     def __add__(self, other):
 
         if isinstance(other, Number):
@@ -90,6 +115,7 @@ class Rle:
         return Rle(runs, values)
 
 
+    @make_rles_equal_length
     def __sub__(self, other):
 
         if isinstance(other, Number):
@@ -98,6 +124,7 @@ class Rle:
         runs, values = sub_rles(self.runs, self.values, other.runs, other.values)
         return Rle(runs, values)
 
+    @make_rles_equal_length
     def __mul__(self, other):
 
         if isinstance(other, Number):
@@ -108,6 +135,7 @@ class Rle:
 
     __rmul__ = __mul__
 
+    @make_rles_equal_length
     def __truediv__(self, other):
 
         if isinstance(other, Number):

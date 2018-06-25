@@ -79,7 +79,7 @@ def _coverage(long [::1] positions, double [::1] values):
     return runs.values, value_series.values
 
 
-@cython.boundscheck(True)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 def _remove_dupes(long [::1] runs, double [::1] values, int length):
 
@@ -161,6 +161,7 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
         return runs, values
 
     # if np.isclose(value, old_val, equal_nan=True) and counter > 0:
+
     #     #print("value == old val and counter > 0")
     #     nrs[counter - 1] += old_run
     # if np.isclose(value, old_val, equal_nan=True):
