@@ -8,10 +8,11 @@ from libc.math cimport isnan
 cdef extern from "math.h":
     float INFINITY
 
-# try:
-#     dummy = profile
-# except:
-#     profile = lambda x: x
+try:
+    dummy = profile
+except:
+    profile = lambda x: x
+
 def insort(a, b, kind='mergesort'):
     # took mergesort as it seemed a tiny bit faster for my sorted large array try.
     c = np.concatenate((a, b)) # we still need to do this unfortunatly.
@@ -23,6 +24,7 @@ def insort(a, b, kind='mergesort'):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython.initializedcheck(False)
 def _coverage(long [::1] positions, double [::1] values):
 
     d = {}
@@ -39,7 +41,7 @@ def _coverage(long [::1] positions, double [::1] values):
     n_unique = len(unique)
 
     outlength = n_unique
-    positions_arr = unique
+
     if 0 == positions[0]:
         first_value = values[0]
     else:
@@ -51,7 +53,7 @@ def _coverage(long [::1] positions, double [::1] values):
     cdef double[::1] outvalue
 
     outvalue = values_arr
-    outposition = positions_arr
+    outposition = unique
 
     while i < inlength:
         if positions[i] != oldpos:
@@ -62,7 +64,7 @@ def _coverage(long [::1] positions, double [::1] values):
         i += 1
 
     value_series = pd.Series(values_arr)
-    runs = pd.Series(positions_arr)
+    runs = pd.Series(unique)
 
     value_series = value_series.cumsum().shift()
     value_series[0] = first_value
@@ -81,6 +83,7 @@ def _coverage(long [::1] positions, double [::1] values):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython.initializedcheck(False)
 def _remove_dupes(long [::1] runs, double [::1] values, int length):
 
     cdef long[::1] _runs
