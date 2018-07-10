@@ -9,13 +9,14 @@ from natsort import natsorted
 
 from sys import stderr
 
-
 from collections import defaultdict
+
 
 try:
     dummy = profile
 except:
     profile = lambda x: x
+
 
 def _merge_rles(rle):
 
@@ -29,9 +30,6 @@ def _merge_rles(rle):
             new_dict[c] = rle.rles[c, s[0]]
         else:
             new_dict[c] = rle.rles[c, "+"] + rle.rles[c, "-"]
-            # print("c", c)
-            # print("rle.rles[c, '+']\n", rle.rles[c, "+"])
-            # print("rle.rles[c, '-']\n", rle.rles[c, "-"])
 
     return new_dict
 
@@ -53,16 +51,10 @@ def chromosomes_in_both_self_other(self, other):
     chromosomes_in_self_not_other = set(self.rles.keys()) - set(other.rles.keys())
     chromosomes_in_other_not_self = set(other.rles.keys()) - set(self.rles.keys())
 
-    # if chromosomes_in_self_not_other:
-    #     print(", ".join(natsorted(chromosomes_in_self_not_other)) + " missing from other.", file=stderr)
-
-    # if chromosomes_in_other_not_self:
-    #     print(", ".join(natsorted(chromosomes_in_other_not_self)) + " missing from self.", file=stderr)
-
     return chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self
 
 
-def binary_operation(operation, self, other, n_jobs=1):
+def binary_operation(operation, self, other, nb_cpu=1):
 
     func = {"div": __div, "mul": __mul, "add": __add, "sub": __sub}[operation]
 
@@ -71,20 +63,24 @@ def binary_operation(operation, self, other, n_jobs=1):
 
     chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
 
-    _rles = []
-    for c in chromosomes_in_both:
-        _rles.append(func(self.rles[c], other.rles[c]))
+    cs = natsorted(chromosomes_in_both)
 
+    rles = {}
+    for c in cs:
+        rles[c] = func(self.rles[c], other.rles[c])
 
-    rles = {c: r for c, r in zip(chromosomes_in_both, _rles)}
+    # rles = {c: r for c, r in zip(cs, _rles)}
 
     for c in chromosomes_in_self_not_other:
-        rles[c] = self.rles[c]
+        _other = Rle([np.sum(self.rles[c].runs)], [0])
+        rles[c] = func(self.rles[c], _other)
 
     for c in chromosomes_in_other_not_self:
-        rles[c] = other.rles[c]
+        _self = Rle([np.sum(other.rles[c].runs)], [0])
+        rles[c] = func(_self, other.rles[c])
 
     return PyRles(rles)
+
 
 def __add(self, other):
 
@@ -120,11 +116,6 @@ def coverage(ranges, value_col=None):
     ends_df = pd.DataFrame({"Position": df.End, "Value": -1 * values})["Position Value".split()]
     _df = pd.concat([starts_df, ends_df], ignore_index=True)
     _df = _df.sort_values("Position", kind="mergesort")
-
-    # # ndf = df["Start End Score".split()].sort_values("Start End".split())
-    # # else ValueError: buffer source array is read-only
-    # new_starts = df.Start.copy().values
-    # new_ends = df.End.copy().values
 
     runs, values = _coverage(_df.Position.values, _df.Value.values)
 

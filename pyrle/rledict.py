@@ -2,8 +2,6 @@ from pyrle import Rle
 
 from numbers import Number
 
-# from joblib import Parallel, delayed
-
 from pyrle import methods as m
 
 from natsort import natsorted
@@ -16,8 +14,7 @@ except:
 
 class PyRles():
 
-    # @profile
-    def __init__(self, ranges, n_jobs=1, stranded=False, value_col=None):
+    def __init__(self, ranges, stranded=False, value_col=None, nb_cpu=1):
 
         # Construct PyRles from dict of rles
         if isinstance(ranges, dict):
@@ -26,53 +23,34 @@ class PyRles():
             self.__dict__["stranded"] = True if len(list(ranges.keys())[0]) == 2 else False
 
         # Construct PyRles from ranges
-        elif not stranded:
-
-            try:
-                df = ranges.df
-            except:
-                df = ranges
-
-            grpby = list(df.groupby("Chromosome"))
-
-            # if n_jobs > 1:
-            #     _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(cdf, value_col=value_col) for _, cdf in grpby)
-            # else:
-            _rles = []
-            for _, cdf in grpby:
-                cv = m.coverage(cdf, value_col=value_col)
-                _rles.append(cv)
-
-            self.rles = {c: r for c, r in zip([c for c, _ in grpby], _rles)}
-            self.__dict__["stranded"] = False
-
         else:
 
+            if stranded:
+                grpby_keys = "Chromosome Strand".split()
+            else:
+                grpby_keys = "Chromosome"
+
             try:
                 df = ranges.df
             except:
                 df = ranges
 
-            cs = df["Chromosome Strand".split()].drop_duplicates()
-            cs = list(zip(cs.Chromosome.tolist(), cs.Strand.tolist()))
+            grpby = list(natsorted(df.groupby(grpby_keys)))
 
-            grpby = df.groupby("Chromosome Strand".split())
+            _rles = {}
+            for key, cdf in grpby:
+                _rles[key] = m.coverage(cdf, value_col=value_col)
 
-            # if n_jobs > 1:
-            # _rles = Parallel(n_jobs=n_jobs)(delayed(m.coverage)(csdf, value_col=value_col) for cs, csdf in grpby)
-            # else:
-            _rles = []
-            for cs, csdf in grpby:
-                _rles.append(m.coverage(csdf, value_col=value_col))
+            self.rles = _rles
 
-            self.rles = {cs: r for cs, r in zip([cs for cs, _ in grpby], _rles)}
-            self.__dict__["stranded"] = True
+            self.__dict__["stranded"] = stranded
 
-    def add(self, other, n_jobs=1):
 
-        return m.binary_operation("add", self, other, n_jobs=n_jobs)
+    def add(self, other, nb_cpu=1):
 
-    def __add__(self, other, n_jobs=1):
+        return m.binary_operation("add", self, other, nb_cpu=nb_cpu)
+
+    def __add__(self, other, nb_cpu=1):
 
         if isinstance(other, Number):
             return PyRles({cs: v + other for cs, v in self.items()})
@@ -83,9 +61,9 @@ class PyRles():
 
         return PyRles({cs: other + v for cs, v in self.items()})
 
-    def sub(self, other, n_jobs=1):
+    def sub(self, other, nb_cpu=1):
 
-        return m.binary_operation("sub", self, other, n_jobs=n_jobs)
+        return m.binary_operation("sub", self, other, nb_cpu=nb_cpu)
 
     def __sub__(self, other):
 
@@ -98,9 +76,9 @@ class PyRles():
 
         return PyRles({cs: other - v for cs, v in self.items()})
 
-    def mul(self, other, n_jobs=1):
+    def mul(self, other, nb_cpu=1):
 
-        return m.binary_operation("mul", self, other, n_jobs=n_jobs)
+        return m.binary_operation("mul", self, other, nb_cpu=nb_cpu)
 
     def __rmul__(self, other):
 
@@ -115,9 +93,9 @@ class PyRles():
 
     __rmul__ = __mul__
 
-    def div(self, other, n_jobs=1):
+    def div(self, other, nb_cpu=1):
 
-        return m.binary_operation("div", self, other, n_jobs=n_jobs)
+        return m.binary_operation("div", self, other, nb_cpu=nb_cpu)
 
     def __rtruediv__(self, other):
 
