@@ -1,3 +1,5 @@
+import ray
+
 from pyrle import Rle
 
 from numbers import Number
@@ -14,7 +16,7 @@ except:
 
 class PyRles():
 
-    def __init__(self, ranges, stranded=False, value_col=None, nb_cpu=1):
+    def __init__(self, ranges, stranded=False, value_col=None):
 
         # Construct PyRles from dict of rles
         if isinstance(ranges, dict):
@@ -38,19 +40,28 @@ class PyRles():
             grpby = list(natsorted(df.groupby(grpby_keys)))
 
             _rles = {}
-            for key, cdf in grpby:
-                _rles[key] = m.coverage(cdf, value_col=value_col)
+            kwargs = {"value_col": value_col}
+            if stranded:
+                for (c, s), cdf in grpby:
+                    _rles[c, s] = m.coverage.remote(cdf, c, s, kwargs)
+            else:
+                s = None
+                for k, cdf in grpby:
+                    _rles[k] = m.coverage.remote(cdf, c, s, kwargs)
+
+            _rles = {k: v for k, v in zip(_rles.keys(), ray.get(list(_rles.values())))}
+
 
             self.rles = _rles
 
             self.__dict__["stranded"] = stranded
 
 
-    def add(self, other, nb_cpu=1):
+    def add(self, other):
 
-        return m.binary_operation("add", self, other, nb_cpu=nb_cpu)
+        return m.binary_operation("add", self, other)
 
-    def __add__(self, other, nb_cpu=1):
+    def __add__(self, other):
 
         if isinstance(other, Number):
             return PyRles({cs: v + other for cs, v in self.items()})
@@ -61,9 +72,9 @@ class PyRles():
 
         return PyRles({cs: other + v for cs, v in self.items()})
 
-    def sub(self, other, nb_cpu=1):
+    def sub(self, other):
 
-        return m.binary_operation("sub", self, other, nb_cpu=nb_cpu)
+        return m.binary_operation("sub", self, other)
 
     def __sub__(self, other):
 
@@ -76,9 +87,9 @@ class PyRles():
 
         return PyRles({cs: other - v for cs, v in self.items()})
 
-    def mul(self, other, nb_cpu=1):
+    def mul(self, other):
 
-        return m.binary_operation("mul", self, other, nb_cpu=nb_cpu)
+        return m.binary_operation("mul", self, other)
 
     def __rmul__(self, other):
 
@@ -93,9 +104,9 @@ class PyRles():
 
     __rmul__ = __mul__
 
-    def div(self, other, nb_cpu=1):
+    def div(self, other):
 
-        return m.binary_operation("div", self, other, nb_cpu=nb_cpu)
+        return m.binary_operation("div", self, other)
 
     def __rtruediv__(self, other):
 

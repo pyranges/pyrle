@@ -82,8 +82,8 @@ def binary_operation(operation, self, other):
         other_results.append(func.remote(_self, other.rles[c]))
 
 
-    rles = {k: v for k, v in zip(both_results + self_results + other_results,
-                                 chromosomes_in_both + chromosomes_in_self_not_other + chromosomes_in_other_not_self)}
+    rles = {k: v for k, v in zip(chromosomes_in_both + chromosomes_in_self_not_other + chromosomes_in_other_not_self,
+                                 ray.get(both_results + self_results + other_results))}
     return PyRles(rles)
 
 
