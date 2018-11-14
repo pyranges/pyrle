@@ -1,3 +1,5 @@
+import ray
+
 import pandas as pd
 import numpy as np
 
@@ -47,14 +49,14 @@ def ensure_both_or_none_stranded(self, other):
 
 def chromosomes_in_both_self_other(self, other):
 
-    chromosomes_in_both = set(self.rles.keys()).intersection(other.rles.keys())
-    chromosomes_in_self_not_other = set(self.rles.keys()) - set(other.rles.keys())
-    chromosomes_in_other_not_self = set(other.rles.keys()) - set(self.rles.keys())
+    chromosomes_in_both = natsorted(set(self.rles.keys()).intersection(other.rles.keys()))
+    chromosomes_in_self_not_other = natsorted(set(self.rles.keys()) - set(other.rles.keys()))
+    chromosomes_in_other_not_self = natsorted(set(other.rles.keys()) - set(self.rles.keys()))
 
     return chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self
 
 
-def binary_operation(operation, self, other, nb_cpu=1):
+def binary_operation(operation, self, other):
 
     func = {"div": __div, "mul": __mul, "add": __add, "sub": __sub}[operation]
 
@@ -63,49 +65,54 @@ def binary_operation(operation, self, other, nb_cpu=1):
 
     chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
 
-    cs = natsorted(chromosomes_in_both)
-
-    rles = {}
-    for c in cs:
-        rles[c] = func(self.rles[c], other.rles[c])
+    both_results = []
+    for c in chromosomes_in_both:
+        both_results.append(func.remote(self.rles[c], other.rles[c]))
 
     # rles = {c: r for c, r in zip(cs, _rles)}
 
+    self_results = []
     for c in chromosomes_in_self_not_other:
         _other = Rle([np.sum(self.rles[c].runs)], [0])
-        rles[c] = func(self.rles[c], _other)
+        self_results.append(func.remote(self.rles[c], _other))
 
+    other_results = []
     for c in chromosomes_in_other_not_self:
         _self = Rle([np.sum(other.rles[c].runs)], [0])
-        rles[c] = func(_self, other.rles[c])
+        other_results.append(func.remote(_self, other.rles[c]))
 
+
+    rles = {k: v for k, v in zip(both_results + self_results + other_results,
+                                 chromosomes_in_both + chromosomes_in_self_not_other + chromosomes_in_other_not_self)}
     return PyRles(rles)
 
 
+@ray.remote
 def __add(self, other):
 
     return self + other
 
+@ray.remote
 def __sub(self, other):
 
     return self - other
 
+@ray.remote
 def __div(self, other):
 
     return self / other
 
+@ray.remote
 def __mul(self, other):
 
     return self * other
 
 
 
-def coverage(ranges, value_col=None):
+@ray.remote
+def coverage(df, c, s, kwargs):
 
-    try:
-        df = ranges.df
-    except:
-        df = ranges
+    value_col = kwargs.get("value_col", None)
 
     if value_col:
         values = df[value_col].astype(np.float64).values

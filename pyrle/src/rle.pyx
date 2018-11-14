@@ -18,7 +18,7 @@ cdef float inf = INFINITY
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
+cpdef add_rles(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -85,7 +85,7 @@ cpdef add_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
+cpdef sub_rles(const long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -152,7 +152,7 @@ cpdef sub_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
+cpdef div_rles_nonzeroes(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -218,7 +218,7 @@ cpdef div_rles_nonzeroes(long [::1] runs1, double [::1] values1, long [::1] runs
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
+cpdef div_rles_zeroes(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -243,7 +243,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
     while(x1 < l1 and x2 < l2):
 
         diff = r1 - r2
-        
+
         if values2[x2] != 0:
             nv = values1[x1] / values2[x2]
         elif values1[x1] != 0:
@@ -293,7 +293,7 @@ cpdef div_rles_zeroes(long [::1] runs1, double [::1] values1, long [::1] runs2, 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef mul_rles(long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
+cpdef mul_rles(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
     cdef int x1 = 0
     cdef int x2 = 0
     cdef int xn = 0
