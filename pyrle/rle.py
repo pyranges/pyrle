@@ -174,7 +174,7 @@ class Rle:
         df.index = ["Values"]
         df.index.name = "Runs"
 
-        outstr = tabulate(df, tablefmt='psql', showindex=True, headers="keys")
+        outstr = tabulate(df, tablefmt='psql', showindex=True, headers="keys", disable_numparse=True)
         length = np.sum(self.runs)
         elements = len(self.runs)
         info = "\nRle of length {} containing {} elements".format(str(length), str(elements))
