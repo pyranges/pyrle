@@ -110,7 +110,7 @@ def __mul(self, other):
 
 
 @ray.remote
-def coverage(df, c, s, kwargs):
+def coverage(df, kwargs):
 
     value_col = kwargs.get("value_col", None)
 
@@ -123,6 +123,9 @@ def coverage(df, c, s, kwargs):
     ends_df = pd.DataFrame({"Position": df.End, "Value": -1 * values})["Position Value".split()]
     _df = pd.concat([starts_df, ends_df], ignore_index=True)
     _df = _df.sort_values("Position", kind="mergesort")
+
+    if _df.Position.dtype.name == "int32":
+        _df.Position = _df.Position.astype(np.int64)
 
     runs, values = _coverage(_df.Position.values, _df.Value.values)
 

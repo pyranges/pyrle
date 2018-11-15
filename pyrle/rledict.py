@@ -43,11 +43,11 @@ class PyRles():
             kwargs = {"value_col": value_col}
             if stranded:
                 for (c, s), cdf in grpby:
-                    _rles[c, s] = m.coverage.remote(cdf, c, s, kwargs)
+                    _rles[c, s] = m.coverage.remote(cdf, kwargs)
             else:
                 s = None
                 for k, cdf in grpby:
-                    _rles[k] = m.coverage.remote(cdf, c, s, kwargs)
+                    _rles[k] = m.coverage.remote(cdf, kwargs)
 
             _rles = {k: v for k, v in zip(_rles.keys(), ray.get(list(_rles.values())))}
 
