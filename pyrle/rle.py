@@ -1,5 +1,6 @@
 from pyrle.src.rle import sub_rles, add_rles, mul_rles, div_rles_zeroes, div_rles_nonzeroes
 from pyrle.src.coverage import _remove_dupes
+from pyrle.src.getitem import getitem
 
 import pandas as pd
 import numpy as np
@@ -180,6 +181,19 @@ class Rle:
         info = "\nRle of length {} containing {} elements".format(str(length), str(elements))
 
         return outstr + info
+
+    def __getitem__(self, val):
+
+        if isinstance(val, int):
+            runs, values = getitem(self.runs, self.values, val, val + 1)
+        elif isinstance(val, slice):
+            end = val.stop or np.sum(self.runs)
+            runs, values = getitem(self.runs, self.values, val.start, end)
+        else:
+            raise Exception("Rle indexer can only take ints or slices!")
+
+        return Rle(runs, values)
+
 
 
     def __repr__(self):

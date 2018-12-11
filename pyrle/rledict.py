@@ -1,5 +1,3 @@
-import ray
-
 from pyrle import Rle
 
 from numbers import Number
@@ -12,6 +10,14 @@ try:
     dummy = profile
 except:
     profile = lambda x: x
+
+try:
+    # ray.init(logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
+    import ray
+    import logging
+    ray.init(local_mode=True, logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
+except:
+    import pyrles.raymock as ray
 
 
 class PyRles():

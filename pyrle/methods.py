@@ -1,5 +1,3 @@
-import ray
-
 import pandas as pd
 import numpy as np
 
@@ -12,6 +10,16 @@ from natsort import natsorted
 from sys import stderr
 
 from collections import defaultdict
+
+
+
+try:
+    # ray.init(logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
+    import ray
+    import logging
+    ray.init(local_mode=True, logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
+except:
+    import pyrle.raymock as ray
 
 
 try:

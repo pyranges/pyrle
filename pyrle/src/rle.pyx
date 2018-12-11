@@ -85,7 +85,7 @@ cpdef add_rles(const long [::1] runs1, const double [::1] values1, const long [:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef sub_rles(const long [::1] runs1, double [::1] values1, long [::1] runs2, double [::1] values2):
+cpdef sub_rles(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
