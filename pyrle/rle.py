@@ -188,12 +188,21 @@ class Rle:
             runs, values = getitem(self.runs, self.values, val, val + 1)
         elif isinstance(val, slice):
             end = val.stop or np.sum(self.runs)
-            runs, values = getitem(self.runs, self.values, val.start, end)
+            start = val.start or 0
+            runs, values = getitem(self.runs, self.values, start, end)
         else:
             raise Exception("Rle indexer can only take ints or slices!")
 
         return Rle(runs, values)
 
+    def defragment(self):
+
+        runs, values = _remove_dupes(self.runs, self.values, len(self))
+        return Rle(runs, values)
+
+    def numbers_only(self):
+
+        return Rle(self.runs, np.nan_to_num(self.values)).defragment()
 
 
     def __repr__(self):

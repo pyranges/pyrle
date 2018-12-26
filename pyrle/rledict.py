@@ -1,3 +1,6 @@
+# import sys
+# sys.setrecursionlimit(150)
+
 from pyrle import Rle
 
 from numbers import Number
@@ -145,7 +148,9 @@ class PyRles():
 
     def items(self):
 
-        return natsorted(list(self.rles.items()))
+        _items = list(self.rles.items())
+
+        return natsorted(_items, key=lambda x: x[0])
 
     def add_pseudocounts(self, pseudo=0.01):
 
@@ -156,6 +161,10 @@ class PyRles():
     def __getitem__(self, key):
 
         key_is_string = isinstance(key, str)
+        key_is_int = isinstance(key, int)
+
+        if key_is_int:
+            raise Exception("Integer indexing not allowed!")
 
         if key_is_string and self.stranded and key not in ["+", "-"]:
             plus = self.rles.get((key, "+"), Rle([1], [0]))
@@ -175,6 +184,10 @@ class PyRles():
         elif key_is_string:
 
             return self.rles[key]
+
+        # elif key_is_int:
+
+        #     return list(self.rles.values())[key]
 
         elif len(key) == 2:
 
@@ -254,6 +267,18 @@ class PyRles():
 
         return str(self)
 
+    def numbers_only(self):
+
+        return PyRles({k: v.numbers_only() for k, v in self.items()})
+
+    def defragment(self, numbers_only=False):
+
+        if not numbers_only:
+            d = {k: v.defragment() for k, v in self.items()}
+        else:
+            d = {k: v.numbers_only().defragment() for k, v in self.items()}
+
+        return PyRles(d)
 
 if __name__ == "__main__":
 
