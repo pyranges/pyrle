@@ -64,7 +64,7 @@ def _coverage(long [::1] positions, double [::1] values):
         i += 1
 
     value_series = pd.Series(values_arr)
-    runs = pd.Series(unique)
+    runs = pd.Series(unique, dtype=np.long)
 
     value_series = value_series.cumsum().shift()
     value_series[0] = first_value

@@ -144,7 +144,7 @@ class PyRles():
 
     def values(self):
 
-        return natsorted(list(self.rles.values()))
+        return [self.rles[k] for k in natsorted(self.rles.keys())]
 
     def items(self):
 
@@ -183,7 +183,7 @@ class PyRles():
 
         elif key_is_string:
 
-            return self.rles[key]
+            return self.rles.get(key, Rle([1], [0]))
 
         # elif key_is_int:
 
@@ -191,7 +191,7 @@ class PyRles():
 
         elif len(key) == 2:
 
-            return self.rles[key]
+            return self.rles.get(key, Rle([1], [0]))
 
         else:
             raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from PyRles.")

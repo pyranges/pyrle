@@ -1,6 +1,6 @@
 from pyrle.src.rle import sub_rles, add_rles, mul_rles, div_rles_zeroes, div_rles_nonzeroes
 from pyrle.src.coverage import _remove_dupes
-from pyrle.src.getitem import getitem
+from pyrle.src.getitem import getitem, getlocs, getitems
 
 import pandas as pd
 import numpy as np
@@ -40,18 +40,8 @@ class Rle:
     def __init__(self, runs, values):
         assert len(runs) == len(values)
 
-        # Why shorten Rles with length zero here? Better to just drop those entries
-        # with numpy?
-        # i = len(runs) - 1
-        # while i >= 0:
-        #     if runs[i] != 0:
-        #         break
-        #     else:
-        #         i -= 1
-
-        # if i != len(runs) - 1:
-        #     runs = runs[:i]
-        #     values = values[:i]
+        runs = np.copy(runs)
+        values = np.copy(values)
 
         runs = np.array(runs, dtype=np.int)
         values = np.array(values, dtype=np.double)
@@ -62,16 +52,6 @@ class Rle:
             runs = runs[~zero_length_runs]
             values = values[~zero_length_runs]
 
-        # shifted = s.shift()
-        # if np.isclose(s.values[0], np.nan, equal_nan=True):
-        #     if len(s) > 1 and not np.isclose(s.values[1], 1):
-        #         shifted.values[0] = 1
-        #     elif len(s) > 1:
-        #         shifted.values[0] = 0
-
-
-        # print("-----------" * 5)
-        #print("nodup runs, values", runs, values)
         if (np.isclose(s.shift(), s, equal_nan=True)).any() and len(s) > 1:
             #print("runs, values", runs, values)
             runs, values = _remove_dupes(runs, values, len(values))
@@ -186,24 +166,35 @@ class Rle:
 
         if isinstance(val, int):
             runs, values = getitem(self.runs, self.values, val, val + 1)
+            return Rle(runs, values)
         elif isinstance(val, slice):
             end = val.stop or np.sum(self.runs)
             start = val.start or 0
             runs, values = getitem(self.runs, self.values, start, end)
+            return Rle(runs, values)
+        elif isinstance(val, pd.DataFrame):
+            val = val.astype(np.long)
+            values = getitems(self.runs, self.values, val.Start.values, val.End.values)
+            return [Rle(r, v) for r, v in values]
         else:
-            raise Exception("Rle indexer can only take ints or slices!")
+            locs = np.sort(np.array(val, dtype=np.long))
+            values = getlocs(self.runs, self.values, locs)
+            return values
 
-        return Rle(runs, values)
 
     def defragment(self):
 
         runs, values = _remove_dupes(self.runs, self.values, len(self))
+        values[values == -0] = 0
         return Rle(runs, values)
 
     def numbers_only(self):
 
         return Rle(self.runs, np.nan_to_num(self.values)).defragment()
 
+    def copy(self):
+
+        return Rle(np.copy(self.runs), np.copy(self.values))
 
     def __repr__(self):
 
