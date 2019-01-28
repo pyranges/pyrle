@@ -155,6 +155,7 @@ def to_ranges(grles):
             df.columns = "Start End Score".split()
             df.insert(0, "Chromosome", chromosome)
             df.insert(df.shape[1], "Strand", strand)
+            df = df[df.Score != 0]
             dfs.append(df)
     else:
 
@@ -163,6 +164,7 @@ def to_ranges(grles):
             df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
             df.columns = "Start End Score".split()
             df.insert(0, "Chromosome", chromosome)
+            df = df[df.Score != 0]
             dfs.append(df)
 
     return PyRanges(pd.concat(dfs))

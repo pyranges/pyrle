@@ -1,6 +1,8 @@
 # import sys
 # sys.setrecursionlimit(150)
 
+from pyrle.src.getitem import getitems
+
 from pyrle import Rle
 
 from numbers import Number
@@ -8,6 +10,8 @@ from numbers import Number
 from pyrle import methods as m
 
 from natsort import natsorted
+
+import numpy as np
 
 try:
     dummy = profile
@@ -20,7 +24,7 @@ try:
     import logging
     ray.init(local_mode=True, logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
 except:
-    import pyrles.raymock as ray
+    import pyrle.raymock as ray
 
 
 class PyRles():
@@ -162,6 +166,7 @@ class PyRles():
 
         key_is_string = isinstance(key, str)
         key_is_int = isinstance(key, int)
+        import pyranges as pr
 
         if key_is_int:
             raise Exception("Integer indexing not allowed!")
@@ -185,9 +190,18 @@ class PyRles():
 
             return self.rles.get(key, Rle([1], [0]))
 
-        # elif key_is_int:
+        elif isinstance(key, pr.PyRanges):
 
-        #     return list(self.rles.values())[key]
+            result = {}
+            for k, v in key.dfs.items():
+
+                if k not in self.rles:
+                    continue
+
+                v = v["Start End".split()].astype(np.long)
+                result[k] = getitems(self.rles[k].runs, self.rles[k].values, v.Start.values, v.End.values)
+
+            return result
 
         elif len(key) == 2:
 

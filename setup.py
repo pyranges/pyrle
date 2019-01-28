@@ -26,7 +26,7 @@ extensions = [e1, e2, e3]
 install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort"]
 
 setup(name='pyrle',
-      version="0.0.15",
+      version="0.0.16",
       packages=find_packages(),
       ext_modules=cythonize(extensions),
       install_requires=install_requires,
@@ -40,7 +40,7 @@ setup(name='pyrle',
           "Development Status :: 4 - Beta",
           "Environment :: Other Environment", "Intended Audience :: Developers",
           "Intended Audience :: Science/Research",
-          "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+          "License :: OSI Approved :: MIT License",
           "Operating System :: POSIX :: Linux",
           "Operating System :: MacOS :: MacOS X",
           "Topic :: Scientific/Engineering"

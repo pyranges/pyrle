@@ -53,9 +53,7 @@ class Rle:
             values = values[~zero_length_runs]
 
         if (np.isclose(s.shift(), s, equal_nan=True)).any() and len(s) > 1:
-            #print("runs, values", runs, values)
             runs, values = _remove_dupes(runs, values, len(values))
-            #print("runs, values", runs, values)
 
         self.runs = np.copy(runs)
         self.values = np.copy(values)
@@ -165,15 +163,15 @@ class Rle:
     def __getitem__(self, val):
 
         if isinstance(val, int):
-            runs, values = getitem(self.runs, self.values, val, val + 1)
-            return Rle(runs, values)
+            values = getlocs(self.runs, self.values, np.array([val], dtype=np.long))
+            return values[0]
         elif isinstance(val, slice):
             end = val.stop or np.sum(self.runs)
             start = val.start or 0
             runs, values = getitem(self.runs, self.values, start, end)
             return Rle(runs, values)
         elif isinstance(val, pd.DataFrame):
-            val = val.astype(np.long)
+            val = val["Start End".split()].astype(np.long)
             values = getitems(self.runs, self.values, val.Start.values, val.End.values)
             return [Rle(r, v) for r, v in values]
         else:
