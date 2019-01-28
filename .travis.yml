@@ -1,9 +1,8 @@
-# Stolen from http://conda.pydata.org/docs/travis.html
 language: python
 python:
-  # We don't actually use the Travis Python, but this keeps it organized.
   - "3.6"
 install:
+  - pip install cython
   - python setup.py install
 
 # functionality is tested in the pyranges package
