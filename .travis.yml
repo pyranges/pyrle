@@ -6,5 +6,5 @@ python:
 install:
   - python setup.py install
 
-script: python -c 'import pyrle; print(pyrle.__version__)'
 # functionality is tested in the pyranges package
+script: python -c 'import pyrle; print(pyrle.__version__)'
