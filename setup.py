@@ -6,6 +6,7 @@ from distutils.core import setup
 from setuptools import find_packages, Extension, Command
 from Cython.Build import cythonize
 
+__version__ = open("pyrle/version.py").readline().split(" = ")[1].replace('"', '').strip()
 
 # example_module = Extension('convolve', sources=['convolve.c'])
 macros = [("CYTHON_TRACE", "1")]
@@ -26,9 +27,9 @@ extensions = [e1, e2, e3]
 install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort"]
 
 setup(name='pyrle',
-      version="0.0.16",
+      version=__version__,
       packages=find_packages(),
-      ext_modules=cythonize(extensions),
+      ext_modules=cythonize(extensions, language_level="3"),
       install_requires=install_requires,
       author="Endre Bakken Stovner",
       author_email="endrebak85@gmail.com",
