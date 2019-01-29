@@ -27,7 +27,7 @@ try:
     if not ray.is_initialized():
         ray.init(local_mode=True, logging_level=logging.CRITICAL, ignore_reinit_error=True)
 except Exception as e:
-    import pyranges.raymock as ray
+    import pyrle.raymock as ray
 
 
 class PyRles():
