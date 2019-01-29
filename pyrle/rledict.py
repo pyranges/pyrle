@@ -13,18 +13,21 @@ from natsort import natsorted
 
 import numpy as np
 
+import logging
+
 try:
     dummy = profile
 except:
     profile = lambda x: x
 
+
+
 try:
-    # ray.init(logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
     import ray
-    import logging
-    ray.init(local_mode=True, logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
-except:
-    import pyrle.raymock as ray
+    if not ray.is_initialized():
+        ray.init(local_mode=True, logging_level=logging.CRITICAL, ignore_reinit_error=True)
+except Exception as e:
+    import pyranges.raymock as ray
 
 
 class PyRles():

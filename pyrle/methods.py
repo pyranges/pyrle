@@ -17,7 +17,8 @@ try:
     # ray.init(logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
     import ray
     import logging
-    ray.init(local_mode=True, logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
+    if not ray.is_initialized():
+        ray.init(local_mode=True, logging_level=logging.CRITICAL, ignore_reinit_error=True) # logging_level=logging.CRITICAL # local_mode=True
 except:
     import pyrle.raymock as ray
 
