@@ -3,6 +3,8 @@ python:
   - "3.6"
 install:
   - pip install cython
+  - sudo apt-get install R
+  - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - python setup.py install
 
 # functionality is tested in the pyranges package
