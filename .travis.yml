@@ -2,12 +2,11 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install cython
-  - sudo apt-get install R
+  - pip install cython pytest
   - sudo apt-get install -y r-base
   - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - python setup.py install
-  - py.test tests/
 
 # functionality is tested in the pyranges package
-script: cd ~/; python -c 'import pyrle; print(pyrle.__version__)'
+script:
+  - py.test tests/
