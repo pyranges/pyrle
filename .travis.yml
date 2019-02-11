@@ -4,8 +4,10 @@ python:
 install:
   - pip install cython
   - sudo apt-get install R
+  - sudo apt-get install -y r-base
   - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - python setup.py install
+  - py.test tests/
 
 # functionality is tested in the pyranges package
 script: cd ~/; python -c 'import pyrle; print(pyrle.__version__)'
