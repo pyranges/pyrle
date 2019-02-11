@@ -24,7 +24,7 @@ e3 = Extension("pyrle.src.getitem", ["pyrle/src/getitem.pyx"], define_macros = m
 
 extensions = [e1, e2, e3]
 
-install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort"]
+install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort", "pyranges"]
 
 setup(name='pyrle',
       version=__version__,

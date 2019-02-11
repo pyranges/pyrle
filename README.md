@@ -1,6 +1,6 @@
 # pyrle
 
-[![Build Status](https://travis-ci.org/endrebak/pyrle.svg?branch=master)](https://travis-ci.org/endrebak/pyrle) [![hypothesis tested](graphs/hypothesis-tested-brightgreen.svg) [![PyPI version](https://badge.fury.io/py/pyrle.svg)](https://badge.fury.io/py/pyrle)
+[![Build Status](https://travis-ci.org/endrebak/pyrle.svg?branch=master)](https://travis-ci.org/endrebak/pyrle) [!hypothesis tested](graphs/hypothesis-tested-brightgreen.svg) [![PyPI version](https://badge.fury.io/py/pyrle.svg)](https://badge.fury.io/py/pyrle)
 
 Run length arithmetic in Python using Cython. Inspired by the Rle class in R's
 S4Vectors.
