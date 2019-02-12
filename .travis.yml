@@ -4,6 +4,7 @@ python:
 install:
   - pip install cython pytest hypothesis
   - pip install sorted_nearest ncls
+  - echo "deb https://cloud.r-project.org/bin/linux/ubuntu trusty-cran35/" | sudo tee -a /etc/apt/sources.list
   - sudo apt-get install -y r-base
   - echo 'source("http://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - cat install.R
