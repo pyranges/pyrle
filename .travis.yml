@@ -11,4 +11,4 @@ install:
 
 # functionality is tested in the pyranges package
 script:
-  - cd tests/; py.test tests/test_*.py
+  - cd tests/; py.test test_*.py
