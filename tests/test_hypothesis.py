@@ -72,7 +72,7 @@ def test_rle(runlengths, runlengths2, operation):
 
         subprocess.check_output(cmd, shell=True, executable="/bin/bash").decode()
 
-        result = pd.read_table(outfile)
+        result = pd.read_csv(outfile, sep="\t")
         s4vectors_result = Rle(result.Runs, result.Values)
 
     print("pyranges result\n", result_pyranges)
