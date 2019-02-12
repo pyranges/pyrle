@@ -68,7 +68,7 @@ def test_rle(runlengths, runlengths2, operation):
         runlengths.to_csv(f1, sep="\t", index=False)
         runlengths2.to_csv(f2, sep="\t", index=False)
 
-        cmd = rle_operation_cmd.format(f1, f2, operation, outfile) + " 2>/dev/null"
+        cmd = rle_operation_cmd.format(f1, f2, operation, outfile) # + " 2>/dev/null"
 
         subprocess.check_output(cmd, shell=True, executable="/bin/bash").decode()
 
