@@ -4,11 +4,11 @@ python:
 install:
   - pip install cython pytest hypothesis
   - pip install sorted_nearest ncls
-  - sudo apt-get install -y r-base
-  - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
+  # - sudo apt-get install -y r-base
+  # - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - python setup.py install
   - ls tests
 
-# functionality is tested in the pyranges package
 script:
-  - cd tests/; py.test test_*.py
+  - python -c "import pyrle; print(pyrle.__version__)"
+  - cd tests/; py.test -v
