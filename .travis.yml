@@ -7,8 +7,9 @@ install:
   # - sudo apt-get install -y r-base
   # - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - python setup.py install
+  - python setup.py build_ext --inplace
   - ls tests
 
 script:
   - python -c "import pyrle; print(pyrle.__version__)"
-  - cd tests/; py.test -v
+  - py.test -v
