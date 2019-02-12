@@ -29,7 +29,7 @@ install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort", "pyrange
 setup(name='pyrle',
       version=__version__,
       packages=find_packages(),
-      ext_modules=cythonize(extensions, language_level="3"),
+      ext_modules=cythonize(extensions, language_level=2),
       install_requires=install_requires,
       author="Endre Bakken Stovner",
       author_email="endrebak85@gmail.com",
