@@ -11,13 +11,18 @@ print(args)
 print("We are starting in R! We are starting in R! We are starting in R! We are starting in R! We are starting in R! We are starting in R! We are starting in R! ")
 
 
-suppressMessages(library(S4Vectors))
+library(S4Vectors)
+## suppressMessages(library(S4Vectors))
 
 
 df1 = read.table(f1, sep="\t", header=TRUE)
+
+print("read table 1")
 df2 = read.table(f2, sep="\t", header=TRUE)
 
 sum1 = sum(df1$Runs)
+
+print("found sum 1")
 sum2 = sum(df2$Runs)
 
 df1$Values = df1$Values * 1.0

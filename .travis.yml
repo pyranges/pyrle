@@ -8,6 +8,8 @@ install:
   - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - python setup.py install
   - python setup.py build_ext --inplace
+  - which Rscript
+  - which RScript
   - ls tests
 
 script:
