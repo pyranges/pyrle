@@ -4,7 +4,7 @@ python:
 install:
   - pip install cython pytest hypothesis
   - pip install sorted_nearest ncls
-  - ncls apt-get install -y r-base
+  - sudo apt-get install -y r-base
   - echo 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
   - python setup.py install
   - ls tests
