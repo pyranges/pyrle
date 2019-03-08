@@ -187,7 +187,10 @@ class PyRles():
                 if s == key:
                     to_return[c, s] = rle
 
-            return PyRles(to_return)
+            if len(to_return) > 1:
+                return PyRles(to_return)
+            else: # return just the rle
+                return list(to_return.values())[0]
 
         elif key_is_string:
 

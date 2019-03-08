@@ -54,6 +54,18 @@ runlengths_same_length_integers = data_frames(index=indexes(dtype=np.int64, min_
                                               column("Values2", st.integers(min_value=1, max_value=int(1e4)))])
 
 
+
+@st.composite
+def _slice(draw):
+
+    start = draw(lengths) - 1
+    diff = draw(lengths) - 1
+
+    return start, start + diff
+
+
+
+
 @st.composite
 def dfs_min(draw):
     df = draw(better_dfs_min)

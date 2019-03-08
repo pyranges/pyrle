@@ -197,3 +197,14 @@ class Rle:
     def __repr__(self):
 
         return str(self)
+
+# import pyranges.data
+# data
+# import pyranges.data as d
+# d
+# h = d.aorta()
+# h = d.aorta().coverage()
+# import pyranges as pr
+# pr.data()
+# pr.data.aorta()
+# pr.data.aorta().coverage()

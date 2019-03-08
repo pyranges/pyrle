@@ -9,7 +9,7 @@ install:
   - gpg -a --export E084DAB9 | sudo apt-key add -
   - sudo apt-get update
   - sudo apt-get install -y r-base
-  - echo 'source("http://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges")' > install.R
+  - echo 'source("http://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("GenomicRanges"); biocLite("rtracklayer")' > install.R
   - cat install.R
   - sudo Rscript --vanilla install.R
   - python setup.py install
