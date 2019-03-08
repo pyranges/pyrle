@@ -37,9 +37,6 @@ rle_operation_cmd = "Rscript --vanilla tests/subset_coverage.R {} {} {} {}"
 def test_subset_coverage(runlengths, interval):
 
     start, end = interval
-    # Only compared against bioc with integers because float equality is hard,
-    # for both libraries, sometimes end up with slightly different runlengths
-    # when consecutive values are almost equal
 
     print("runlengths\n", runlengths)
 
@@ -54,7 +51,7 @@ def test_subset_coverage(runlengths, interval):
         outfile = "{}/result.txt".format(temp_dir)
         runlengths.to_csv(f1, sep="\t", index=False)
 
-        cmd = rle_operation_cmd.format(f1, start, end, outfile) # + " 2>/dev/null"
+        cmd = rle_operation_cmd.format(f1, start + 1, end, outfile) # + " 2>/dev/null"
         print(cmd)
 
         subprocess.check_output(cmd, shell=True, executable="/bin/bash").decode()

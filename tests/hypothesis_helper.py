@@ -59,7 +59,7 @@ runlengths_same_length_integers = data_frames(index=indexes(dtype=np.int64, min_
 def _slice(draw):
 
     start = draw(lengths) - 1
-    diff = draw(lengths) - 1
+    diff = draw(lengths)
 
     return start, start + diff
 
