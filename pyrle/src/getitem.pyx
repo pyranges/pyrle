@@ -4,9 +4,6 @@ import pandas as pd
 
 cimport cython
 
-from libc.math cimport isnan
-
-# from libcpp cimport bool
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

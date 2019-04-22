@@ -101,7 +101,7 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     cdef int last_different = 0
 
     nrs_arr = np.zeros(len(runs), dtype=np.long)
-    nvs_arr = np.zeros(len(runs), dtype=np.double)
+    nvs_arr = np.zeros(len(runs), dtype=np.float64)
 
     cdef long[::1] nrs
     cdef double[::1] nvs

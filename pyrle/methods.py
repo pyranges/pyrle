@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from pyrle import Rle
-from pyrle.rledict import PyRles
+from pyrle import rledict as rd
 from pyrle.src.coverage import _coverage
 
 from natsort import natsorted
@@ -10,23 +10,6 @@ from natsort import natsorted
 from sys import stderr
 
 from collections import defaultdict
-
-
-
-try:
-    # ray.init(logging_level=logging.CRITICAL) # logging_level=logging.CRITICAL # local_mode=True
-    import ray
-    import logging
-    if not ray.is_initialized():
-        ray.init(local_mode=True, logging_level=logging.CRITICAL, ignore_reinit_error=True) # logging_level=logging.CRITICAL # local_mode=True
-except:
-    import pyrle.raymock as ray
-
-
-try:
-    dummy = profile
-except:
-    profile = lambda x: x
 
 
 def _merge_rles(rle):
@@ -58,9 +41,12 @@ def ensure_both_or_none_stranded(self, other):
 
 def chromosomes_in_both_self_other(self, other):
 
-    chromosomes_in_both = natsorted(set(self.rles.keys()).intersection(other.rles.keys()))
-    chromosomes_in_self_not_other = natsorted(set(self.rles.keys()) - set(other.rles.keys()))
-    chromosomes_in_other_not_self = natsorted(set(other.rles.keys()) - set(self.rles.keys()))
+    chromosomes_in_both = natsorted(
+        set(self.rles.keys()).intersection(other.rles.keys()))
+    chromosomes_in_self_not_other = natsorted(
+        set(self.rles.keys()) - set(other.rles.keys()))
+    chromosomes_in_other_not_self = natsorted(
+        set(other.rles.keys()) - set(self.rles.keys()))
 
     return chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self
 
@@ -68,11 +54,13 @@ def chromosomes_in_both_self_other(self, other):
 def binary_operation(operation, self, other):
 
     func = {"div": __div, "mul": __mul, "add": __add, "sub": __sub}[operation]
+    func, get = rd.get_multithreaded_funcs(func)
 
     if self.stranded != other.stranded:
         self, other = ensure_both_or_none_stranded(self, other)
 
-    chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(self, other)
+    chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(
+        self, other)
 
     both_results = []
     for c in chromosomes_in_both:
@@ -90,35 +78,36 @@ def binary_operation(operation, self, other):
         _self = Rle([np.sum(other.rles[c].runs)], [0])
         other_results.append(func.remote(_self, other.rles[c]))
 
+    rles = {
+        k: v
+        for k, v in zip(
+            chromosomes_in_both + chromosomes_in_self_not_other +
+            chromosomes_in_other_not_self,
+            get(both_results + self_results + other_results))
+    }
+    return rd.PyRles(rles)
 
-    rles = {k: v for k, v in zip(chromosomes_in_both + chromosomes_in_self_not_other + chromosomes_in_other_not_self,
-                                 ray.get(both_results + self_results + other_results))}
-    return PyRles(rles)
 
-
-@ray.remote
 def __add(self, other):
 
     return self + other
 
-@ray.remote
+
 def __sub(self, other):
 
     return self - other
 
-@ray.remote
+
 def __div(self, other):
 
     return self / other
 
-@ray.remote
+
 def __mul(self, other):
 
     return self * other
 
 
-
-@ray.remote
 def coverage(df, kwargs):
 
     value_col = kwargs.get("value_col", None)
@@ -128,8 +117,14 @@ def coverage(df, kwargs):
     else:
         values = np.ones(len(df))
 
-    starts_df = pd.DataFrame({"Position": df.Start, "Value": values})["Position Value".split()]
-    ends_df = pd.DataFrame({"Position": df.End, "Value": -1 * values})["Position Value".split()]
+    starts_df = pd.DataFrame({
+        "Position": df.Start,
+        "Value": values
+    })["Position Value".split()]
+    ends_df = pd.DataFrame({
+        "Position": df.End,
+        "Value": -1 * values
+    })["Position Value".split()]
     _df = pd.concat([starts_df, ends_df], ignore_index=True)
     _df = _df.sort_values("Position", kind="mergesort")
 
@@ -141,8 +136,6 @@ def coverage(df, kwargs):
     return Rle(runs, values)
 
 
-
-
 def to_ranges(grles):
 
     from pyranges import PyRanges
@@ -152,7 +145,8 @@ def to_ranges(grles):
 
         for (chromosome, strand), rle in grles.items():
             starts, ends, values = _to_ranges(rle)
-            df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
+            df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
+                           axis=1)
             df.columns = "Start End Score".split()
             df.insert(0, "Chromosome", chromosome)
             df.insert(df.shape[1], "Strand", strand)
@@ -162,7 +156,8 @@ def to_ranges(grles):
 
         for chromosome, rle in grles.items():
             starts, ends, values = _to_ranges(rle)
-            df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
+            df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
+                           axis=1)
             df.columns = "Start End Score".split()
             df.insert(0, "Chromosome", chromosome)
             df = df[df.Score != 0]
@@ -187,4 +182,5 @@ def _to_ranges(rle):
     ends = ends.loc[end_idx]
     values = values[start_idx].reset_index(drop=True)
 
-    return starts.astype(int).reset_index(drop=True), ends.astype(int).reset_index(drop=True), values
+    return starts.astype(int).reset_index(
+        drop=True), ends.astype(int).reset_index(drop=True), values

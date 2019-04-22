@@ -6,8 +6,7 @@ from pyrle.src.getitem import getitems
 from pyrle import Rle
 
 from numbers import Number
-
-from pyrle import methods as m
+import pyrle.methods as m
 
 from natsort import natsorted
 
@@ -21,24 +20,48 @@ except:
     profile = lambda x: x
 
 
+def ray_initialized():
+    def test_function():
+        pass
 
-try:
-    import ray
-    if not ray.is_initialized():
-        ray.init(local_mode=True, logging_level=logging.CRITICAL, ignore_reinit_error=True)
-except Exception as e:
-    import pyrle.raymock as ray
+    try:
+        test_function = ray.remote(test_function)
+    except Exception as e:
+        if type(e) == NameError:
+            return False
+
+        raise e
+
+    try:
+        test_function.remote()
+    except Exception as e:
+        if "RayConnectionError" in str(type(e)):
+            return True
+        else:
+            raise e
+
+
+def get_multithreaded_funcs(function):
+
+    if ray_initialized():
+        get = ray.get
+        function = ray.remote(function)
+    else:
+        get = lambda x: x
+        function.remote = function
+
+    return function, get
 
 
 class PyRles():
-
     def __init__(self, ranges, stranded=False, value_col=None):
 
         # Construct PyRles from dict of rles
         if isinstance(ranges, dict):
 
             self.rles = ranges
-            self.__dict__["stranded"] = True if len(list(ranges.keys())[0]) == 2 else False
+            self.__dict__["stranded"] = True if len(list(
+                ranges.keys())[0]) == 2 else False
 
         # Construct PyRles from ranges
         else:
@@ -55,23 +78,26 @@ class PyRles():
 
             grpby = list(natsorted(df.groupby(grpby_keys)))
 
+            m_coverage, get = get_multithreaded_funcs(m.coverage)
+
             _rles = {}
             kwargs = {"value_col": value_col}
             if stranded:
                 for (c, s), cdf in grpby:
-                    _rles[c, s] = m.coverage.remote(cdf, kwargs)
+                    _rles[c, s] = m_coverage.remote(cdf, kwargs)
             else:
                 s = None
                 for k, cdf in grpby:
-                    _rles[k] = m.coverage.remote(cdf, kwargs)
+                    _rles[k] = m_coverage.remote(cdf, kwargs)
 
-            _rles = {k: v for k, v in zip(_rles.keys(), ray.get(list(_rles.values())))}
-
+            _rles = {
+                k: v
+                for k, v in zip(_rles.keys(), get(list(_rles.values())))
+            }
 
             self.rles = _rles
 
             self.__dict__["stranded"] = stranded
-
 
     def add(self, other):
 
@@ -135,7 +161,6 @@ class PyRles():
 
         return m.binary_operation("div", self, other)
 
-
     def to_ranges(self):
 
         return m.to_ranges(self)
@@ -189,7 +214,7 @@ class PyRles():
 
             if len(to_return) > 1:
                 return PyRles(to_return)
-            else: # return just the rle
+            else:  # return just the rle
                 return list(to_return.values())[0]
 
         elif key_is_string:
@@ -205,7 +230,8 @@ class PyRles():
                     continue
 
                 v = v["Start End".split()].astype(np.long)
-                result[k] = getitems(self.rles[k].runs, self.rles[k].values, v.Start.values, v.End.values)
+                result[k] = getitems(self.rles[k].runs, self.rles[k].values,
+                                     v.Start.values, v.End.values)
 
             return result
 
@@ -214,8 +240,9 @@ class PyRles():
             return self.rles.get(key, Rle([1], [0]))
 
         else:
-            raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from PyRles.")
-
+            raise IndexError(
+                "Must use chromosome, strand or (chromosome, strand) to get items from PyRles."
+            )
 
     def __str__(self):
 
@@ -224,52 +251,58 @@ class PyRles():
 
         if not stranded:
             if len(keys) > 2:
-                str_list = [keys[0],
-                    str(self.rles[keys[0]]),
-                    "...",
-                    keys[-1],
+                str_list = [
+                    keys[0],
+                    str(self.rles[keys[0]]), "...", keys[-1],
                     str(self.rles[keys[-1]]),
-                    "Unstranded PyRles object with {} chromosomes.".format(len(self.rles.keys()))]
+                    "Unstranded PyRles object with {} chromosomes.".format(
+                        len(self.rles.keys()))
+                ]
             elif len(keys) == 2:
-                str_list = [keys[0],
-                            "-" * len(keys[0]),
-                            str(self.rles[keys[0]]),
-                            "",
-                            keys[-1],
-                            "-" * len(keys[-1]),
-                            str(self.rles[keys[-1]]),
-                            "Unstranded PyRles object with {} chromosomes.".format(len(self.rles.keys()))]
+                str_list = [
+                    keys[0], "-" * len(keys[0]),
+                    str(self.rles[keys[0]]), "", keys[-1], "-" * len(keys[-1]),
+                    str(self.rles[keys[-1]]),
+                    "Unstranded PyRles object with {} chromosomes.".format(
+                        len(self.rles.keys()))
+                ]
             else:
-                str_list = [keys[0],
-                            str(self.rles[keys[0]]),
-                            "Unstranded PyRles object with {} chromosome.".format(len(self.rles.keys()))]
+                str_list = [
+                    keys[0],
+                    str(self.rles[keys[0]]),
+                    "Unstranded PyRles object with {} chromosome.".format(
+                        len(self.rles.keys()))
+                ]
 
         else:
             if len(keys) > 2:
-                str_list = [" ".join(keys[0]),
-                    str(self.rles[keys[0]]),
-                    "...",
-                    " ".join(keys[-1]),
+                str_list = [
+                    " ".join(keys[0]),
+                    str(self.rles[keys[0]]), "...", " ".join(keys[-1]),
                     str(self.rles[keys[-1]]),
-                    "PyRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
+                    "PyRles object with {} chromosomes/strand pairs.".format(
+                        len(self.rles.keys()))
+                ]
             elif len(keys) == 2:
-                str_list = [" ".join(keys[0]),
-                            "-" * len(keys[0]),
-                            str(self.rles[keys[0]]),
-                            "",
-                            " ".join(keys[-1]),
-                            "-" * len(keys[-1]),
-                            str(self.rles[keys[-1]]),
-                            "PyRles object with {} chromosomes/strand pairs.".format(len(self.rles.keys()))]
+                str_list = [
+                    " ".join(keys[0]), "-" * len(keys[0]),
+                    str(self.rles[keys[0]]), "", " ".join(keys[-1]),
+                    "-" * len(keys[-1]),
+                    str(self.rles[keys[-1]]),
+                    "PyRles object with {} chromosomes/strand pairs.".format(
+                        len(self.rles.keys()))
+                ]
             else:
-                str_list = [" ".join(keys[0]),
-                            str(self.rles[keys[0]]),
-                            "PyRles object with {} chromosome/strand pairs.".format(len(self.rles.keys()))]
+                str_list = [
+                    " ".join(keys[0]),
+                    str(self.rles[keys[0]]),
+                    "PyRles object with {} chromosome/strand pairs.".format(
+                        len(self.rles.keys()))
+                ]
 
         outstr = "\n".join(str_list)
 
         return outstr
-
 
     def __eq__(self, other):
 
@@ -300,6 +333,7 @@ class PyRles():
 
         return PyRles(d)
 
+
 if __name__ == "__main__":
 
     # Must turn on macros in setup.py for line tracing to work
@@ -313,9 +347,13 @@ if __name__ == "__main__":
     test_file = "/mnt/scratch/endrebak/genomes/chip/UCSD.Aorta.Input.STL002.bed.gz"
 
     nrows = None
-    df = pd.read_table(test_file, sep="\t", usecols=[0, 1, 2, 5], header=None,
-                       names="Chromosome Start End Strand".split(), nrows=nrows)
-
+    df = pd.read_table(
+        test_file,
+        sep="\t",
+        usecols=[0, 1, 2, 5],
+        header=None,
+        names="Chromosome Start End Strand".split(),
+        nrows=nrows)
 
     print("Done reading")
     start = time()

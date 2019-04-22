@@ -7,10 +7,9 @@ cimport cython
 from numpy import nan
 
 
-from libc.math cimport copysign, isfinite, INFINITY, NAN
+from libc.math cimport copysign, INFINITY, NAN
 
 cdef float inf = INFINITY
-
 
 # s/boundscheck(True/boundscheck(False
 # s/boundscheck(False/boundscheck(True
