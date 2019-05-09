@@ -221,7 +221,8 @@ class PyRles():
 
             return self.rles.get(key, Rle([1], [0]))
 
-        elif isinstance(key, pr.PyRanges):
+        elif "PyRanges" in str(type(key)): # hack to avoid isinstance(key, pr.PyRanges) so that we
+                                           # do not need a dep on PyRanges in this library
 
             result = {}
             for k, v in key.dfs.items():

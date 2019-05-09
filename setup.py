@@ -24,7 +24,7 @@ e3 = Extension("pyrle.src.getitem", ["pyrle/src/getitem.pyx"], define_macros = m
 
 extensions = [e1, e2, e3]
 
-install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort", "pyranges"]
+install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort"]
 
 setup(name='pyrle',
       version=__version__,
@@ -36,7 +36,6 @@ setup(name='pyrle',
       url="https://github.com/endrebak/pyrle",
       license=["MIT"],
       classifiers=[
-          "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3",
           "Development Status :: 4 - Beta",
           "Environment :: Other Environment", "Intended Audience :: Developers",
