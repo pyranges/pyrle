@@ -1,6 +1,3 @@
-# import sys
-# sys.setrecursionlimit(150)
-
 from pyrle.src.getitem import getitems
 
 from pyrle import Rle
@@ -20,30 +17,12 @@ except:
     profile = lambda x: x
 
 
-def ray_initialized():
-    def test_function():
-        pass
-
-    try:
-        test_function = ray.remote(test_function)
-    except Exception as e:
-        if type(e) == NameError:
-            return False
-
-        raise e
-
-    try:
-        test_function.remote()
-    except Exception as e:
-        if "RayConnectionError" in str(type(e)):
-            return True
-        else:
-            raise e
 
 
-def get_multithreaded_funcs(function):
+def get_multithreaded_funcs(function, nb_cpu):
 
-    if ray_initialized():
+    if nb_cpu > 1:
+        import ray
         get = ray.get
         function = ray.remote(function)
     else:
@@ -54,7 +33,7 @@ def get_multithreaded_funcs(function):
 
 
 class PyRles():
-    def __init__(self, ranges, stranded=False, value_col=None):
+    def __init__(self, ranges, stranded=False, value_col=None, nb_cpu=1):
 
         # Construct PyRles from dict of rles
         if isinstance(ranges, dict):
@@ -78,7 +57,12 @@ class PyRles():
 
             grpby = list(natsorted(df.groupby(grpby_keys)))
 
-            m_coverage, get = get_multithreaded_funcs(m.coverage)
+            if nb_cpu > 1:
+                import ray
+                with m.suppress_stdout_stderr():
+                    ray.init(num_cpus=nb_cpu)
+
+            m_coverage, get = get_multithreaded_funcs(m.coverage, nb_cpu)
 
             _rles = {}
             kwargs = {"value_col": value_col}
@@ -95,13 +79,16 @@ class PyRles():
                 for k, v in zip(_rles.keys(), get(list(_rles.values())))
             }
 
+            if nb_cpu > 1:
+                ray.shutdown()
+
             self.rles = _rles
 
             self.__dict__["stranded"] = stranded
 
-    def add(self, other):
+    def add(self, other, nb_cpu=1):
 
-        return m.binary_operation("add", self, other)
+        return m.binary_operation("add", self, other, nb_cpu)
 
     def __add__(self, other):
 
@@ -114,9 +101,9 @@ class PyRles():
 
         return PyRles({cs: other + v for cs, v in self.items()})
 
-    def sub(self, other):
+    def sub(self, other, nb_cpu=1):
 
-        return m.binary_operation("sub", self, other)
+        return m.binary_operation("sub", self, other, nb_cpu)
 
     def __sub__(self, other):
 
@@ -129,9 +116,9 @@ class PyRles():
 
         return PyRles({cs: other - v for cs, v in self.items()})
 
-    def mul(self, other):
+    def mul(self, other, nb_cpu=1):
 
-        return m.binary_operation("mul", self, other)
+        return m.binary_operation("mul", self, other, nb_cpu)
 
     def __rmul__(self, other):
 
@@ -146,9 +133,9 @@ class PyRles():
 
     __rmul__ = __mul__
 
-    def div(self, other):
+    def div(self, other, nb_cpu=1):
 
-        return m.binary_operation("div", self, other)
+        return m.binary_operation("div", self, other, nb_cpu)
 
     def __rtruediv__(self, other):
 

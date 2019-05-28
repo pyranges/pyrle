@@ -78,7 +78,7 @@ def dfs_min(draw):
     # if not strand:
     #     df = df.drop("Strand", axis=1)
 
-    gr = PyRanges(df, extended=True)
+    gr = PyRanges(df)
     # gr = PyRanges(df)
 
     # do not sort like this, use pyranges sort
