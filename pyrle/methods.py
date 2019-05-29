@@ -21,8 +21,8 @@ class suppress_stdout_stderr(object):
        This will not suppress raised exceptions, since exceptions are printed
     to stderr just before a script exits, and after the context manager has
     exited (at least, I think that is why it lets exceptions through).
-
     '''
+
     def __init__(self):
         # Open a pair of null files
         self.null_fds = [os.open(os.devnull, os.O_RDWR) for x in range(2)]
@@ -101,8 +101,6 @@ def binary_operation(operation, self, other, nb_cpu=1):
     for c in chromosomes_in_both:
         both_results.append(func.remote(self.rles[c], other.rles[c]))
 
-    # rles = {c: r for c, r in zip(cs, _rles)}
-
     self_results = []
     for c in chromosomes_in_self_not_other:
         _other = Rle([np.sum(self.rles[c].runs)], [0])
@@ -171,36 +169,59 @@ def coverage(df, kwargs):
     return Rle(runs, values)
 
 
-def to_ranges(grles):
+def to_ranges_df_strand(rle, k):
 
-    # TODO: make multithreaded
+    chromosome, strand = k
+    starts, ends, values = _to_ranges(rle)
+    df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
+                    axis=1)
+    df.columns = "Start End Score".split()
+    df.insert(0, "Chromosome", chromosome)
+    df.insert(df.shape[1], "Strand", strand)
+    df = df[df.Score != 0]
+
+    return df
+
+
+def to_ranges_df_no_strand(rle, k):
+
+    starts, ends, values = _to_ranges(rle)
+    df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
+                    axis=1)
+    df.columns = "Start End Score".split()
+    df.insert(0, "Chromosome", k)
+    df = df[df.Score != 0]
+
+    return df
+
+
+def to_ranges(grles, nb_cpu=1):
 
     from pyranges import PyRanges
 
-    dfs = []
-    if grles.stranded:
+    func = to_ranges_df_strand if grles.stranded else to_ranges_df_no_strand
 
-        for (chromosome, strand), rle in grles.items():
-            starts, ends, values = _to_ranges(rle)
-            df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
-                           axis=1)
-            df.columns = "Start End Score".split()
-            df.insert(0, "Chromosome", chromosome)
-            df.insert(df.shape[1], "Strand", strand)
-            df = df[df.Score != 0]
-            dfs.append(df)
+    if nb_cpu > 1:
+        import ray
+        ray.init(num_cpus=nb_cpu)
+        func = ray.remote(func)
+        get = ray.get
     else:
+        func.remote = func
+        get = lambda x: x
 
-        for chromosome, rle in grles.items():
-            starts, ends, values = _to_ranges(rle)
-            df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
-                           axis=1)
-            df.columns = "Start End Score".split()
-            df.insert(0, "Chromosome", chromosome)
-            df = df[df.Score != 0]
-            dfs.append(df)
+    dfs, keys = [], []
+    for k, v in grles.items():
+        result = func.remote(v, k)
+        dfs.append(result)
+        keys.append(k)
 
-    return PyRanges(pd.concat(dfs))
+    dfs = {k: v for (k, v) in zip(keys, get(dfs))}
+
+    if nb_cpu > 1:
+        ray.shutdown()
+
+    return PyRanges(dfs)
 
 
 def _to_ranges(rle):
