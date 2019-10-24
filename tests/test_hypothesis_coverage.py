@@ -51,7 +51,7 @@ def test_coverage(df):
     p = pr.PyRanges(df)
     print("pyranges\n", p)
 
-    c = p.coverage(strand=False)["chr1"]
+    c = p.to_rle(strand=False)["chr1"]
 
     result_df = None
     with tempfile.TemporaryDirectory() as temp_dir:

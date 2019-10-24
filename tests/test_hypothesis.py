@@ -89,8 +89,8 @@ rle_commute_how = ["__add__", "__mul__"]
 @given(gr=dfs_min(), gr2=dfs_min())
 def test_commutative_rles(gr, gr2, how):
 
-    cv = gr.coverage(strand=True)
-    cv2 = gr2.coverage(strand=True)
+    cv = gr.to_rle(strand=True)
+    cv2 = gr2.to_rle(strand=True)
 
     method = getattr(cv, how)
     method2 = getattr(cv2, how)
