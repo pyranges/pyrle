@@ -61,7 +61,7 @@ def find_runs(x):
         run_starts = np.nonzero(loc_run_start)[0]
 
         # find run values
-        run_values = x[loc_run_start]
+        run_values = np.array(x[loc_run_start], dtype=np.double)
 
         # find run lengths
         run_lengths = np.diff(np.append(run_starts, n))

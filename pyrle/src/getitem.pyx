@@ -8,7 +8,7 @@ cimport cython
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef getitem(long [::1] runs, double [::1] values, start, end):
+cpdef getitem(const long [::1] runs, const double [::1] values, start, end):
 
     cdef:
         int i = 0
@@ -86,7 +86,7 @@ cpdef getitem(long [::1] runs, double [::1] values, start, end):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-def getlocs(long [::1] runs, double [::1] values, long [::1] locs):
+def getlocs(const long [::1] runs, const double [::1] values, const long [::1] locs):
 
     cdef:
         int i = 0
@@ -113,7 +113,7 @@ def getlocs(long [::1] runs, double [::1] values, long [::1] locs):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef _getitem(long [::1] runs, double [::1] values, long [::1] run_cumsum, start, end):
+cpdef _getitem(const long [::1] runs, const double [::1] values, const long [::1] run_cumsum, start, end):
 
     cdef:
         int i = 0
@@ -198,7 +198,7 @@ cpdef _getitem(long [::1] runs, double [::1] values, long [::1] run_cumsum, star
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef getitems(long [::1] runs, double [::1] values, long [::1] starts, long [::1] ends):
+cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1] starts, const long [::1] ends):
 
     cdef:
         long i = 0
@@ -213,17 +213,22 @@ cpdef getitems(long [::1] runs, double [::1] values, long [::1] starts, long [::
     run_cumsum_arr = np.cumsum(runs)
     run_cumsum = run_cumsum_arr
 
-    results = []
+    _runs, _values = [], []
 
     for i in range(len(starts)):
 
-        # print(starts[i], ends[i])
-        # cpdef getitem(long [::1] runs, double [::1] values, start, end):
+        __runs, __values = _getitem(runs, values, run_cumsum, starts[i], ends[i])
 
-        # _runs, _values = getitem(runs, values, starts[i], ends[i])
-        _runs, _values = _getitem(runs, values, run_cumsum, starts[i], ends[i])
-        # print(_runs, _values)
+        _runs.append(__runs)
+        _values.append(__values)
 
-        results.append((_runs, _values))
+    ls = np.array([len(r) for r in _runs], dtype=int)
+    _runs = np.concatenate(_runs)
+    _values = np.concatenate(_values)
 
-    return results
+    _starts = np.repeat(starts, ls)
+    _ends = np.repeat(ends, ls)
+
+    df = pd.DataFrame({"Start": _starts, "End": _ends, "Run": _runs, "Value": _values})
+
+    return df

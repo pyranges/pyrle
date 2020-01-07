@@ -181,7 +181,6 @@ class PyRles():
 
         key_is_string = isinstance(key, str)
         key_is_int = isinstance(key, int)
-        import pyranges as pr
 
         if key_is_int:
             raise Exception("Integer indexing not allowed!")
@@ -211,6 +210,7 @@ class PyRles():
         elif "PyRanges" in str(type(key)): # hack to avoid isinstance(key, pr.PyRanges) so that we
                                            # do not need a dep on PyRanges in this library
 
+            import pyranges as pr
             result = {}
             for k, v in key.dfs.items():
 
@@ -218,10 +218,18 @@ class PyRles():
                     continue
 
                 v = v["Start End".split()].astype(np.long)
-                result[k] = getitems(self.rles[k].runs, self.rles[k].values,
+                df = getitems(self.rles[k].runs, self.rles[k].values,
                                      v.Start.values, v.End.values)
 
-            return result
+                if isinstance(k, tuple):
+                    df.insert(0, "Chromosome", k[0])
+                    df.insert(df.shape[1], "Strand", k[1])
+                else:
+                    df.insert(0, "Chromosome", k)
+
+                result[k] = df
+
+            return pr.PyRanges(result)
 
         elif len(key) == 2:
 
