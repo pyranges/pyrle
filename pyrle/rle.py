@@ -215,7 +215,7 @@ class Rle:
         elif isinstance(val, pd.DataFrame):
             val = val["Start End".split()].astype(np.long)
             values = getitems(self.runs, self.values, val.Start.values, val.End.values)
-            return [Rle(r, v) for r, v in values]
+            return values
         else:
             locs = np.sort(np.array(val, dtype=np.long))
             values = getlocs(self.runs, self.values, locs)
