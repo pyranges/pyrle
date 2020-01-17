@@ -8,7 +8,7 @@ cimport cython
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef getitem(const long [::1] runs, const double [::1] values, start, end):
+cpdef getitem(const long [::1] runs, const double [::1] values, int start, int end):
 
     cdef:
         int i = 0
@@ -113,7 +113,7 @@ def getlocs(const long [::1] runs, const double [::1] values, const long [::1] l
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef _getitem(const long [::1] runs, const double [::1] values, const long [::1] run_cumsum, start, end):
+cpdef _getitem(const long [::1] runs, const double [::1] values, const long [::1] run_cumsum, int start, int end):
 
     cdef:
         int i = 0
@@ -128,11 +128,11 @@ cpdef _getitem(const long [::1] runs, const double [::1] values, const long [::1
         cdef double[::1] vs
         cdef long[::1] rs
 
+
     values_arr = np.ones(arr_length) * -1
     vs = values_arr
     runs_arr = np.ones(arr_length, dtype=np.long) * -1
     rs = runs_arr
-
 
     for i in range(search_start, len(runs)):
         # print("i", i)
@@ -203,32 +203,107 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
     cdef:
         long i = 0
         long counter = 0
-        long rsum = 0
         long start = 0
         long end = 0
         long old_start = -1
         long old_end = -1
         cdef long[::1] run_cumsum
+        int x = 0
+        int arr_length
+        int nfound = 0
+        # int foundsum = 0
+        int rsum = 0
+        int r = 0
+        int l = 0
+        int started = 0
+        cdef double[::1] vs
+        cdef long[::1] rs
+        cdef long[::1] ids
+        cdef long[::1] search_starts
 
     run_cumsum_arr = np.cumsum(runs)
     run_cumsum = run_cumsum_arr
 
-    _runs, _values = [], []
+    search_starts_arr = np.searchsorted(run_cumsum, starts)
+    search_starts = search_starts_arr
 
-    for i in range(len(starts)):
+    arr_length = len(run_cumsum_arr)
 
-        __runs, __values = _getitem(runs, values, run_cumsum, starts[i], ends[i])
+    ids_arr = np.ones(arr_length, dtype=np.long) * -1
+    ids = ids_arr
+    values_arr = np.ones(arr_length) * -1
+    vs = values_arr
+    runs_arr = np.ones(arr_length, dtype=np.long) * -1
+    rs = runs_arr
 
-        _runs.append(__runs)
-        _values.append(__values)
+    for x in range(len(search_starts)):
 
-    ls = np.array([len(r) for r in _runs], dtype=int)
-    _runs = np.concatenate(_runs)
-    _values = np.concatenate(_values)
+        search_start = search_starts_arr[x]
+        start = starts[x]
+        end = ends[x]
+        started = 0
+        # print("-------")
+        # print("x", x)
 
-    _starts = np.repeat(starts, ls)
-    _ends = np.repeat(ends, ls)
+        for i in range(search_start, len(runs)):
 
-    df = pd.DataFrame({"Start": _starts, "End": _ends, "Run": _runs, "Value": _values})
+            r = runs[i]
 
-    return df
+            rsum = run_cumsum[i]
+
+            if nfound >= arr_length:
+                arr_length = arr_length * 2
+                values_arr = np.resize(values_arr, arr_length)
+                ids_arr = np.resize(ids_arr, arr_length)
+                runs_arr = np.resize(runs_arr, arr_length)
+                rs = runs_arr
+                vs = values_arr
+                ids = ids_arr
+
+            if started == 0:
+
+                if rsum > start:
+
+                    if not rsum > end:
+                        l = rsum - start
+                        rs[nfound] = l
+                        ids[nfound] = x
+                        vs[nfound] = values[i]
+                        nfound += 1
+                    else:
+                        ids[nfound] = x
+                        rs[nfound] = end - start
+                        vs[nfound] = values[i]
+                        nfound += 1
+                        # print("first_break", started)
+                        break
+
+                    started = 1
+            else:
+
+                if rsum < end:
+
+                    l = runs[i]
+                    rs[nfound] = l
+                    ids[nfound] = x
+                    vs[nfound] = values[i]
+                    nfound += 1
+                else:
+                    l = runs[i] - (rsum - end)
+
+                    if l == 0:
+                        # print("second_break")
+                        break
+
+
+                    rs[nfound] = l
+                    ids[nfound] = x
+                    vs[nfound] = values[i]
+                    nfound += 1
+
+                    # print("third_break")
+                    break
+
+    return ids_arr[:nfound], runs_arr[:nfound], values_arr[:nfound]
+
+

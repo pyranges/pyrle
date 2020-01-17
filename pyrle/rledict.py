@@ -211,6 +211,10 @@ class PyRles():
                                            # do not need a dep on PyRanges in this library
 
             import pyranges as pr
+            import pandas as pd
+
+            from pyrle.rle import find_runs
+
             result = {}
             for k, v in key.dfs.items():
 
@@ -218,8 +222,15 @@ class PyRles():
                     continue
 
                 v = v["Start End".split()].astype(np.long)
-                df = getitems(self.rles[k].runs, self.rles[k].values,
-                                     v.Start.values, v.End.values)
+                ids, runs, values = getitems(self.rles[k].runs, self.rles[k].values,
+                                             v.Start.values, v.End.values)
+
+                id_values, id_runs = find_runs(ids)
+                df = pd.DataFrame({"Start": np.repeat(v.Start.values, id_runs),
+                                   "End": np.repeat(v.End.values, id_runs),
+                                   "RunID": ids, 
+                                   "Run": runs,
+                                   "Value": values})
 
                 if isinstance(k, tuple):
                     df.insert(0, "Chromosome", k[0])
