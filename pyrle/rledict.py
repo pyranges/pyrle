@@ -222,13 +222,15 @@ class PyRles():
                     continue
 
                 v = v["Start End".split()].astype(np.long)
-                ids, runs, values = getitems(self.rles[k].runs, self.rles[k].values,
+                starts, ends, runs, values = getitems(self.rles[k].runs, self.rles[k].values,
                                              v.Start.values, v.End.values)
 
-                id_values, id_runs = find_runs(ids)
-                df = pd.DataFrame({"Start": np.repeat(v.Start.values, id_runs),
-                                   "End": np.repeat(v.End.values, id_runs),
-                                   "RunID": ids, 
+                # id_values, id_runs = find_runs(ids)
+                # print(id_values.shape)
+                # print(id_runs.shape)
+                df = pd.DataFrame({"Start": starts,
+                                   "End": ends,
+                                   # "RunID": ids, 
                                    "Run": runs,
                                    "Value": values})
 

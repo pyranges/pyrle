@@ -1,3 +1,6 @@
+# 0.0.29 (21.01.19)
+- try to fix bug when subsetting with pyranges
+
 # 0.0.28 (17.01.19)
 - improve speed when subsetting with pyranges
 
