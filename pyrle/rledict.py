@@ -86,6 +86,59 @@ class PyRles():
 
             self.__dict__["stranded"] = stranded
 
+    def __iter__(self):
+
+        return iter(self.rles.items())
+
+
+    def apply_values(self, f, defragment=True):
+
+        new_rles = {}
+
+        for k, r in self:
+
+            new_rle = r.copy()
+            new_rle.values = f(new_rle.values).astype(np.double)
+
+            new_rle = new_rle.defragment()
+
+            new_rles[k] = new_rle
+
+        return new_rles
+
+    def apply_runs(self, f, defragment=True):
+
+        new_rles = {}
+
+        for k, r in self:
+
+            new_rle = r.copy()
+            new_rle.runs = f(new_rle.runs).astype(np.int)
+
+            new_rle = new_rle.defragment()
+
+            new_rles[k] = new_rle
+
+        return new_rles
+
+
+    def apply(self, f, defragment=True):
+
+        new_rles = {}
+
+        for k, r in self:
+
+            new_rle = r.copy()
+            # new_rle.runs = f(new_rle.runs).astype(np.int)
+            new_rle = f(new_rle)
+
+            new_rle = new_rle.defragment()
+
+            new_rles[k] = new_rle
+
+        return new_rles
+
+
     def add(self, other, nb_cpu=1):
 
         return m.binary_operation("add", self, other, nb_cpu)

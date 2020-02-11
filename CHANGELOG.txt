@@ -1,3 +1,9 @@
+# 0.0.30 (unreleased)
+- add unary negation to rle/rledict
+- add apply_values and apply_runs to rledict
+- add iter to rledict to for loop through keys/values
+- subsetting an RLE with a dataframe now returns a dataframe
+
 # 0.0.29 (21.01.19)
 - try to fix bug when subsetting with pyranges
 

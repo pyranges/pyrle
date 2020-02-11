@@ -110,6 +110,11 @@ class Rle:
     def __len__(self):
         return len(self.runs)
 
+    def __neg__(self):
+        self = self.copy()
+        self.values = -self.values
+        return self
+
     def __radd__(self, other):
 
         return Rle(self.runs, self.values + other)
@@ -214,7 +219,15 @@ class Rle:
             return Rle(runs, values)
         elif isinstance(val, pd.DataFrame):
             val = val["Start End".split()].astype(np.long)
-            values = getitems(self.runs, self.values, val.Start.values, val.End.values)
+            starts, ends, runs, values = getitems(self.runs, self.values,
+                                            val.Start.values, val.End.values)
+
+            df = pd.DataFrame({"Start": starts,
+                                "End": ends,
+                                "Run": runs,
+                                "Value": values})
+            val = val["Start End".split()].astype(np.long)
+            # values = getitems(self.runs, self.values, val.Start.values, val.End.values)
             return values
         else:
             locs = np.sort(np.array(val, dtype=np.long))
