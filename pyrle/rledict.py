@@ -136,7 +136,7 @@ class PyRles():
 
             new_rles[k] = new_rle
 
-        return new_rles
+        return PyRles(new_rles)
 
 
     def add(self, other, nb_cpu=1):
@@ -229,6 +229,16 @@ class PyRles():
         for k, rle in self.items():
 
             rle.values.loc[rle.values == 0] = pseudo
+
+    def copy(self):
+        d = {}
+        for k, r in self:
+            d[k] = r.copy()
+
+        return PyRles(d)
+
+    def shift(self, distance):
+        return self.apply(lambda r: r.shift(distance))
 
     def __getitem__(self, key):
 

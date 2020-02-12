@@ -4,8 +4,10 @@
 - add iter to rledict to for loop through keys/values
 - subsetting an RLE with a dataframe now returns a dataframe
 - printing rles respects terminal width
+- add copy() to rledict
+- add shift to rle/rledict
 
-# 0.0.29 (21.01.19)
+# 0).0.29 (21.01.19)
 - try to fix bug when subsetting with pyranges
 
 # 0.0.28 (17.01.19)

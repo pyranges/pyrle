@@ -206,8 +206,6 @@ class Rle:
         return self
 
 
-    
-
     def __str__(self):
 
         terminal_width = shutil.get_terminal_size().columns
@@ -218,8 +216,11 @@ class Rle:
         start_runs, end_runs = [str(i) for i in self.runs[:half_entries]], [str(i) for i in self.runs[-half_entries:]]
         start_values, end_values = [str(i) for i in self.values[:half_entries]], [str(i) for i in self.values[-half_entries:]]
 
-        runs = start_runs + ["..."] + end_runs
-        values = start_values + ["..."] + end_values
+        if entries > len(self.runs):
+            runs = start_runs + ["..."] + end_runs
+            values = start_values + ["..."] + end_values
+        else:
+            runs, values = self.runs, self.values
 
         df = pd.Series(values).to_frame().T
 
@@ -268,9 +269,35 @@ class Rle:
                                 "End": ends,
                                 "Run": runs,
                                 "Value": values})
-            val = val["Start End".split()].astype(np.long)
+            # val = val["Start End".split()].astype(np.long)
             # values = getitems(self.runs, self.values, val.Start.values, val.End.values)
-            return values
+            return df
+        elif "PyRanges" in str(type(val)): # hack to avoid isinstance(key, pr.PyRanges) so that we
+                                           # do not need a dep on PyRanges in this library
+            import pyranges as pr
+            val = val.drop().df
+            chromosome = val.Chromosome.iloc[0]
+
+            if "Strand" in val:
+                strand = val.Strand.iloc[0]
+            else:
+                strand = None
+
+            val = val["Start End".split()].astype(np.long)
+            starts, ends, runs, values = getitems(self.runs, self.values,
+                                            val.Start.values, val.End.values)
+
+            df = pd.DataFrame({"Chromosome": chromosome,
+                               "Start": starts,
+                               "End": ends,
+                               "Run": runs,
+                               "Value": values})
+
+            if strand:
+                df.insert(3, "Strand", strand)
+            # val = val["Start End".split()].astype(np.long)
+            # values = getitems(self.runs, self.values, val.Start.values, val.End.values)
+            return pr.PyRanges(df)
         else:
             locs = np.sort(np.array(val, dtype=np.long))
             values = getlocs(self.runs, self.values, locs)
@@ -290,6 +317,31 @@ class Rle:
     def copy(self):
 
         return Rle(np.copy(self.runs), np.copy(self.values))
+
+    def shift(self, dist):
+
+        self = self.copy()
+        if dist > 0:
+            self.runs[0] += dist
+        elif dist < 0:
+            if -dist < self.runs[0]:
+                self.runs[0] += dist # remember dist is negative
+            else:
+                cs = np.cumsum(self.runs)
+                ix = np.argmax(cs > -dist)
+                # print("ix", ix)
+                # print("dist", dist)
+                leftover = (dist + np.sum(self.runs[:ix]))
+                # print("cs", cs)
+                # print("leftover", leftover)
+                self = Rle(self.runs[ix:], self.values[ix:])
+                # print("new_self\n", self)
+                self.runs[0] += leftover
+
+                if self.runs[0] < 0:
+                    self = Rle([], [])
+
+        return self
 
     def __repr__(self):
 
