@@ -4,6 +4,7 @@ from pyrle.src.getitem import getitem, getlocs, getitems
 
 import pandas as pd
 import numpy as np
+import shutil
 
 from tabulate import tabulate
 
@@ -183,16 +184,42 @@ class Rle:
         values_equal = np.allclose(self.values, other.values)
         return runs_equal and values_equal
 
+    def apply_values(self, f, defragment=True):
+        self = self.copy()
+        self.values = f(self.values)
+        if defragment:
+            self = self.defragment()
+        return self
+
+    def apply_runs(self, f, defragment=True):
+        self = self.copy()
+        self.runs = f(self.runs)
+        if defragment:
+            self = self.defragment()
+        return self
+
+    def apply(self, f, defragment=True):
+        self = self.copy()
+        self = f(self)
+        if defragment:
+            self = self.defragment()
+        return self
+
+
+    
+
     def __str__(self):
 
-        if len(self.runs) > 10:
-            runs = [str(i) for i in self.runs[:5]] + \
-                [" ... "] + [str(i) for i in self.runs[-5:]]
-            values = ["{}".format(i) for i in self.values[:5]] + \
-                    [" ... "] + ["{}".format(i) for i in self.values[-5:]]
-        else:
-            runs = [str(i) for i in self.runs]
-            values = ["{}".format(i) for i in self.values]
+        terminal_width = shutil.get_terminal_size().columns
+
+        entries = min(len(self.runs), 10)
+        half_entries = int(entries/2)
+
+        start_runs, end_runs = [str(i) for i in self.runs[:half_entries]], [str(i) for i in self.runs[-half_entries:]]
+        start_values, end_values = [str(i) for i in self.values[:half_entries]], [str(i) for i in self.values[-half_entries:]]
+
+        runs = start_runs + ["..."] + end_runs
+        values = start_values + ["..."] + end_values
 
         df = pd.Series(values).to_frame().T
 
@@ -201,6 +228,21 @@ class Rle:
         df.index.name = "Runs"
 
         outstr = tabulate(df, tablefmt='psql', showindex=True, headers="keys", disable_numparse=True)
+
+        while len(outstr.split("\n", 1)[0]) > terminal_width:
+            half_entries -= 1
+
+            runs = start_runs[:half_entries] + ["..."] + end_runs[-half_entries:]
+            values = start_values[:half_entries] + ["..."] + end_values[-half_entries:]
+
+            df = pd.Series(values).to_frame().T
+
+            df.columns = list(runs)
+            df.index = ["Values"]
+            df.index.name = "Runs"
+
+            outstr = tabulate(df, tablefmt='psql', showindex=True, headers="keys", disable_numparse=True)
+
         length = np.sum(self.runs)
         elements = len(self.runs)
         info = "\nRle of length {} containing {} elements".format(str(length), str(elements))
