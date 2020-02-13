@@ -6,6 +6,7 @@
 - printing rles respects terminal width
 - add copy() to rledict
 - add shift to rle/rledict
+- add .length property to Rle which gives sum of runs
 
 # 0).0.29 (21.01.19)
 - try to fix bug when subsetting with pyranges

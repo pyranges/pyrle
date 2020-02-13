@@ -318,28 +318,44 @@ class Rle:
 
         return Rle(np.copy(self.runs), np.copy(self.values))
 
-    def shift(self, dist):
+    @property
+    def length(self):
+        return np.sum(self.runs)
+
+    # def shorten(self, value):
+    #     if 
+    # def lengthen
+
+    def shift(self, dist, fill=0, fill_end=True):
+        # TODO: missing remove_end for dist > 0 shifts
 
         self = self.copy()
         if dist > 0:
-            self.runs[0] += dist
+            if self.values[0] == fill:
+                self.runs[0] += dist
+            else:
+                self.values = np.r_[fill, self.values]
+                self.runs = np.r_[dist, self.runs]
         elif dist < 0:
-            if -dist < self.runs[0]:
-                self.runs[0] += dist # remember dist is negative
+            dist = -dist # remember dist is negative
+            if dist < self.runs[0]:
+                self.runs[0] -= dist 
             else:
                 cs = np.cumsum(self.runs)
-                ix = np.argmax(cs > -dist)
-                # print("ix", ix)
-                # print("dist", dist)
-                leftover = (dist + np.sum(self.runs[:ix]))
-                # print("cs", cs)
-                # print("leftover", leftover)
+                ix = np.argmax(cs > dist)
+                leftover = (np.sum(self.runs[:ix]) - dist)
                 self = Rle(self.runs[ix:], self.values[ix:])
-                # print("new_self\n", self)
                 self.runs[0] += leftover
 
                 if self.runs[0] < 0:
                     self = Rle([], [])
+
+                if fill_end:
+                    if self.values[-1] == fill:
+                        self.runs[-1] += dist
+                    else:
+                        self.values = np.r_[self.values, fill]
+                        self.runs = np.r_[self.runs, dist]
 
         return self
 
