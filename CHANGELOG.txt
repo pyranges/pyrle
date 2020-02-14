@@ -1,4 +1,4 @@
-# 0.0.30 (unreleased)
+# 0.0.30 (14.01.20)
 - add unary negation to rle/rledict
 - add apply, apply_values and apply_runs to rle/rledict
 - add iter to rledict to for loop through keys/values
@@ -7,8 +7,13 @@
 - add copy() to rledict
 - add shift to rle/rledict
 - add .length property to Rle which gives sum of runs
+- allow for empty constructors (Rle() and PyRles())
+- add .chromosomes property to rledict
+- add len() to PyRles
+- rledicts now also have a to_csv method
+- add to_table to rledict
 
-# 0).0.29 (21.01.19)
+# 0.0.29 (21.01.19)
 - try to fix bug when subsetting with pyranges
 
 # 0.0.28 (17.01.19)

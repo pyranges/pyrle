@@ -218,6 +218,7 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
         int started = 0
         cdef double[::1] vs
         cdef long[::1] rs
+        cdef long[::1] ids
         cdef long[::1] new_starts
         cdef long[::1] new_ends
         cdef long[::1] search_starts
@@ -230,10 +231,12 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
 
     arr_length = len(run_cumsum_arr)
 
+    ids_arr = np.ones(arr_length, dtype=np.long) * -1
     starts_arr = np.ones(arr_length, dtype=np.long) * -1
     ends_arr = np.ones(arr_length, dtype=np.long) * -1
     new_starts = starts_arr
     new_ends = ends_arr
+    ids = ids_arr
     values_arr = np.ones(arr_length) * -1
     vs = values_arr
     runs_arr = np.ones(arr_length, dtype=np.long) * -1
@@ -260,6 +263,8 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
                 starts_arr = np.resize(starts_arr, arr_length)
                 ends_arr = np.resize(ends_arr, arr_length)
                 runs_arr = np.resize(runs_arr, arr_length)
+                ids_arr = np.resize(ids_arr, arr_length)
+                ids = ids_arr
                 rs = runs_arr
                 vs = values_arr
                 new_starts = starts_arr
@@ -275,12 +280,14 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
                         new_starts[nfound] = start
                         new_ends[nfound] = end
                         vs[nfound] = values[i]
+                        ids[nfound] = x
                         nfound += 1
                     else:
                         new_starts[nfound] = start
                         new_ends[nfound] = end
                         rs[nfound] = end - start
                         vs[nfound] = values[i]
+                        ids[nfound] = x
                         nfound += 1
                         # print("first_break", started)
                         break
@@ -295,6 +302,7 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
                     new_starts[nfound] = start
                     new_ends[nfound] = end
                     vs[nfound] = values[i]
+                    ids[nfound] = x
                     nfound += 1
                 else:
                     l = runs[i] - (rsum - end)
@@ -307,12 +315,13 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
                     rs[nfound] = l
                     new_starts[nfound] = start
                     new_ends[nfound] = end
+                    ids[nfound] = x
                     vs[nfound] = values[i]
                     nfound += 1
 
                     # print("third_break")
                     break
 
-    return starts_arr[:nfound], ends_arr[:nfound], runs_arr[:nfound], values_arr[:nfound]
+    return ids_arr[:nfound], starts_arr[:nfound], ends_arr[:nfound], runs_arr[:nfound], values_arr[:nfound]
 
 

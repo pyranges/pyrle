@@ -33,7 +33,7 @@ def get_multithreaded_funcs(function, nb_cpu):
 
 
 class PyRles():
-    def __init__(self, ranges, stranded=False, value_col=None, nb_cpu=1):
+    def __init__(self, ranges=None, stranded=False, value_col=None, nb_cpu=1):
 
         # Construct PyRles from dict of rles
         if isinstance(ranges, dict):
@@ -41,6 +41,8 @@ class PyRles():
             self.rles = ranges
             self.__dict__["stranded"] = True if len(list(
                 ranges.keys())[0]) == 2 else False
+        elif ranges is None:
+            self.rles = {}
 
         # Construct PyRles from ranges
         else:
@@ -201,12 +203,22 @@ class PyRles():
 
         return m.binary_operation("div", self, other)
 
-    def to_ranges(self):
+    def to_ranges(self, dtype=np.int32):
 
-        return m.to_ranges(self)
+        assert dtype in [np.int32, np.int64]
+
+        return m.to_ranges(self).apply(lambda df: df.astype({"Start": dtype, "End": dtype}))
+
+    def __len__(self):
+        return len(self.rles)
+
+
 
     @property
     def stranded(self):
+
+        if len(self) == 0:
+            return True
 
         return len(self.keys()[0]) == 2
 
@@ -278,24 +290,21 @@ class PyRles():
 
             from pyrle.rle import find_runs
 
+            if not len(key):
+                return pd.DataFrame(columns="Chromosome Start End ID Run Value".split())
+
             result = {}
             for k, v in key.dfs.items():
 
                 if k not in self.rles:
                     continue
 
-                v = v["Start End".split()].astype(np.long)
-                starts, ends, runs, values = getitems(self.rles[k].runs, self.rles[k].values,
-                                             v.Start.values, v.End.values)
 
-                # id_values, id_runs = find_runs(ids)
-                # print(id_values.shape)
-                # print(id_runs.shape)
-                df = pd.DataFrame({"Start": starts,
-                                   "End": ends,
-                                   # "RunID": ids, 
-                                   "Run": runs,
-                                   "Value": values})
+                v = v["Start End".split()].astype(np.long)
+                ids, starts, ends, runs, values = getitems(self.rles[k].runs, self.rles[k].values,
+                                                           v.Start.values, v.End.values)
+
+                df = pd.DataFrame({"Start": starts, "End": ends, "ID": ids, "Run": runs, "Value": values})
 
                 if isinstance(k, tuple):
                     df.insert(0, "Chromosome", k[0])
@@ -316,7 +325,25 @@ class PyRles():
                 "Must use chromosome, strand or (chromosome, strand) to get items from PyRles."
             )
 
+
+    @property
+    def chromosomes(self):
+
+        cs = []
+
+        for k in self.rles:
+            if isinstance(k, tuple):
+                cs.append(k[0])
+            else:
+                cs.append(k)
+
+        return natsorted(set(cs))
+
+
     def __str__(self):
+
+        if not self.rles:
+            return "Empty PyRles."
 
         keys = natsorted(self.rles.keys())
         stranded = True if len(list(keys)[0]) == 2 else False
@@ -404,6 +431,26 @@ class PyRles():
             d = {k: v.numbers_only().defragment() for k, v in self.items()}
 
         return PyRles(d)
+
+    def to_table(self):
+
+        import pandas as pd
+        dfs = []
+        for k, r in self.rles.items():
+            df = pd.DataFrame(data={"Runs": r.runs, "Values": r.values})
+            if self.stranded:
+                df.insert(0, "Chromosome", k[0])
+                df.insert(1, "Strand", k[1])
+            else:
+                df.insert(0, "Chromosome", k)
+
+            dfs.append(df)
+
+        return pd.concat(dfs)
+
+    def to_csv(self, f, sep="\t"):
+
+        self.to_table().to_csv(f, sep=sep, index=False)
 
 
 if __name__ == "__main__":

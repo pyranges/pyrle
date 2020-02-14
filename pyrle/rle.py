@@ -72,9 +72,9 @@ def find_runs(x):
 
 class Rle:
 
-    def __init__(self, runs, values=None):
+    def __init__(self, runs=None, values=None):
 
-        if values is not None:
+        if values is not None and runs is not None:
 
             assert len(runs) == len(values)
 
@@ -96,9 +96,13 @@ class Rle:
             self.runs = np.copy(runs)
             self.values = np.copy(values)
 
-        else:
+        elif runs is not None:
             values = runs
             self.values, self.runs = find_runs(values)
+
+        else:
+            self.runs = np.array([], dtype=np.int)
+            self.values = np.array([], dtype=np.double)
 
 
     def to_csv(self, **kwargs):
@@ -216,7 +220,7 @@ class Rle:
         start_runs, end_runs = [str(i) for i in self.runs[:half_entries]], [str(i) for i in self.runs[-half_entries:]]
         start_values, end_values = [str(i) for i in self.values[:half_entries]], [str(i) for i in self.values[-half_entries:]]
 
-        if entries > len(self.runs):
+        if entries < len(self.runs):
             runs = start_runs + ["..."] + end_runs
             values = start_values + ["..."] + end_values
         else:
@@ -261,14 +265,16 @@ class Rle:
             runs, values = getitem(self.runs, self.values, start, end)
             return Rle(runs, values)
         elif isinstance(val, pd.DataFrame):
+            intype = val.dtypes["Start"]
             val = val["Start End".split()].astype(np.long)
-            starts, ends, runs, values = getitems(self.runs, self.values,
+            ids, starts, ends, runs, values = getitems(self.runs, self.values,
                                             val.Start.values, val.End.values)
 
             df = pd.DataFrame({"Start": starts,
                                 "End": ends,
+                                "ID": ids,
                                 "Run": runs,
-                                "Value": values})
+                                "Value": values}).astype({"Start": intype, "End": intype})
             # val = val["Start End".split()].astype(np.long)
             # values = getitems(self.runs, self.values, val.Start.values, val.End.values)
             return df
@@ -276,7 +282,12 @@ class Rle:
                                            # do not need a dep on PyRanges in this library
             import pyranges as pr
             val = val.drop().df
+            if val.empty:
+                return pd.DataFrame(columns="Chromosome Start End ID Run Value".split())
+
             chromosome = val.Chromosome.iloc[0]
+
+            intype = val.dtypes["Start"]
 
             if "Strand" in val:
                 strand = val.Strand.iloc[0]
@@ -284,14 +295,15 @@ class Rle:
                 strand = None
 
             val = val["Start End".split()].astype(np.long)
-            starts, ends, runs, values = getitems(self.runs, self.values,
+            ids, starts, ends, runs, values = getitems(self.runs, self.values,
                                             val.Start.values, val.End.values)
 
             df = pd.DataFrame({"Chromosome": chromosome,
                                "Start": starts,
-                               "End": ends,
-                               "Run": runs,
-                               "Value": values})
+                                "End": ends,
+                                "ID": ids,
+                                "Run": runs,
+                                "Value": values}).astype({"Start": intype, "End": intype})
 
             if strand:
                 df.insert(3, "Strand", strand)
