@@ -250,7 +250,7 @@ class Rle:
 
         length = np.sum(self.runs)
         elements = len(self.runs)
-        info = "\nRle of length {} containing {} elements".format(str(length), str(elements))
+        info = "\nRle of length {} containing {} elements (avg. length {})".format(str(length), str(elements), str(np.round(length/elements, 3)))
 
         return outstr + info
 
@@ -307,9 +307,9 @@ class Rle:
 
             if strand:
                 df.insert(3, "Strand", strand)
-            # val = val["Start End".split()].astype(np.long)
-            # values = getitems(self.runs, self.values, val.Start.values, val.End.values)
+
             return pr.PyRanges(df)
+
         else:
             locs = np.sort(np.array(val, dtype=np.long))
             values = getlocs(self.runs, self.values, locs)

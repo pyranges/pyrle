@@ -252,6 +252,10 @@ class PyRles():
     def shift(self, distance):
         return self.apply(lambda r: r.shift(distance))
 
+    def __setitem__(self, key, item):
+
+        self.rles[key] = item
+
     def __getitem__(self, key):
 
         key_is_string = isinstance(key, str)
@@ -261,8 +265,8 @@ class PyRles():
             raise Exception("Integer indexing not allowed!")
 
         if key_is_string and self.stranded and key not in ["+", "-"]:
-            plus = self.rles.get((key, "+"), Rle([1], [0]))
-            rev = self.rles.get((key, "-"), Rle([1], [0]))
+            plus = self.rles.get((key, "+"), Rle())
+            rev = self.rles.get((key, "-"), Rle())
 
             return PyRles({(key, "+"): plus, (key, "-"): rev})
 
@@ -280,7 +284,7 @@ class PyRles():
 
         elif key_is_string:
 
-            return self.rles.get(key, Rle([1], [0]))
+            return self.rles.get(key, Rle())
 
         elif "PyRanges" in str(type(key)): # hack to avoid isinstance(key, pr.PyRanges) so that we
                                            # do not need a dep on PyRanges in this library
@@ -451,6 +455,35 @@ class PyRles():
     def to_csv(self, f, sep="\t"):
 
         self.to_table().to_csv(f, sep=sep, index=False)
+
+    def make_strands_same_length(self, fill_value=0):
+
+        self = self.copy()
+
+        if not self.stranded:
+            return self
+
+        for c in self.chromosomes:
+            p = self[c]["+"]
+            n = self[c]["-"]
+            pl = p.length
+            nl = n.length
+            diff = abs(pl - nl)
+
+            if pl > nl:
+                if n.values[-1] == fill_value:
+                    n.runs[-1] += diff
+                else:
+                    n.runs = np.r_[n.runs, diff]
+                    n.values = np.r_[n.values, fill_value]
+            elif pl < nl:
+                if p.values[-1] == fill_value:
+                    p.runs[-1] += diff
+                else:
+                    p.runs = np.r_[p.runs, diff]
+                    p.values = np.r_[p.values, fill_value]
+
+        return self
 
 
 if __name__ == "__main__":
