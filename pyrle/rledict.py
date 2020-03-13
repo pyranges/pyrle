@@ -106,7 +106,7 @@ class PyRles():
 
             new_rles[k] = new_rle
 
-        return new_rles
+        return PyRles(new_rles)
 
     def apply_runs(self, f, defragment=True):
 
@@ -121,7 +121,7 @@ class PyRles():
 
             new_rles[k] = new_rle
 
-        return new_rles
+        return PyRles(new_rles)
 
 
     def apply(self, f, defragment=True):

@@ -141,7 +141,7 @@ def __mul(self, other):
     return self * other
 
 
-def coverage(df, kwargs):
+def coverage(df, **kwargs):
 
     value_col = kwargs.get("value_col", None)
 
