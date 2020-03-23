@@ -1,6 +1,10 @@
+"""Data structure for run length encoding representation and arithmetic."""
+
 from pyrle.src.rle import sub_rles, add_rles, mul_rles, div_rles_zeroes, div_rles_nonzeroes
 from pyrle.src.coverage import _remove_dupes
 from pyrle.src.getitem import getitem, getlocs, getitems
+
+import pyrle as rle
 
 import pandas as pd
 import numpy as np
@@ -9,6 +13,8 @@ import shutil
 from tabulate import tabulate
 
 from numbers import Number
+
+__all__ = ["Rle"]
 
 
 def make_rles_equal_length(func):
@@ -72,6 +78,73 @@ def find_runs(x):
 
 class Rle:
 
+    """Data structure to represent and manipulate Run Length Encodings.
+
+    An Rle contains two vectors, one with runs (int) and one with values
+    (double).
+
+    Operations between Rles act as if it was a regular vector.
+
+    There are three ways to build an Rle: from a vector of runs or a vector of
+    values, or a vector of values.
+
+    Parameters
+    ----------
+    runs : array-like
+
+        Run lengths.
+
+    values : array-like
+
+        Run values.
+
+    Examples
+    --------
+
+    >>> r = Rle([1, 2, 1, 5], [0, 2.1, 3, 4])
+    >>> r
+    +--------+-----+-----+-----+-----+
+    | Runs   | 1   | 2   | 1   | 5   |
+    |--------+-----+-----+-----+-----|
+    | Values | 0.0 | 2.1 | 3.0 | 4.0 |
+    +--------+-----+-----+-----+-----+
+    Rle of length 9 containing 4 elements (avg. length 2.25)
+
+    >>> r2 = Rle([1, 1, 1, 0, 0, 2, 2, 3, 4, 2])
+    >>> r2
+    +--------+-----+-----+-----+-----+-----+-----+
+    | Runs   | 3   | 2   | 2   | 1   | 1   | 1   |
+    |--------+-----+-----+-----+-----+-----+-----|
+    | Values | 1.0 | 0.0 | 2.0 | 3.0 | 4.0 | 2.0 |
+    +--------+-----+-----+-----+-----+-----+-----+
+    Rle of length 10 containing 6 elements (avg. length 1.667)
+
+    When one Rle is longer than the other, the shorter is extended with zeros:
+
+    >>> r - r2
+    +--------+------+-----+-----+-----+-----+-----+-----+------+
+    | Runs   | 1    | 2   | 1   | 1   | 2   | 1   | 1   | 1    |
+    |--------+------+-----+-----+-----+-----+-----+-----+------|
+    | Values | -1.0 | 1.1 | 3.0 | 4.0 | 2.0 | 1.0 | 0.0 | -2.0 |
+    +--------+------+-----+-----+-----+-----+-----+-----+------+
+    Rle of length 10 containing 8 elements (avg. length 1.25)
+
+    Scalar operations work with Rles:
+
+    >>> r * 5
+    +--------+-----+------+------+------+
+    | Runs   | 1   | 2    | 1    | 5    |
+    |--------+-----+------+------+------|
+    | Values | 0.0 | 10.5 | 15.0 | 20.0 |
+    +--------+-----+------+------+------+
+    Rle of length 9 containing 4 elements (avg. length 2.25)
+
+    """
+
+    runs = None
+    values = None
+
+
     def __init__(self, runs=None, values=None):
 
         if values is not None and runs is not None:
@@ -105,14 +178,74 @@ class Rle:
             self.values = np.array([], dtype=np.double)
 
 
-    def to_csv(self, **kwargs):
+    def __array_ufunc__(self, *args, **kwargs):
 
-        if not kwargs.get("path_or_buf"):
-            print(pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()].to_csv(**kwargs))
-        else:
-            pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()].to_csv(**kwargs)
+        """Apply unary numpy-function to the values.
+
+        Notes
+        -----
+
+        Function must produce a vector of length equal to self.
+
+        Examples
+        --------
+
+        >>> r = Rle([1, 2, 3, 4], [1, 4, 9, 16])
+        >>> r
+        +--------+-----+-----+-----+------+
+        | Runs   | 1   | 2   | 3   | 4    |
+        |--------+-----+-----+-----+------|
+        | Values | 1.0 | 4.0 | 9.0 | 16.0 |
+        +--------+-----+-----+-----+------+
+        Rle of length 10 containing 4 elements (avg. length 2.5)
+
+        >>> np.sqrt(r)
+        +--------+-----+-----+-----+-----+
+        | Runs   | 1   | 2   | 3   | 4   |
+        |--------+-----+-----+-----+-----|
+        | Values | 1.0 | 2.0 | 3.0 | 4.0 |
+        +--------+-----+-----+-----+-----+
+        Rle of length 10 containing 4 elements (avg. length 2.5)
+        """
+
+        self = self.copy()
+
+        func, call, gr = args
+
+        self.values = getattr(func, call)(self.values, **kwargs)
+
+        return self
+
+    def __eq__(self, other):
+
+        """Test Rles for equality.
+
+        Runs must be exactly equal and values must be equal according to numpy.allclose.
+
+        >>> r0 = Rle([1, 2], [0, 0.9999])
+        >>> r1 = Rle([1, 2], [0, 0.999999])
+        >>> r2 = Rle([1, 2], [0, 0.99999999])
+        >>> r1 == r2
+        True
+        >>> r0 == r2
+        False
+        """
+
+        if len(self.runs) != len(other.runs):
+            return False
+
+        runs_equal = np.equal(self.runs, other.runs).all()
+        values_equal = np.allclose(self.values, other.values)
+        return runs_equal and values_equal
 
     def __len__(self):
+
+        """Return number of runs in Rle.
+
+        See Also
+        --------
+        pyrle.Rle.length : return length of Rle."""
+
         return len(self.runs)
 
     def __neg__(self):
@@ -179,14 +312,6 @@ class Rle:
 
         return Rle(runs, values)
 
-    def __eq__(self, other):
-
-        if len(self.runs) != len(other.runs):
-            return False
-
-        runs_equal = np.equal(self.runs, other.runs).all()
-        values_equal = np.allclose(self.values, other.values)
-        return runs_equal and values_equal
 
     def apply_values(self, f, defragment=True):
         self = self.copy()
@@ -334,9 +459,6 @@ class Rle:
     def length(self):
         return np.sum(self.runs)
 
-    # def shorten(self, value):
-    #     if 
-    # def lengthen
 
     def shift(self, dist, fill=0, fill_end=True):
         # TODO: missing remove_end for dist > 0 shifts
@@ -351,7 +473,7 @@ class Rle:
         elif dist < 0:
             dist = -dist # remember dist is negative
             if dist < self.runs[0]:
-                self.runs[0] -= dist 
+                self.runs[0] -= dist
             else:
                 cs = np.cumsum(self.runs)
                 ix = np.argmax(cs > dist)
@@ -370,6 +492,14 @@ class Rle:
                         self.runs = np.r_[self.runs, dist]
 
         return self
+
+    def to_csv(self, **kwargs):
+
+        if not kwargs.get("path_or_buf"):
+            print(pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()].to_csv(**kwargs))
+        else:
+            pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()].to_csv(**kwargs)
+
 
     def __repr__(self):
 
