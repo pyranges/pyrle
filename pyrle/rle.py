@@ -249,15 +249,59 @@ class Rle:
         return len(self.runs)
 
     def __neg__(self):
+
+        """Negate values.
+
+        Examples
+        --------
+        >>> r = Rle([1, 2, 3], [5, -20, 1])
+        >>> r
+        +--------+-----+-------+-----+
+        | Runs   | 1   | 2     | 3   |
+        |--------+-----+-------+-----|
+        | Values | 5.0 | -20.0 | 1.0 |
+        +--------+-----+-------+-----+
+        Rle of length 6 containing 3 elements (avg. length 2.0)
+
+        >>> -r
+        +--------+------+------+------+
+        | Runs   | 1    | 2    | 3    |
+        |--------+------+------+------|
+        | Values | -5.0 | 20.0 | -1.0 |
+        +--------+------+------+------+
+        Rle of length 6 containing 3 elements (avg. length 2.0)
+        """
+
         self = self.copy()
         self.values = -self.values
         return self
 
     def __radd__(self, other):
 
+        """Add number and Rle.
+
+        Examples
+        --------
+        >>> 5 + Rle([1, 2], [3, 4])
+        +--------+-----+-----+
+        | Runs   | 1   | 2   |
+        |--------+-----+-----|
+        | Values | 8.0 | 9.0 |
+        +--------+-----+-----+
+        Rle of length 3 containing 2 elements (avg. length 1.5)
+        """
+
         return Rle(self.runs, self.values + other)
 
     def __rmul__(self, other):
+
+        """Add number and Rle.
+
+        Examples
+        --------
+        >>> 5 * Rle([1, 2], [0.5, 1])
+        Rle of length 3 containing 2 elements (avg. length 1.5)
+        """
 
         return Rle(self.runs, self.values * other)
 
