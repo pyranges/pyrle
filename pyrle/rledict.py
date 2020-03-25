@@ -1,3 +1,5 @@
+"""Data structure for collection of genomic Rles."""
+
 from pyrle.src.getitem import getitems
 
 from pyrle import Rle
@@ -10,13 +12,6 @@ from natsort import natsorted
 import numpy as np
 
 import logging
-
-try:
-    dummy = profile
-except:
-    profile = lambda x: x
-
-
 
 
 def get_multithreaded_funcs(function, nb_cpu):
@@ -33,6 +28,74 @@ def get_multithreaded_funcs(function, nb_cpu):
 
 
 class PyRles():
+
+    """Data structure to represent and manipulate a genomic collection of Rles.
+
+    An Rle contains two vectors, one with runs (int) and one with values
+    (double).
+
+    Operations between Rles act as if it was a regular vector.
+
+    There are three ways to build an Rle: from a vector of runs or a vector of
+    values, or a vector of values.
+
+    Parameters
+    ----------
+    runs : array-like
+
+        Run lengths.
+
+    values : array-like
+
+        Run values.
+
+    See Also
+    --------
+    pyrle.rledict.PyRles : genomic collection of Rles
+
+    Examples
+    --------
+
+    >>> r = Rle([1, 2, 1, 5], [0, 2.1, 3, 4])
+    >>> r
+    +--------+-----+-----+-----+-----+
+    | Runs   | 1   | 2   | 1   | 5   |
+    |--------+-----+-----+-----+-----|
+    | Values | 0.0 | 2.1 | 3.0 | 4.0 |
+    +--------+-----+-----+-----+-----+
+    Rle of length 9 containing 4 elements (avg. length 2.25)
+
+    >>> r2 = Rle([1, 1, 1, 0, 0, 2, 2, 3, 4, 2])
+    >>> r2
+    +--------+-----+-----+-----+-----+-----+-----+
+    | Runs   | 3   | 2   | 2   | 1   | 1   | 1   |
+    |--------+-----+-----+-----+-----+-----+-----|
+    | Values | 1.0 | 0.0 | 2.0 | 3.0 | 4.0 | 2.0 |
+    +--------+-----+-----+-----+-----+-----+-----+
+    Rle of length 10 containing 6 elements (avg. length 1.667)
+
+    When one Rle is longer than the other, the shorter is extended with zeros:
+
+    >>> r - r2
+    +--------+------+-----+-----+-----+-----+-----+-----+------+
+    | Runs   | 1    | 2   | 1   | 1   | 2   | 1   | 1   | 1    |
+    |--------+------+-----+-----+-----+-----+-----+-----+------|
+    | Values | -1.0 | 1.1 | 3.0 | 4.0 | 2.0 | 1.0 | 0.0 | -2.0 |
+    +--------+------+-----+-----+-----+-----+-----+-----+------+
+    Rle of length 10 containing 8 elements (avg. length 1.25)
+
+    Scalar operations work with Rles:
+
+    >>> r * 5
+    +--------+-----+------+------+------+
+    | Runs   | 1   | 2    | 1    | 5    |
+    |--------+-----+------+------+------|
+    | Values | 0.0 | 10.5 | 15.0 | 20.0 |
+    +--------+-----+------+------+------+
+    Rle of length 9 containing 4 elements (avg. length 2.25)
+
+    """
+
     def __init__(self, ranges=None, stranded=False, value_col=None, nb_cpu=1):
 
         # Construct PyRles from dict of rles

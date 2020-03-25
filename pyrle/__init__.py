@@ -10,6 +10,11 @@ from collections import defaultdict, OrderedDict
 
 def from_csv(f, sep="\t"):
 
+    """Read PyRle from CSV.
+
+    >>>
+    """
+
     d = {}
     df = pd.read_csv(f, sep=sep, index_col=None)
     if "Strand" in df:
