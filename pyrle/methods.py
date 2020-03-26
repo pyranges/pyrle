@@ -118,7 +118,7 @@ def binary_operation(operation, self, other, nb_cpu=1):
             chromosomes_in_other_not_self,
             get(both_results + self_results + other_results))
     }
-    return rd.PyRles(rles)
+    return rd.RleDict(rles)
 
 
 def __add(self, other):

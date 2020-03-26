@@ -95,7 +95,7 @@ class Rle:
 
     See Also
     --------
-    pyrle.rledict.PyRles : genomic collection of Rles
+    pyrle.rledict.RleDict : genomic collection of Rles
 
     Examples
     --------

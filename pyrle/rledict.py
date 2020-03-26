@@ -1,4 +1,10 @@
-"""Data structure for collection of genomic Rles."""
+"""Data structure for collection of genomic Rles.
+
+It has the same methods as the Rle object, but align these on the chromosome
+or chromosome and strand pairs.
+
+See the documentation for pyrle.Rle.
+"""
 
 from pyrle.src.getitem import getitems
 
@@ -13,6 +19,7 @@ import numpy as np
 
 import logging
 
+__all__ = ["RleDict"]
 
 def get_multithreaded_funcs(function, nb_cpu):
 
@@ -27,78 +34,105 @@ def get_multithreaded_funcs(function, nb_cpu):
     return function, get
 
 
-class PyRles():
+class RleDict():
 
     """Data structure to represent and manipulate a genomic collection of Rles.
 
-    An Rle contains two vectors, one with runs (int) and one with values
-    (double).
-
-    Operations between Rles act as if it was a regular vector.
-
-    There are three ways to build an Rle: from a vector of runs or a vector of
-    values, or a vector of values.
-
     Parameters
     ----------
-    runs : array-like
+    ranges : dict of Rles, DataFrame or PyRanges, default None
 
-        Run lengths.
+        Data to build RleDict from.
 
-    values : array-like
+    stranded : bool, default False
 
-        Run values.
+        Whether to make separate Rles for each strand. Default False.
+
+    value_col : str, default None
+
+        Column to use for Rle values cols.
+
+    nb_cpu : int, default 1
+
+        Number of CPUs used to create the RleDict.
 
     See Also
     --------
-    pyrle.rledict.PyRles : genomic collection of Rles
+
+    pyrle.rle.Rle : Numerical run length encoding
 
     Examples
     --------
 
     >>> r = Rle([1, 2, 1, 5], [0, 2.1, 3, 4])
-    >>> r
+    >>> r2 = Rle([1, 1, 1, 0, 0, 2, 2, 3, 4, 2])
+    >>> rd = RleDict({"chr1": r, "chr2": r2})
+    >>> rd
+    chr1
+    ----
     +--------+-----+-----+-----+-----+
     | Runs   | 1   | 2   | 1   | 5   |
     |--------+-----+-----+-----+-----|
     | Values | 0.0 | 2.1 | 3.0 | 4.0 |
     +--------+-----+-----+-----+-----+
     Rle of length 9 containing 4 elements (avg. length 2.25)
-
-    >>> r2 = Rle([1, 1, 1, 0, 0, 2, 2, 3, 4, 2])
-    >>> r2
+    <BLANKLINE>
+    chr2
+    ----
     +--------+-----+-----+-----+-----+-----+-----+
     | Runs   | 3   | 2   | 2   | 1   | 1   | 1   |
     |--------+-----+-----+-----+-----+-----+-----|
     | Values | 1.0 | 0.0 | 2.0 | 3.0 | 4.0 | 2.0 |
     +--------+-----+-----+-----+-----+-----+-----+
     Rle of length 10 containing 6 elements (avg. length 1.667)
+    Unstranded RleDict object with 2 chromosomes.
 
-    When one Rle is longer than the other, the shorter is extended with zeros:
+    >>> import pyranges as pr
+    >>> gr = pr.data.chipseq()
+    >>> df = pr.data.chipseq_background().df
+    >>> cs = RleDict(gr, stranded=True)
+    >>> bg = RleDict(df, stranded=True)
 
-    >>> r - r2
-    +--------+------+-----+-----+-----+-----+-----+-----+------+
-    | Runs   | 1    | 2   | 1   | 1   | 2   | 1   | 1   | 1    |
-    |--------+------+-----+-----+-----+-----+-----+-----+------|
-    | Values | -1.0 | 1.1 | 3.0 | 4.0 | 2.0 | 1.0 | 0.0 | -2.0 |
-    +--------+------+-----+-----+-----+-----+-----+-----+------+
-    Rle of length 10 containing 8 elements (avg. length 1.25)
+    >>> cs
+    chr1 +
+    +--------+-----------+------+---------+------+-----------+-------+------+-----------+------+-----------+------+
+    | Runs   | 1541598   | 25   | 57498   | 25   | 1904886   | ...   | 25   | 2952580   | 25   | 1156833   | 25   |
+    |--------+-----------+------+---------+------+-----------+-------+------+-----------+------+-----------+------|
+    | Values | 0.0       | 1.0  | 0.0     | 1.0  | 0.0       | ...   | 1.0  | 0.0       | 1.0  | 0.0       | 1.0  |
+    +--------+-----------+------+---------+------+-----------+-------+------+-----------+------+-----------+------+
+    Rle of length 247134924 containing 894 elements (avg. length 276437.275)
+    ...
+    chrY -
+    +--------+-----------+------+----------+------+----------+-------+------+----------+------+----------+------+
+    | Runs   | 7046809   | 25   | 358542   | 25   | 296582   | ...   | 25   | 143271   | 25   | 156610   | 25   |
+    |--------+-----------+------+----------+------+----------+-------+------+----------+------+----------+------|
+    | Values | 0.0       | 1.0  | 0.0      | 1.0  | 0.0      | ...   | 1.0  | 0.0      | 1.0  | 0.0      | 1.0  |
+    +--------+-----------+------+----------+------+----------+-------+------+----------+------+----------+------+
+    Rle of length 22210662 containing 32 elements (avg. length 694083.188)
+    RleDict object with 48 chromosomes/strand pairs.
 
-    Scalar operations work with Rles:
-
-    >>> r * 5
-    +--------+-----+------+------+------+
-    | Runs   | 1   | 2    | 1    | 5    |
-    |--------+-----+------+------+------|
-    | Values | 0.0 | 10.5 | 15.0 | 20.0 |
-    +--------+-----+------+------+------+
-    Rle of length 9 containing 4 elements (avg. length 2.25)
-
+    >>> cs - (bg * 5)
+    chr1 +
+    +--------+-----------+------+----------+------+---------+-------+------+----------+------+-----------+------+
+    | Runs   | 1041102   | 25   | 500471   | 25   | 57498   | ...   | 25   | 363693   | 25   | 1156833   | 25   |
+    |--------+-----------+------+----------+------+---------+-------+------+----------+------+-----------+------|
+    | Values | 0.0       | -5.0 | 0.0      | 1.0  | 0.0     | ...   | -5.0 | 0.0      | 1.0  | 0.0       | 1.0  |
+    +--------+-----------+------+----------+------+---------+-------+------+----------+------+-----------+------+
+    Rle of length 247134924 containing 1618 elements (avg. length 152740.991)
+    ...
+    chrY -
+    +--------+-----------+------+----------+------+----------+-------+------+----------+------+------------+------+
+    | Runs   | 7046809   | 25   | 358542   | 25   | 296582   | ...   | 25   | 156610   | 25   | 35191552   | 25   |
+    |--------+-----------+------+----------+------+----------+-------+------+----------+------+------------+------|
+    | Values | 0.0       | 1.0  | 0.0      | 1.0  | 0.0      | ...   | 1.0  | 0.0      | 1.0  | 0.0        | -5.0 |
+    +--------+-----------+------+----------+------+----------+-------+------+----------+------+------------+------+
+    Rle of length 57402239 containing 42 elements (avg. length 1366719.976)
+    RleDict object with 50 chromosomes/strand pairs.
     """
 
     def __init__(self, ranges=None, stranded=False, value_col=None, nb_cpu=1):
 
-        # Construct PyRles from dict of rles
+        # Construct RleDict from dict of rles
         if isinstance(ranges, dict):
 
             self.rles = ranges
@@ -107,7 +141,7 @@ class PyRles():
         elif ranges is None:
             self.rles = {}
 
-        # Construct PyRles from ranges
+        # Construct RleDict from ranges
         else:
 
             if stranded:
@@ -133,11 +167,11 @@ class PyRles():
             kwargs = {"value_col": value_col}
             if stranded:
                 for (c, s), cdf in grpby:
-                    _rles[c, s] = m_coverage.remote(cdf, kwargs)
+                    _rles[c, s] = m_coverage.remote(cdf, **kwargs)
             else:
                 s = None
                 for k, cdf in grpby:
-                    _rles[k] = m_coverage.remote(cdf, kwargs)
+                    _rles[k] = m_coverage.remote(cdf, **kwargs)
 
             _rles = {
                 k: v
@@ -151,173 +185,55 @@ class PyRles():
 
             self.__dict__["stranded"] = stranded
 
-    def __iter__(self):
-
-        return iter(self.rles.items())
-
-
-    def apply_values(self, f, defragment=True):
-
-        new_rles = {}
-
-        for k, r in self:
-
-            new_rle = r.copy()
-            new_rle.values = f(new_rle.values).astype(np.double)
-
-            new_rle = new_rle.defragment()
-
-            new_rles[k] = new_rle
-
-        return PyRles(new_rles)
-
-    def apply_runs(self, f, defragment=True):
-
-        new_rles = {}
-
-        for k, r in self:
-
-            new_rle = r.copy()
-            new_rle.runs = f(new_rle.runs).astype(np.int)
-
-            new_rle = new_rle.defragment()
-
-            new_rles[k] = new_rle
-
-        return PyRles(new_rles)
-
-
-    def apply(self, f, defragment=True):
-
-        new_rles = {}
-
-        for k, r in self:
-
-            new_rle = r.copy()
-            # new_rle.runs = f(new_rle.runs).astype(np.int)
-            new_rle = f(new_rle)
-
-            new_rle = new_rle.defragment()
-
-            new_rles[k] = new_rle
-
-        return PyRles(new_rles)
-
-
-    def add(self, other, nb_cpu=1):
-
-        return m.binary_operation("add", self, other, nb_cpu)
 
     def __add__(self, other):
 
         if isinstance(other, Number):
-            return PyRles({cs: v + other for cs, v in self.items()})
+            return RleDict({cs: v + other for cs, v in self.items()})
 
         return m.binary_operation("add", self, other)
 
-    def __radd__(self, other):
 
-        return PyRles({cs: other + v for cs, v in self.items()})
+    def __eq__(self, other):
 
-    def sub(self, other, nb_cpu=1):
+        if not self.rles.keys() == other.rles.keys():
+            return False
 
-        return m.binary_operation("sub", self, other, nb_cpu)
+        for c in self.rles.keys():
 
-    def __sub__(self, other):
+            if self.rles[c] != other.rles[c]:
+                return False
 
-        if isinstance(other, Number):
-            return PyRles({cs: v - other for cs, v in self.items()})
+        return True
 
-        return m.binary_operation("sub", self, other)
+    def __iter__(self):
 
-    def __rsub__(self, other):
+        """Iterate over key and Rle.
 
-        return PyRles({cs: other - v for cs, v in self.items()})
+        Examples
+        --------
+        >>> r = RleDict({("chr1", "+"): Rle([1, 1], [1, 2]),
+        ...              ("chr1", "-"): Rle([1, 1], [3, 2.0])})
+        >>> for k, v in r:
+        ...     print(k)
+        ...     print(v)
+        ('chr1', '+')
+        +--------+-----+-----+
+        | Runs   | 1   | 1   |
+        |--------+-----+-----|
+        | Values | 1.0 | 2.0 |
+        +--------+-----+-----+
+        Rle of length 2 containing 2 elements (avg. length 1.0)
+        ('chr1', '-')
+        +--------+-----+-----+
+        | Runs   | 1   | 1   |
+        |--------+-----+-----|
+        | Values | 3.0 | 2.0 |
+        +--------+-----+-----+
+        Rle of length 2 containing 2 elements (avg. length 1.0)
+        """
 
-    def mul(self, other, nb_cpu=1):
-
-        return m.binary_operation("mul", self, other, nb_cpu)
-
-    def __rmul__(self, other):
-
-        return PyRles({cs: other * v for cs, v in self.items()})
-
-    def __mul__(self, other):
-
-        if isinstance(other, Number):
-            return PyRles({cs: v * other for cs, v in self.items()})
-
-        return m.binary_operation("mul", self, other)
-
-    __rmul__ = __mul__
-
-    def div(self, other, nb_cpu=1):
-
-        return m.binary_operation("div", self, other, nb_cpu)
-
-    def __rtruediv__(self, other):
-
-        return PyRles({cs: other / v for cs, v in self.items()})
-
-    def __truediv__(self, other):
-
-        if isinstance(other, Number):
-            return PyRles({cs: v / other for cs, v in self.items()})
-
-        return m.binary_operation("div", self, other)
-
-    def to_ranges(self, dtype=np.int32):
-
-        assert dtype in [np.int32, np.int64]
-
-        return m.to_ranges(self).apply(lambda df: df.astype({"Start": dtype, "End": dtype}))
-
-    def __len__(self):
-        return len(self.rles)
-
-
-
-    @property
-    def stranded(self):
-
-        if len(self) == 0:
-            return True
-
-        return len(self.keys()[0]) == 2
-
-    def keys(self):
-
-        return natsorted(list(self.rles.keys()))
-
-    def values(self):
-
-        return [self.rles[k] for k in natsorted(self.rles.keys())]
-
-    def items(self):
-
-        _items = list(self.rles.items())
-
-        return natsorted(_items, key=lambda x: x[0])
-
-    def add_pseudocounts(self, pseudo=0.01):
-
-        for k, rle in self.items():
-
-            rle.values.loc[rle.values == 0] = pseudo
-
-    def copy(self):
-        d = {}
-        for k, r in self:
-            d[k] = r.copy()
-
-        return PyRles(d)
-
-    def shift(self, distance):
-        return self.apply(lambda r: r.shift(distance))
-
-    def __setitem__(self, key, item):
-
-        self.rles[key] = item
+        return iter(self.rles.items())
 
     def __getitem__(self, key):
 
@@ -331,7 +247,7 @@ class PyRles():
             plus = self.rles.get((key, "+"), Rle())
             rev = self.rles.get((key, "-"), Rle())
 
-            return PyRles({(key, "+"): plus, (key, "-"): rev})
+            return RleDict({(key, "+"): plus, (key, "-"): rev})
 
         # only return particular strand, but from all chromos
         elif key_is_string and self.stranded and key in ["+", "-"]:
@@ -341,7 +257,7 @@ class PyRles():
                     to_return[c, s] = rle
 
             if len(to_return) > 1:
-                return PyRles(to_return)
+                return RleDict(to_return)
             else:  # return just the rle
                 return list(to_return.values())[0]
 
@@ -389,9 +305,331 @@ class PyRles():
 
         else:
             raise IndexError(
-                "Must use chromosome, strand or (chromosome, strand) to get items from PyRles."
+                "Must use chromosome, strand or (chromosome, strand) to get items from RleDict."
             )
 
+    def __len__(self):
+        """Return number of keys in RleDict."""
+        return len(self.rles)
+
+    def __mul__(self, other):
+
+        if isinstance(other, Number):
+            return RleDict({cs: v * other for cs, v in self.items()})
+
+        return m.binary_operation("mul", self, other)
+
+    def __radd__(self, other):
+
+        return RleDict({cs: other + v for cs, v in self.items()})
+
+    def __repr__(self):
+
+        return str(self)
+
+    def __rsub__(self, other):
+
+        return RleDict({cs: other - v for cs, v in self.items()})
+
+    def __rtruediv__(self, other):
+
+        return RleDict({cs: other / v for cs, v in self.items()})
+
+    def __rmul__(self, other):
+
+        return RleDict({cs: other * v for cs, v in self.items()})
+
+    def __setitem__(self, key, item):
+
+        self.rles[key] = item
+
+    def __str__(self):
+
+        if not self.rles:
+            return "Empty RleDict."
+
+        keys = natsorted(self.rles.keys())
+        stranded = True if len(list(keys)[0]) == 2 else False
+
+        if not stranded:
+            if len(keys) > 2:
+                str_list = [
+                    keys[0],
+                    str(self.rles[keys[0]]), "...", keys[-1],
+                    str(self.rles[keys[-1]]),
+                    "Unstranded RleDict object with {} chromosomes.".format(
+                        len(self.rles.keys()))
+                ]
+            elif len(keys) == 2:
+                str_list = [
+                    keys[0], "-" * len(keys[0]),
+                    str(self.rles[keys[0]]), "", keys[-1], "-" * len(keys[-1]),
+                    str(self.rles[keys[-1]]),
+                    "Unstranded RleDict object with {} chromosomes.".format(
+                        len(self.rles.keys()))
+                ]
+            else:
+                str_list = [
+                    keys[0],
+                    str(self.rles[keys[0]]),
+                    "Unstranded RleDict object with {} chromosome.".format(
+                        len(self.rles.keys()))
+                ]
+
+        else:
+            if len(keys) > 2:
+                str_list = [
+                    " ".join(keys[0]),
+                    str(self.rles[keys[0]]), "...", " ".join(keys[-1]),
+                    str(self.rles[keys[-1]]),
+                    "RleDict object with {} chromosomes/strand pairs.".format(
+                        len(self.rles.keys()))
+                ]
+            elif len(keys) == 2:
+                str_list = [
+                    " ".join(keys[0]), "-" * len(keys[0]),
+                    str(self.rles[keys[0]]), "", " ".join(keys[-1]),
+                    "-" * len(keys[-1]),
+                    str(self.rles[keys[-1]]),
+                    "RleDict object with {} chromosomes/strand pairs.".format(
+                        len(self.rles.keys()))
+                ]
+            else:
+                str_list = [
+                    " ".join(keys[0]),
+                    str(self.rles[keys[0]]),
+                    "RleDict object with {} chromosome/strand pairs.".format(
+                        len(self.rles.keys()))
+                ]
+
+        outstr = "\n".join(str_list)
+
+        return outstr
+
+    def __sub__(self, other):
+
+        if isinstance(other, Number):
+            return RleDict({cs: v - other for cs, v in self.items()})
+
+        return m.binary_operation("sub", self, other)
+
+    def __truediv__(self, other):
+
+        if isinstance(other, Number):
+            return RleDict({cs: v / other for cs, v in self.items()})
+
+        return m.binary_operation("div", self, other)
+
+
+    def add(self, other, nb_cpu=1):
+
+        """Add two RleDicts.
+
+        Same as +, but add takes nb_cpu argument."""
+
+        return m.binary_operation("add", self, other, nb_cpu)
+
+
+    def add_pseudocounts(self, pseudo=0.01):
+
+        for k, rle in self.items():
+
+            rle.values.loc[rle.values == 0] = pseudo
+
+
+    def apply(self, f, defragment=True):
+
+        """Apply function to each Rle.
+
+        Parameters
+        ----------
+        f : callable
+
+            Takes and returns an Rle
+
+        defragment : bool, default True
+
+            Merge consecutive runs of equal values afterwards.
+
+        **kwargs :
+
+            Arguments given to f.
+
+        See Also
+        --------
+
+        pyrle.RleDict.__array_ufunc__ : apply numpy function to RleDict
+
+        Examples
+        --------
+        >>> r = RleDict({("chr1", "+"): Rle([1, 4], [1, 2]),
+        ...              ("chr1", "-"): Rle([2, 1], [3, 2.0])})
+        >>> def nonsense(rle):
+        ...     rle.runs = rle.runs[::-1].copy()
+        ...     rle.values = np.sqrt(rle.values)
+        ...     return rle
+        >>> r.apply(nonsense)
+        chr1 +
+        --
+        +--------+-----+--------------------+
+        | Runs   | 4   | 1                  |
+        |--------+-----+--------------------|
+        | Values | 1.0 | 1.4142135381698608 |
+        +--------+-----+--------------------+
+        Rle of length 5 containing 2 elements (avg. length 2.5)
+        <BLANKLINE>
+        chr1 -
+        --
+        +--------+--------------------+--------------------+
+        | Runs   | 1                  | 2                  |
+        |--------+--------------------+--------------------|
+        | Values | 1.7320508075688772 | 1.4142135381698608 |
+        +--------+--------------------+--------------------+
+        Rle of length 3 containing 2 elements (avg. length 1.5)
+        RleDict object with 2 chromosomes/strand pairs.
+        """
+
+        new_rles = {}
+
+        for k, r in self:
+
+            new_rle = r.copy()
+            # new_rle.runs = f(new_rle.runs).astype(np.int)
+            new_rle = f(new_rle)
+
+            new_rle = new_rle.defragment()
+
+            new_rles[k] = new_rle
+
+        return RleDict(new_rles)
+
+
+    def apply_runs(self, f, defragment=True):
+
+        """Apply a function to the runs of RleDict.
+
+        Parameters
+        ----------
+        f : callable
+
+            Takes the runs and returns an array of type int64 with same length as the input.
+
+        defragment : bool, default True
+
+            Merge consecutive runs of equal values afterwards.
+
+        **kwargs :
+
+            Arguments given to f.
+
+        See Also
+        --------
+
+        pyrle.RleDict.apply_values : apply function to values of RleDict
+
+        Examples
+        --------
+        >>> r = RleDict({("chr1", "+"): Rle([1, 4], [1, 2]),
+        ...              ("chr1", "-"): Rle([2, 1], [3, 2.0])})
+        >>> def even_times_hundred(runs):
+        ...     runs[runs % 2 == 0] *= 100
+        ...     return runs
+        >>> r.apply_runs(even_times_hundred)
+        chr1 +
+        --
+        +--------+-----+-------+
+        | Runs   | 1   | 400   |
+        |--------+-----+-------|
+        | Values | 1.0 | 2.0   |
+        +--------+-----+-------+
+        Rle of length 401 containing 2 elements (avg. length 200.5)
+        <BLANKLINE>
+        chr1 -
+        --
+        +--------+-------+-----+
+        | Runs   | 200   | 1   |
+        |--------+-------+-----|
+        | Values | 3.0   | 2.0 |
+        +--------+-------+-----+
+        Rle of length 201 containing 2 elements (avg. length 100.5)
+        RleDict object with 2 chromosomes/strand pairs.
+        """
+
+        new_rles = {}
+
+        for k, r in self:
+
+            new_rle = r.copy()
+            new_rle.runs = f(new_rle.runs).astype(np.int)
+
+            new_rle = new_rle.defragment()
+
+            new_rles[k] = new_rle
+
+        return RleDict(new_rles)
+
+
+    def apply_values(self, f, defragment=True, **kwargs):
+
+        """Apply a function to the values of each Rle.
+
+        Parameters
+        ----------
+        f : callable
+
+            Takes the values and returns an array of type double with the same length as the input.
+
+        defragment : bool, default True
+
+            Merge consecutive runs of equal values afterwards.
+
+        **kwargs :
+
+            Arguments given to f.
+
+        See Also
+        --------
+
+        pyrle.RleDict.__array_ufunc__ : apply numpy function to RleDict
+
+        Examples
+        --------
+        >>> r = RleDict({("chr1", "+"): Rle([1, 1], [1, 2]),
+        ...              ("chr1", "-"): Rle([1, 1], [3, 2.0])})
+        >>> f = lambda v, **kwargs: v ** kwargs["exponent"]
+        >>> r.apply_values(f, exponent=3)
+        chr1 +
+        --
+        +--------+-----+-----+
+        | Runs   | 1   | 1   |
+        |--------+-----+-----|
+        | Values | 1.0 | 8.0 |
+        +--------+-----+-----+
+        Rle of length 2 containing 2 elements (avg. length 1.0)
+        <BLANKLINE>
+        chr1 -
+        --
+        +--------+------+-----+
+        | Runs   | 1    | 1   |
+        |--------+------+-----|
+        | Values | 27.0 | 8.0 |
+        +--------+------+-----+
+        Rle of length 2 containing 2 elements (avg. length 1.0)
+        RleDict object with 2 chromosomes/strand pairs.
+        """
+
+        new_rles = {}
+
+        for k, r in self:
+
+            new_rle = r.copy()
+            new_rle.values = f(new_rle.values, **kwargs).astype(np.double)
+
+            new_rle = new_rle.defragment()
+
+            new_rles[k] = new_rle
+
+        return RleDict(new_rles)
 
     @property
     def chromosomes(self):
@@ -407,88 +645,14 @@ class PyRles():
         return natsorted(set(cs))
 
 
-    def __str__(self):
+    def copy(self):
+        d = {}
+        for k, r in self:
+            d[k] = r.copy()
 
-        if not self.rles:
-            return "Empty PyRles."
+        return RleDict(d)
 
-        keys = natsorted(self.rles.keys())
-        stranded = True if len(list(keys)[0]) == 2 else False
 
-        if not stranded:
-            if len(keys) > 2:
-                str_list = [
-                    keys[0],
-                    str(self.rles[keys[0]]), "...", keys[-1],
-                    str(self.rles[keys[-1]]),
-                    "Unstranded PyRles object with {} chromosomes.".format(
-                        len(self.rles.keys()))
-                ]
-            elif len(keys) == 2:
-                str_list = [
-                    keys[0], "-" * len(keys[0]),
-                    str(self.rles[keys[0]]), "", keys[-1], "-" * len(keys[-1]),
-                    str(self.rles[keys[-1]]),
-                    "Unstranded PyRles object with {} chromosomes.".format(
-                        len(self.rles.keys()))
-                ]
-            else:
-                str_list = [
-                    keys[0],
-                    str(self.rles[keys[0]]),
-                    "Unstranded PyRles object with {} chromosome.".format(
-                        len(self.rles.keys()))
-                ]
-
-        else:
-            if len(keys) > 2:
-                str_list = [
-                    " ".join(keys[0]),
-                    str(self.rles[keys[0]]), "...", " ".join(keys[-1]),
-                    str(self.rles[keys[-1]]),
-                    "PyRles object with {} chromosomes/strand pairs.".format(
-                        len(self.rles.keys()))
-                ]
-            elif len(keys) == 2:
-                str_list = [
-                    " ".join(keys[0]), "-" * len(keys[0]),
-                    str(self.rles[keys[0]]), "", " ".join(keys[-1]),
-                    "-" * len(keys[-1]),
-                    str(self.rles[keys[-1]]),
-                    "PyRles object with {} chromosomes/strand pairs.".format(
-                        len(self.rles.keys()))
-                ]
-            else:
-                str_list = [
-                    " ".join(keys[0]),
-                    str(self.rles[keys[0]]),
-                    "PyRles object with {} chromosome/strand pairs.".format(
-                        len(self.rles.keys()))
-                ]
-
-        outstr = "\n".join(str_list)
-
-        return outstr
-
-    def __eq__(self, other):
-
-        if not self.rles.keys() == other.rles.keys():
-            return False
-
-        for c in self.rles.keys():
-
-            if self.rles[c] != other.rles[c]:
-                return False
-
-        return True
-
-    def __repr__(self):
-
-        return str(self)
-
-    def numbers_only(self):
-
-        return PyRles({k: v.numbers_only() for k, v in self.items()})
 
     def defragment(self, numbers_only=False):
 
@@ -497,27 +661,28 @@ class PyRles():
         else:
             d = {k: v.numbers_only().defragment() for k, v in self.items()}
 
-        return PyRles(d)
+        return RleDict(d)
 
-    def to_table(self):
 
-        import pandas as pd
-        dfs = []
-        for k, r in self.rles.items():
-            df = pd.DataFrame(data={"Runs": r.runs, "Values": r.values})
-            if self.stranded:
-                df.insert(0, "Chromosome", k[0])
-                df.insert(1, "Strand", k[1])
-            else:
-                df.insert(0, "Chromosome", k)
+    def div(self, other, nb_cpu=1):
 
-            dfs.append(df)
+        """Divide two RleDicts.
 
-        return pd.concat(dfs)
+        Same as /, but div takes nb_cpu argument."""
 
-    def to_csv(self, f, sep="\t"):
+        return m.binary_operation("div", self, other, nb_cpu)
 
-        self.to_table().to_csv(f, sep=sep, index=False)
+
+    def items(self):
+
+        _items = list(self.rles.items())
+
+        return natsorted(_items, key=lambda x: x[0])
+
+
+    def keys(self):
+
+        return natsorted(list(self.rles.keys()))
 
     def make_strands_same_length(self, fill_value=0):
 
@@ -549,6 +714,111 @@ class PyRles():
         return self
 
 
+    def mul(self, other, nb_cpu=1):
+
+        """Multiply two RleDicts.
+
+        Same as *, but mul takes nb_cpu argument."""
+
+        return m.binary_operation("mul", self, other, nb_cpu)
+
+
+    def numbers_only(self):
+
+        return RleDict({k: v.numbers_only() for k, v in self.items()})
+
+
+    def shift(self, distance):
+        return self.apply(lambda r: r.shift(distance))
+
+    def sub(self, other, nb_cpu=1):
+
+        """Subtract two RleDicts.
+
+        Same as -, but sub takes nb_cpu argument."""
+
+        return m.binary_operation("sub", self, other, nb_cpu)
+
+
+    @property
+    def stranded(self):
+
+        if len(self) == 0:
+            return True
+
+        return len(self.keys()[0]) == 2
+
+    def to_csv(self, f, sep="\t"):
+
+        self.to_table().to_csv(f, sep=sep, index=False)
+
+    def to_ranges(self, dtype=np.int32, stranded=None):
+
+        """Turn RleDict into PyRanges.
+
+        Parameters
+        ----------
+        dtype : {np.int32 or np.int64}
+
+            Type of starts and ends in PyRanges.
+
+        stranded : bool, default None, i.e. auto
+
+            Whether to return stranded PyRanges.
+
+        Example
+        -------
+        >>> r = RleDict({("chr1", "+"): Rle([1, 1], [1, 2]),
+        ...              ("chr1", "-"): Rle([1, 1], [3, 2.0])})
+        >>> r.to_ranges()
+        +--------------+-----------+-----------+-------------+--------------+
+        | Chromosome   |     Start |       End |       Score | Strand       |
+        | (category)   |   (int32) |   (int32) |   (float64) | (category)   |
+        |--------------+-----------+-----------+-------------+--------------|
+        | chr1         |         0 |         1 |           1 | +            |
+        | chr1         |         1 |         2 |           2 | +            |
+        | chr1         |         0 |         1 |           3 | -            |
+        | chr1         |         1 |         2 |           2 | -            |
+        +--------------+-----------+-----------+-------------+--------------+
+        Stranded PyRanges object has 4 rows and 5 columns from 1 chromosomes.
+        For printing, the PyRanges was sorted on Chromosome and Strand.
+        """
+
+        assert dtype in [np.int32, np.int64]
+
+        dtypes = {"Chromosome": "category", "Start": dtype, "End": dtype}
+        if self.stranded:
+            dtypes["Strand"] = "category"
+
+        return m.to_ranges(self).apply(lambda df: df.astype(dtypes))
+
+
+
+    def to_table(self):
+
+        import pandas as pd
+        dfs = []
+        for k, r in self.rles.items():
+            df = pd.DataFrame(data={"Runs": r.runs, "Values": r.values})
+            if self.stranded:
+                df.insert(0, "Chromosome", k[0])
+                df.insert(1, "Strand", k[1])
+            else:
+                df.insert(0, "Chromosome", k)
+
+            dfs.append(df)
+
+        return pd.concat(dfs)
+
+
+    def values(self):
+
+        return [self.rles[k] for k in natsorted(self.rles.keys())]
+
+
+
+
+
 if __name__ == "__main__":
 
     # Must turn on macros in setup.py for line tracing to work
@@ -573,7 +843,7 @@ if __name__ == "__main__":
     print("Done reading")
     start = time()
 
-    result = PyRles(df, stranded=True)
+    result = RleDict(df, stranded=True)
 
     end = time()
     total = end - start
