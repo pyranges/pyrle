@@ -746,7 +746,7 @@ class RleDict():
         if len(self) == 0:
             return True
 
-        return len(self.keys()[0]) == 2
+        return isinstance(self.keys()[0], tuple)
 
     def to_csv(self, f, sep="\t"):
 

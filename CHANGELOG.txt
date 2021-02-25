@@ -1,3 +1,6 @@
+# 0.0.32 (25.02.21)
+- fix bug in .stranded
+
 # 0.0.31 (unreleased)
 - helper method make_strands_same_length to rledicts
 
