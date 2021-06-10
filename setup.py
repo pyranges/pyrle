@@ -34,7 +34,7 @@ setup(name='pyrle',
       author="Endre Bakken Stovner",
       author_email="endrebak85@gmail.com",
       url="https://github.com/endrebak/pyrle",
-      license=["MIT"],
+      license="MIT",
       classifiers=[
           "Programming Language :: Python :: 3",
           "Development Status :: 4 - Beta",
