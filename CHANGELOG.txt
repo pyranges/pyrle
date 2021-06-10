@@ -1,3 +1,6 @@
+# 0.0.33 (10.06.21)
+- fix bug in setup.py
+
 # 0.0.32 (25.02.21)
 - fix bug in .stranded
 
