@@ -1,7 +1,6 @@
-
 import pytest
 
-from hypothesis import given, settings, reproduce_failure, unlimited, HealthCheck, seed
+from hypothesis import given, settings, reproduce_failure, HealthCheck, seed
 from hypothesis.extra.pandas import data_frames, columns, range_indexes, column, indexes
 from hypothesis.extra.numpy import arrays
 import hypothesis.strategies as st
@@ -42,11 +41,15 @@ else:
 
 coverage_cmd = "Rscript --vanilla tests/compute_coverage.R {} {}"
 
+
 @pytest.mark.r
-@settings(max_examples=max_examples, deadline=deadline, timeout=unlimited, suppress_health_check=HealthCheck.all())
+@settings(
+    max_examples=max_examples,
+    deadline=deadline,
+    suppress_health_check=HealthCheck.all(),
+)
 @given(df=dfs_min_single_chromosome())
 def test_coverage(df):
-
     print("---" * 10)
     p = pr.PyRanges(df)
     print("pyranges\n", p)
@@ -67,7 +70,10 @@ def test_coverage(df):
 
         result = pd.read_table(outfile)[["Runs.value", "Values.value"]]
         result.columns = "Runs Values".split()
-        result = pd.concat([pd.DataFrame(index=[0], data={"Runs": 1, "Values": 0}), result], ignore_index=True)
+        result = pd.concat(
+            [pd.DataFrame(index=[0], data={"Runs": 1, "Values": 0}), result],
+            ignore_index=True,
+        )
         s4vectors_result = Rle(result.Runs, result.Values)
 
     print("pyranges result\n", c)

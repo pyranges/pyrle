@@ -1,9 +1,7 @@
-
 import pandas as pd
 
 
 def assert_df_equal(df1, df2):
-
     pd.options.mode.chained_assignment = None
     if "Strand" in df1 and "Strand" in df2:
         sort_on = "Chromosome Start End Strand".split()

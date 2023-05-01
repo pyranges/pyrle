@@ -64,7 +64,7 @@ def _coverage(long [::1] positions, double [::1] values):
         i += 1
 
     value_series = pd.Series(values_arr)
-    runs = pd.Series(unique, dtype=np.long)
+    runs = pd.Series(unique, dtype=np.int_)
 
     value_series = value_series.cumsum().shift()
     value_series[0] = first_value
@@ -100,7 +100,7 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
     cdef float value
     cdef int last_different = 0
 
-    nrs_arr = np.zeros(len(runs), dtype=np.long)
+    nrs_arr = np.zeros(len(runs), dtype=np.int_)
     nvs_arr = np.zeros(len(runs), dtype=np.float64)
 
     cdef long[::1] nrs

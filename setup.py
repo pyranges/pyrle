@@ -1,12 +1,14 @@
-
 # setup.py
 
 from distutils.core import setup
+
 # from distutils.extension import Extension
 from setuptools import find_packages, Extension, Command
 from Cython.Build import cythonize
 
-__version__ = open("pyrle/version.py").readline().split(" = ")[1].replace('"', '').strip()
+__version__ = (
+    open("pyrle/version.py").readline().split(" = ")[1].replace('"', "").strip()
+)
 
 # example_module = Extension('convolve', sources=['convolve.c'])
 macros = [("CYTHON_TRACE", "1")]
@@ -14,39 +16,43 @@ macros = None
 
 if macros:
     from Cython.Compiler.Options import get_directive_defaults
-    directive_defaults = get_directive_defaults()
-    directive_defaults['linetrace'] = True
-    directive_defaults['binding'] = True
 
-e1 = Extension("pyrle.src.rle", ["pyrle/src/rle.pyx"], define_macros = macros)
-e2 = Extension("pyrle.src.coverage", ["pyrle/src/coverage.pyx"], define_macros = macros)
-e3 = Extension("pyrle.src.getitem", ["pyrle/src/getitem.pyx"], define_macros = macros)
+    directive_defaults = get_directive_defaults()
+    directive_defaults["linetrace"] = True
+    directive_defaults["binding"] = True
+
+e1 = Extension("pyrle.src.rle", ["pyrle/src/rle.pyx"], define_macros=macros)
+e2 = Extension("pyrle.src.coverage", ["pyrle/src/coverage.pyx"], define_macros=macros)
+e3 = Extension("pyrle.src.getitem", ["pyrle/src/getitem.pyx"], define_macros=macros)
 
 extensions = [e1, e2, e3]
 
 install_requires = ["cython", "pandas", "tabulate", "numpy", "natsort"]
 
-setup(name='pyrle',
-      version=__version__,
-      packages=find_packages(),
-      ext_modules=cythonize(extensions, language_level=3),
-      install_requires=install_requires,
-      author="Endre Bakken Stovner",
-      author_email="endrebak85@gmail.com",
-      url="https://github.com/endrebak/pyrle",
-      license="MIT",
-      classifiers=[
-          "Programming Language :: Python :: 3",
-          "Development Status :: 4 - Beta",
-          "Environment :: Other Environment", "Intended Audience :: Developers",
-          "Intended Audience :: Science/Research",
-          "License :: OSI Approved :: MIT License",
-          "Operating System :: POSIX :: Linux",
-          "Operating System :: MacOS :: MacOS X",
-          "Topic :: Scientific/Engineering"
-      ],
-      package_data={'': ['*.pyx', '*.pxd', '*.h', '*.c']},
-      include_dirs=["."])
+setup(
+    name="pyrle",
+    version=__version__,
+    packages=find_packages(),
+    ext_modules=cythonize(extensions, language_level=3),
+    install_requires=install_requires,
+    author="Endre Bakken Stovner",
+    author_email="endrebak85@gmail.com",
+    url="https://github.com/endrebak/pyrle",
+    license="MIT",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Development Status :: 4 - Beta",
+        "Environment :: Other Environment",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS :: MacOS X",
+        "Topic :: Scientific/Engineering",
+    ],
+    package_data={"": ["*.pyx", "*.pxd", "*.h", "*.c"]},
+    include_dirs=["."],
+)
 
 
 # import os

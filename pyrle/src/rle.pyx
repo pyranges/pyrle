@@ -29,7 +29,7 @@ cpdef add_rles(const long [::1] runs1, const double [::1] values1, const long [:
     cdef int l2 = len(runs2)
     cdef long r1 = runs1[x1]
     cdef long r2 = runs2[x2]
-    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.int_)
     nvs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.double)
 
     cdef long[::1] nrs
@@ -96,7 +96,7 @@ cpdef sub_rles(const long [::1] runs1, const double [::1] values1, const long [:
     cdef int l2 = len(runs2)
     cdef long r1 = runs1[x1]
     cdef long r2 = runs2[x2]
-    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.int_)
     nvs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.double)
 
     cdef long[::1] nrs
@@ -164,7 +164,7 @@ cpdef div_rles_nonzeroes(const long [::1] runs1, const double [::1] values1, con
     cdef int l2 = len(runs2)
     cdef long r1 = runs1[x1]
     cdef long r2 = runs2[x2]
-    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.int_)
     nvs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.double)
 
     cdef long[::1] nrs
@@ -230,7 +230,7 @@ cpdef div_rles_zeroes(const long [::1] runs1, const double [::1] values1, const 
     cdef int l2 = len(runs2)
     cdef long r1 = runs1[x1]
     cdef long r2 = runs2[x2]
-    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.int_)
     nvs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.double)
 
     cdef long[::1] nrs
@@ -303,7 +303,7 @@ cpdef mul_rles(const long [::1] runs1, const double [::1] values1, const long [:
     cdef int l2 = len(runs2)
     cdef long r1 = runs1[x1]
     cdef long r2 = runs2[x2]
-    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.long)
+    nrs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.int_)
     nvs_arr = np.zeros(len(runs1) + len(runs2), dtype=np.double)
 
     cdef long[::1] nrs

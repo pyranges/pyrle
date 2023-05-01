@@ -13,15 +13,16 @@ from collections import defaultdict
 
 import os
 
+
 class suppress_stdout_stderr(object):
-    '''
+    """
     A context manager for doing a "deep suppression" of stdout and stderr in
     Python, i.e. will suppress all print, even if the print originates in a
     compiled C/Fortran sub-function.
        This will not suppress raised exceptions, since exceptions are printed
     to stderr just before a script exits, and after the context manager has
     exited (at least, I think that is why it lets exceptions through).
-    '''
+    """
 
     def __init__(self):
         # Open a pair of null files
@@ -42,8 +43,8 @@ class suppress_stdout_stderr(object):
         os.close(self.null_fds[0])
         os.close(self.null_fds[1])
 
-def _merge_rles(rle):
 
+def _merge_rles(rle):
     new_dict = {}
     dd = defaultdict(list)
     for chromosome, strand in rle.rles.keys():
@@ -59,7 +60,6 @@ def _merge_rles(rle):
 
 
 def ensure_both_or_none_stranded(self, other):
-
     # means other not stranded
     if self.stranded:
         self.rles = _merge_rles(self)
@@ -70,32 +70,41 @@ def ensure_both_or_none_stranded(self, other):
 
 
 def chromosomes_in_both_self_other(self, other):
-
     chromosomes_in_both = natsorted(
-        set(self.rles.keys()).intersection(other.rles.keys()))
+        set(self.rles.keys()).intersection(other.rles.keys())
+    )
     chromosomes_in_self_not_other = natsorted(
-        set(self.rles.keys()) - set(other.rles.keys()))
+        set(self.rles.keys()) - set(other.rles.keys())
+    )
     chromosomes_in_other_not_self = natsorted(
-        set(other.rles.keys()) - set(self.rles.keys()))
+        set(other.rles.keys()) - set(self.rles.keys())
+    )
 
-    return chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self
+    return (
+        chromosomes_in_both,
+        chromosomes_in_self_not_other,
+        chromosomes_in_other_not_self,
+    )
 
 
 def binary_operation(operation, self, other, nb_cpu=1):
-
     func = {"div": __div, "mul": __mul, "add": __add, "sub": __sub}[operation]
     func, get = rd.get_multithreaded_funcs(func, nb_cpu)
 
     if nb_cpu > 1:
         import ray
+
         with suppress_stdout_stderr():
             ray.init(num_cpus=nb_cpu)
 
     if self.stranded != other.stranded:
         self, other = ensure_both_or_none_stranded(self, other)
 
-    chromosomes_in_both, chromosomes_in_self_not_other, chromosomes_in_other_not_self = chromosomes_in_both_self_other(
-        self, other)
+    (
+        chromosomes_in_both,
+        chromosomes_in_self_not_other,
+        chromosomes_in_other_not_self,
+    ) = chromosomes_in_both_self_other(self, other)
 
     both_results = []
     for c in chromosomes_in_both:
@@ -114,35 +123,32 @@ def binary_operation(operation, self, other, nb_cpu=1):
     rles = {
         k: v
         for k, v in zip(
-            chromosomes_in_both + chromosomes_in_self_not_other +
-            chromosomes_in_other_not_self,
-            get(both_results + self_results + other_results))
+            chromosomes_in_both
+            + chromosomes_in_self_not_other
+            + chromosomes_in_other_not_self,
+            get(both_results + self_results + other_results),
+        )
     }
     return rd.RleDict(rles)
 
 
 def __add(self, other):
-
     return self + other
 
 
 def __sub(self, other):
-
     return self - other
 
 
 def __div(self, other):
-
     return self / other
 
 
 def __mul(self, other):
-
     return self * other
 
 
 def coverage(df, **kwargs):
-
     value_col = kwargs.get("value_col", None)
 
     if value_col:
@@ -150,14 +156,12 @@ def coverage(df, **kwargs):
     else:
         values = np.ones(len(df))
 
-    starts_df = pd.DataFrame({
-        "Position": df.Start,
-        "Value": values
-    })["Position Value".split()]
-    ends_df = pd.DataFrame({
-        "Position": df.End,
-        "Value": -1 * values
-    })["Position Value".split()]
+    starts_df = pd.DataFrame({"Position": df.Start, "Value": values})[
+        "Position Value".split()
+    ]
+    ends_df = pd.DataFrame({"Position": df.End, "Value": -1 * values})[
+        "Position Value".split()
+    ]
     _df = pd.concat([starts_df, ends_df], ignore_index=True)
     _df = _df.sort_values("Position", kind="mergesort")
 
@@ -170,11 +174,9 @@ def coverage(df, **kwargs):
 
 
 def to_ranges_df_strand(rle, k):
-
     chromosome, strand = k
     starts, ends, values = _to_ranges(rle)
-    df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
-                    axis=1)
+    df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
     df.columns = "Start End Score".split()
     df.insert(0, "Chromosome", chromosome)
     df.insert(df.shape[1], "Strand", strand)
@@ -184,10 +186,8 @@ def to_ranges_df_strand(rle, k):
 
 
 def to_ranges_df_no_strand(rle, k):
-
     starts, ends, values = _to_ranges(rle)
-    df = pd.concat([pd.Series(r) for r in [starts, ends, values]],
-                    axis=1)
+    df = pd.concat([pd.Series(r) for r in [starts, ends, values]], axis=1)
     df.columns = "Start End Score".split()
     df.insert(0, "Chromosome", k)
     df = df[df.Score != 0]
@@ -196,13 +196,13 @@ def to_ranges_df_no_strand(rle, k):
 
 
 def to_ranges(grles, nb_cpu=1):
-
     from pyranges import PyRanges
 
     func = to_ranges_df_strand if grles.stranded else to_ranges_df_no_strand
 
     if nb_cpu > 1:
         import ray
+
         ray.init(num_cpus=nb_cpu)
         func = ray.remote(func)
         get = ray.get
@@ -225,7 +225,6 @@ def to_ranges(grles, nb_cpu=1):
 
 
 def _to_ranges(rle):
-
     runs = pd.Series(rle.runs)
     starts = pd.Series([0] + list(runs)).cumsum()
 
@@ -240,5 +239,8 @@ def _to_ranges(rle):
     ends = ends.loc[end_idx]
     values = values[start_idx].reset_index(drop=True)
 
-    return starts.astype(int).reset_index(
-        drop=True), ends.astype(int).reset_index(drop=True), values
+    return (
+        starts.astype(int).reset_index(drop=True),
+        ends.astype(int).reset_index(drop=True),
+        values,
+    )

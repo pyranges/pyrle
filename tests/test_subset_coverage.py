@@ -1,8 +1,13 @@
 import pytest
 
-from hypothesis import given, settings, reproduce_failure, unlimited, HealthCheck, seed
+from hypothesis import given, settings, reproduce_failure, HealthCheck, seed
 
-from tests.hypothesis_helper import runlengths, dfs_min, runlengths_same_length_integers, _slice
+from tests.hypothesis_helper import (
+    runlengths,
+    dfs_min,
+    runlengths_same_length_integers,
+    _slice,
+)
 
 from itertools import product
 import tempfile
@@ -31,11 +36,15 @@ else:
 
 rle_operation_cmd = "Rscript --vanilla tests/subset_coverage.R {} {} {} {}"
 
+
 @pytest.mark.r
 @given(runlengths=runlengths, interval=_slice())
-@settings(max_examples=max_examples, deadline=deadline, timeout=unlimited, suppress_health_check=HealthCheck.all())
+@settings(
+    max_examples=max_examples,
+    deadline=deadline,
+    suppress_health_check=HealthCheck.all(),
+)
 def test_subset_coverage(runlengths, interval):
-
     start, end = interval
 
     print("runlengths\n", runlengths)
@@ -51,7 +60,7 @@ def test_subset_coverage(runlengths, interval):
         outfile = "{}/result.txt".format(temp_dir)
         runlengths.to_csv(f1, sep="\t", index=False)
 
-        cmd = rle_operation_cmd.format(f1, start + 1, end, outfile) # + " 2>/dev/null"
+        cmd = rle_operation_cmd.format(f1, start + 1, end, outfile)  # + " 2>/dev/null"
         print(cmd)
 
         subprocess.check_output(cmd, shell=True, executable="/bin/bash").decode()

@@ -1,6 +1,6 @@
 import pytest
 
-from hypothesis import given, settings, reproduce_failure, unlimited, HealthCheck, seed
+from hypothesis import given, settings, reproduce_failure, HealthCheck, seed
 
 from tests.hypothesis_helper import runlengths, dfs_min, runlengths_same_length_integers
 
@@ -34,17 +34,23 @@ rle_operations = "+ - / *".split()
 
 rle_operation_cmd = "Rscript --vanilla tests/compute_Rle.R {} {} '{}' {}"
 
+
 @pytest.mark.r
 @given(runlengths=runlengths, runlengths2=runlengths)
-@settings(max_examples=max_examples, deadline=deadline, timeout=unlimited, suppress_health_check=HealthCheck.all())
+@settings(
+    max_examples=max_examples,
+    deadline=deadline,
+    suppress_health_check=HealthCheck.all(),
+)
 @pytest.mark.parametrize("operation", rle_operations)
 def test_rle(runlengths, runlengths2, operation):
-
     # Only compared against bioc with integers because float equality is hard,
     # for both libraries, sometimes end up with slightly different runlengths
     # when consecutive values are almost equal
 
-    pyop = {"+": "__add__", "-": "__sub__", "*": "__mul__", "/": "__truediv__"}[operation]
+    pyop = {"+": "__add__", "-": "__sub__", "*": "__mul__", "/": "__truediv__"}[
+        operation
+    ]
 
     print("runlengths", runlengths)
     print("runlengths2", runlengths2)
@@ -68,7 +74,7 @@ def test_rle(runlengths, runlengths2, operation):
         runlengths.to_csv(f1, sep="\t", index=False)
         runlengths2.to_csv(f2, sep="\t", index=False)
 
-        cmd = rle_operation_cmd.format(f1, f2, operation, outfile) # + " 2>/dev/null"
+        cmd = rle_operation_cmd.format(f1, f2, operation, outfile)  # + " 2>/dev/null"
 
         subprocess.check_output(cmd, shell=True, executable="/bin/bash").decode()
 
@@ -84,11 +90,15 @@ def test_rle(runlengths, runlengths2, operation):
 
 rle_commute_how = ["__add__", "__mul__"]
 
+
 @pytest.mark.parametrize("how", rle_commute_how)
-@settings(max_examples=max_examples, deadline=deadline, timeout=unlimited, suppress_health_check=HealthCheck.all())
+@settings(
+    max_examples=max_examples,
+    deadline=deadline,
+    suppress_health_check=HealthCheck.all(),
+)
 @given(gr=dfs_min(), gr2=dfs_min())
 def test_commutative_rles(gr, gr2, how):
-
     cv = gr.to_rle(strand=True)
     cv2 = gr2.to_rle(strand=True)
 
@@ -98,14 +108,20 @@ def test_commutative_rles(gr, gr2, how):
     result = method(cv2)
     result2 = method2(cv)
 
-    assert result == result2, "\n".join([str(e) for e in [cv, cv2, result, result2, "---" * 10]])
+    assert result == result2, "\n".join(
+        [str(e) for e in [cv, cv2, result, result2, "---" * 10]]
+    )
 
-@settings(max_examples=max_examples, deadline=deadline, timeout=unlimited, suppress_health_check=HealthCheck.all())
+
+@settings(
+    max_examples=max_examples,
+    deadline=deadline,
+    suppress_health_check=HealthCheck.all(),
+)
 @given(df=runlengths_same_length_integers)
 def test_inverse_div_mul_rles(df):
-
     """Testing with small integers, since small value floating points might lead to
-mul then div not being equal to identity function because of float equality."""
+    mul then div not being equal to identity function because of float equality."""
 
     print(df)
     runlength = df.Runs.sum()
@@ -132,12 +148,15 @@ mul then div not being equal to identity function because of float equality."""
     assert np.allclose(result2.values, cv.values)
 
 
-@settings(max_examples=max_examples, deadline=deadline, timeout=unlimited, suppress_health_check=HealthCheck.all())
+@settings(
+    max_examples=max_examples,
+    deadline=deadline,
+    suppress_health_check=HealthCheck.all(),
+)
 @given(df=runlengths_same_length_integers)
 def test_inverse_add_sub_rles(df):
-
     """Testing with small integers, since small value floating points might lead to
-mul then div not being equal to identity function because of float equality."""
+    mul then div not being equal to identity function because of float equality."""
 
     cv = Rle(df.Runs.values, df.Values.values)
 

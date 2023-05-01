@@ -1,3 +1,9 @@
+# 0.0.36 (01.05.22)
+- Update numpy types
+
+# 0.0.35 (27.05.22)
+- update np.long to np.int to avoid depr warnings
+
 # 0.0.34 (03.02.22)
 - attempt to fix #5
 

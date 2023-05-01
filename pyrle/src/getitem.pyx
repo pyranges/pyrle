@@ -24,7 +24,7 @@ cpdef getitem(const long [::1] runs, const double [::1] values, int start, int e
 
     values_arr = np.zeros(arr_length)
     vs = values_arr
-    runs_arr = np.zeros(arr_length, dtype=np.long)
+    runs_arr = np.zeros(arr_length, dtype=np.int_)
     rs = runs_arr
 
     for i in range(len(runs)):
@@ -131,7 +131,7 @@ cpdef _getitem(const long [::1] runs, const double [::1] values, const long [::1
 
     values_arr = np.ones(arr_length) * -1
     vs = values_arr
-    runs_arr = np.ones(arr_length, dtype=np.long) * -1
+    runs_arr = np.ones(arr_length, dtype=np.int_) * -1
     rs = runs_arr
 
     for i in range(search_start, len(runs)):
@@ -231,15 +231,15 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
 
     arr_length = len(run_cumsum_arr)
 
-    ids_arr = np.ones(arr_length, dtype=np.long) * -1
-    starts_arr = np.ones(arr_length, dtype=np.long) * -1
-    ends_arr = np.ones(arr_length, dtype=np.long) * -1
+    ids_arr = np.ones(arr_length, dtype=np.int_) * -1
+    starts_arr = np.ones(arr_length, dtype=np.int_) * -1
+    ends_arr = np.ones(arr_length, dtype=np.int_) * -1
     new_starts = starts_arr
     new_ends = ends_arr
     ids = ids_arr
     values_arr = np.ones(arr_length) * -1
     vs = values_arr
-    runs_arr = np.ones(arr_length, dtype=np.long) * -1
+    runs_arr = np.ones(arr_length, dtype=np.int_) * -1
     rs = runs_arr
 
     for x in range(len(search_starts)):
@@ -323,5 +323,3 @@ cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1
                     break
 
     return ids_arr[:nfound], starts_arr[:nfound], ends_arr[:nfound], runs_arr[:nfound], values_arr[:nfound]
-
-

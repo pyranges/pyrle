@@ -1,6 +1,12 @@
 """Data structure for run length encoding representation and arithmetic."""
 
-from pyrle.src.rle import sub_rles, add_rles, mul_rles, div_rles_zeroes, div_rles_nonzeroes
+from pyrle.src.rle import (
+    sub_rles,
+    add_rles,
+    mul_rles,
+    div_rles_zeroes,
+    div_rles_nonzeroes,
+)
 from pyrle.src.coverage import _remove_dupes
 from pyrle.src.getitem import getitem, getlocs, getitems
 
@@ -15,7 +21,6 @@ from tabulate import tabulate
 from numbers import Number
 
 __all__ = ["Rle"]
-
 
 
 def _make_rles_equal_length(self, other, value=0):
@@ -48,7 +53,7 @@ def find_runs(x):
     # ensure array
     x = np.asanyarray(x)
     if x.ndim != 1:
-        raise ValueError('only 1D array supported')
+        raise ValueError("only 1D array supported")
     n = x.shape[0]
 
     # handle empty array
@@ -143,17 +148,14 @@ class Rle:
     runs = None
     values = None
 
-
     def __init__(self, runs=None, values=None):
-
         if values is not None and runs is not None:
-
             assert len(runs) == len(values)
 
             runs = np.copy(runs)
             values = np.copy(values)
 
-            runs = np.array(runs, dtype=np.int)
+            runs = np.array(runs, dtype=np.int_)
             values = np.array(values, dtype=np.double)
             s = pd.Series(values, dtype=np.double)
 
@@ -173,12 +175,10 @@ class Rle:
             self.values, self.runs = find_runs(values)
 
         else:
-            self.runs = np.array([], dtype=np.int)
+            self.runs = np.array([], dtype=np.int_)
             self.values = np.array([], dtype=np.double)
 
-
     def __add__(self, other):
-
         """Add number or Rle to Rle.
 
         The shortest Rle is extended with zeros.
@@ -212,9 +212,7 @@ class Rle:
         runs, values = add_rles(self.runs, self.values, other.runs, other.values)
         return Rle(runs, values)
 
-
     def __array_ufunc__(self, *args, **kwargs):
-
         """Apply unary numpy-function to the values.
 
         Notes
@@ -260,7 +258,6 @@ class Rle:
         return self
 
     def __eq__(self, other):
-
         """Return where Rle equal.
 
         Examples
@@ -290,11 +287,9 @@ class Rle:
         r.values = np.where(r.values == 0, 1.0, 0.0)
         return r.defragment()
 
-
     def __getitem__(self, val):
-
         if isinstance(val, int):
-            values = getlocs(self.runs, self.values, np.array([val], dtype=np.long))
+            values = getlocs(self.runs, self.values, np.array([val], dtype=np.int_))
             return values[0]
         elif isinstance(val, slice):
             end = val.stop or np.sum(self.runs)
@@ -303,21 +298,23 @@ class Rle:
             return Rle(runs, values)
         elif isinstance(val, pd.DataFrame):
             intype = val.dtypes["Start"]
-            val = val["Start End".split()].astype(np.long)
-            ids, starts, ends, runs, values = getitems(self.runs, self.values,
-                                            val.Start.values, val.End.values)
+            val = val["Start End".split()].astype(np.int_)
+            ids, starts, ends, runs, values = getitems(
+                self.runs, self.values, val.Start.values, val.End.values
+            )
 
-            df = pd.DataFrame({"Start": starts,
-                                "End": ends,
-                                "ID": ids,
-                                "Run": runs,
-                                "Value": values}).astype({"Start": intype, "End": intype})
-            # val = val["Start End".split()].astype(np.long)
+            df = pd.DataFrame(
+                {"Start": starts, "End": ends, "ID": ids, "Run": runs, "Value": values}
+            ).astype({"Start": intype, "End": intype})
+            # val = val["Start End".split()].astype(np.int)
             # values = getitems(self.runs, self.values, val.Start.values, val.End.values)
             return df
-        elif "PyRanges" in str(type(val)): # hack to avoid isinstance(key, pr.PyRanges) so that we
-                                           # do not need a dep on PyRanges in this library
+        elif "PyRanges" in str(
+            type(val)
+        ):  # hack to avoid isinstance(key, pr.PyRanges) so that we
+            # do not need a dep on PyRanges in this library
             import pyranges as pr
+
             val = val.drop().df
             if val.empty:
                 return pd.DataFrame(columns="Chromosome Start End ID Run Value".split())
@@ -331,16 +328,21 @@ class Rle:
             else:
                 strand = None
 
-            val = val["Start End".split()].astype(np.long)
-            ids, starts, ends, runs, values = getitems(self.runs, self.values,
-                                            val.Start.values, val.End.values)
+            val = val["Start End".split()].astype(np.int_)
+            ids, starts, ends, runs, values = getitems(
+                self.runs, self.values, val.Start.values, val.End.values
+            )
 
-            df = pd.DataFrame({"Chromosome": chromosome,
-                               "Start": starts,
-                                "End": ends,
-                                "ID": ids,
-                                "Run": runs,
-                                "Value": values}).astype({"Start": intype, "End": intype})
+            df = pd.DataFrame(
+                {
+                    "Chromosome": chromosome,
+                    "Start": starts,
+                    "End": ends,
+                    "ID": ids,
+                    "Run": runs,
+                    "Value": values,
+                }
+            ).astype({"Start": intype, "End": intype})
 
             if strand:
                 df.insert(3, "Strand", strand)
@@ -348,12 +350,11 @@ class Rle:
             return pr.PyRanges(df)
 
         else:
-            locs = np.sort(np.array(val, dtype=np.long))
+            locs = np.sort(np.array(val, dtype=np.int_))
             values = getlocs(self.runs, self.values, locs)
             return values
 
     def __ge__(self, other):
-
         """Check if greater or equal to other.
 
         Examples
@@ -383,7 +384,6 @@ class Rle:
         return r.defragment()
 
     def __gt__(self, other):
-
         """Check if greater than other.
 
         Examples
@@ -413,7 +413,6 @@ class Rle:
         return r.defragment()
 
     def __le__(self, other):
-
         """Check if less than or equal to other.
         Examples
         --------
@@ -442,9 +441,7 @@ class Rle:
         r.values = np.where(r.values <= 0, 1.0, 0.0)
         return r.defragment()
 
-
     def __len__(self):
-
         """Return number of runs in Rle.
 
         See Also
@@ -454,7 +451,6 @@ class Rle:
         return len(self.runs)
 
     def __lt__(self, other):
-
         """Check if less than other.
 
         Examples
@@ -484,9 +480,7 @@ class Rle:
         r.values = np.where(r.values < 0, 1.0, 0.0)
         return r.defragment()
 
-
     def __mul__(self, other):
-
         """Subtract number or Rle from Rle.
 
         The shortest Rle is extended with zeros.
@@ -520,9 +514,7 @@ class Rle:
         runs, values = mul_rles(self.runs, self.values, other.runs, other.values)
         return Rle(runs, values)
 
-
     def __ne__(self, other):
-
         """Return where not equal.
 
         Examples
@@ -545,7 +537,6 @@ class Rle:
         return r.defragment()
 
     def __neg__(self):
-
         """Negate values.
 
         Examples
@@ -573,7 +564,6 @@ class Rle:
         return self
 
     def __radd__(self, other):
-
         """Add scalar to Rle values.
 
         Examples
@@ -590,13 +580,11 @@ class Rle:
         return Rle(self.runs, self.values + other)
 
     def __repr__(self):
-
         """Return REPL string representation."""
 
         return str(self)
 
     def __rmul__(self, other):
-
         """Multiply scalar with Rle-values.
 
         Examples
@@ -613,7 +601,6 @@ class Rle:
         return Rle(self.runs, self.values * other)
 
     def __rsub__(self, other):
-
         """Subtract Rle-values from scalar.
 
         Examples
@@ -630,7 +617,6 @@ class Rle:
         return Rle(self.runs, other - self.values)
 
     def __rtruediv__(self, other):
-
         """Divide scalar with Rle-values.
 
         Examples
@@ -646,18 +632,20 @@ class Rle:
 
         return Rle(self.runs, other / self.values)
 
-
     def __str__(self):
-
         """Return string representation of Rle."""
 
         terminal_width = shutil.get_terminal_size().columns
 
         entries = min(len(self.runs), 10)
-        half_entries = int(entries/2)
+        half_entries = int(entries / 2)
 
-        start_runs, end_runs = [str(i) for i in self.runs[:half_entries]], [str(i) for i in self.runs[-half_entries:]]
-        start_values, end_values = [str(i) for i in self.values[:half_entries]], [str(i) for i in self.values[-half_entries:]]
+        start_runs, end_runs = [str(i) for i in self.runs[:half_entries]], [
+            str(i) for i in self.runs[-half_entries:]
+        ]
+        start_values, end_values = [str(i) for i in self.values[:half_entries]], [
+            str(i) for i in self.values[-half_entries:]
+        ]
 
         if entries < len(self.runs):
             runs = start_runs + ["..."] + end_runs
@@ -671,7 +659,9 @@ class Rle:
         df.index = ["Values"]
         df.index.name = "Runs"
 
-        outstr = tabulate(df, tablefmt='psql', showindex=True, headers="keys", disable_numparse=True)
+        outstr = tabulate(
+            df, tablefmt="psql", showindex=True, headers="keys", disable_numparse=True
+        )
 
         while len(outstr.split("\n", 1)[0]) > terminal_width:
             half_entries -= 1
@@ -685,16 +675,23 @@ class Rle:
             df.index = ["Values"]
             df.index.name = "Runs"
 
-            outstr = tabulate(df, tablefmt='psql', showindex=True, headers="keys", disable_numparse=True)
+            outstr = tabulate(
+                df,
+                tablefmt="psql",
+                showindex=True,
+                headers="keys",
+                disable_numparse=True,
+            )
 
         length = np.sum(self.runs)
         elements = len(self.runs)
-        info = "\nRle of length {} containing {} elements (avg. length {})".format(str(length), str(elements), str(np.round(length/elements, 3)))
+        info = "\nRle of length {} containing {} elements (avg. length {})".format(
+            str(length), str(elements), str(np.round(length / elements, 3))
+        )
 
         return outstr + info
 
     def __sub__(self, other):
-
         """Subtract number or Rle from Rle.
 
         The shortest Rle is extended with zeros.
@@ -728,9 +725,7 @@ class Rle:
         runs, values = sub_rles(self.runs, self.values, other.runs, other.values)
         return Rle(runs, values)
 
-
     def __truediv__(self, other):
-
         """Divide Rle with number or Rle.
 
         The shortest Rle is extended with zeros.
@@ -762,16 +757,17 @@ class Rle:
             self, other = _make_rles_equal_length(self, other)
 
         if (other.values == 0).any() or np.sum(other.runs) < np.sum(self.runs):
-            runs, values = div_rles_zeroes(self.runs, self.values, other.runs, other.values)
+            runs, values = div_rles_zeroes(
+                self.runs, self.values, other.runs, other.values
+            )
         else:
-            runs, values = div_rles_nonzeroes(self.runs, self.values, other.runs, other.values)
+            runs, values = div_rles_nonzeroes(
+                self.runs, self.values, other.runs, other.values
+            )
 
         return Rle(runs, values)
 
-
-
     def apply_values(self, f, defragment=True):
-
         """Apply function to the values.
 
         Parameters
@@ -828,9 +824,7 @@ class Rle:
             self = self.defragment()
         return self
 
-
     def apply_runs(self, f, defragment=True):
-
         """Apply function to the runs.
 
         Parameters
@@ -863,7 +857,6 @@ class Rle:
         return self
 
     def apply(self, f, defragment=True):
-
         """Apply function to the Rle.
 
         Parameters
@@ -901,16 +894,12 @@ class Rle:
             self = self.defragment()
         return self
 
-
     def copy(self):
-
         """Return copy of Rle."""
 
         return Rle(np.copy(self.runs), np.copy(self.values))
 
-
     def defragment(self):
-
         """Merge consecutive values.
 
         Examples
@@ -977,7 +966,6 @@ class Rle:
         return np.sum(self.runs)
 
     def mean(self):
-
         """Return mean of values.
 
         The values are multiplied with their run length.
@@ -994,7 +982,6 @@ class Rle:
         return _sum / length
 
     def numbers_only(self, nan=0.0, posinf=2147483647, neginf=-2147483648):
-
         """Fill inf with large values and nan with 0.
 
         Parameters
@@ -1031,11 +1018,11 @@ class Rle:
         Rle of length 7 containing 5 elements (avg. length 1.4)
         """
 
-        return Rle(self.runs, np.nan_to_num(self.values, nan=nan, posinf=posinf, neginf=neginf)).defragment()
-
+        return Rle(
+            self.runs, np.nan_to_num(self.values, nan=nan, posinf=posinf, neginf=neginf)
+        ).defragment()
 
     def shift(self, dist=1, preserve_length=True, fill=0):
-
         """Shift values.
 
         Parameters
@@ -1110,13 +1097,13 @@ class Rle:
                 self = self[:original_length]
 
         elif dist < 0:
-            dist = -dist # remember dist is negative
+            dist = -dist  # remember dist is negative
             if dist < self.runs[0]:
                 self.runs[0] -= dist
             else:
                 cs = np.cumsum(self.runs)
                 ix = np.argmax(cs > dist)
-                leftover = (np.sum(self.runs[:ix]) - dist)
+                leftover = np.sum(self.runs[:ix]) - dist
                 self = Rle(self.runs[ix:], self.values[ix:])
                 self.runs[0] += leftover
 
@@ -1133,7 +1120,6 @@ class Rle:
         return self
 
     def std(self):
-
         """Return standard deviation.
 
         See Also
@@ -1149,12 +1135,9 @@ class Rle:
 
         _sum = np.sum(self.values - self.mean()) ** 2
 
-        return np.sqrt(_sum/(self.length - 1))
-
-
+        return np.sqrt(_sum / (self.length - 1))
 
     def to_frame(self):
-
         """Return Rle as DataFrame.
 
         See Also
@@ -1173,11 +1156,11 @@ class Rle:
         2    18     0.0
         """
 
-        return pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()]
-
+        return pd.DataFrame(data={"Runs": self.runs, "Values": self.values})[
+            "Runs Values".split()
+        ]
 
     def to_csv(self, **kwargs):
-
         """Return Rle as DataFrame.
 
         Parameters

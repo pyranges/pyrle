@@ -10,8 +10,8 @@ from collections import defaultdict, OrderedDict
 
 PyRles = RleDict
 
-def from_csv(f, sep="\t"):
 
+def from_csv(f, sep="\t"):
     """Read PyRle from CSV.
 
     >>>

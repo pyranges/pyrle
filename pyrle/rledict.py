@@ -21,10 +21,11 @@ import logging
 
 __all__ = ["RleDict"]
 
-def get_multithreaded_funcs(function, nb_cpu):
 
+def get_multithreaded_funcs(function, nb_cpu):
     if nb_cpu > 1:
         import ray
+
         get = ray.get
         function = ray.remote(function)
     else:
@@ -34,7 +35,7 @@ def get_multithreaded_funcs(function, nb_cpu):
     return function, get
 
 
-class RleDict():
+class RleDict:
 
     """Data structure to represent and manipulate a genomic collection of Rles.
 
@@ -131,19 +132,17 @@ class RleDict():
     """
 
     def __init__(self, ranges=None, stranded=False, value_col=None, nb_cpu=1):
-
         # Construct RleDict from dict of rles
         if isinstance(ranges, dict):
-
             self.rles = ranges
-            self.__dict__["stranded"] = True if len(list(
-                ranges.keys())[0]) == 2 else False
+            self.__dict__["stranded"] = (
+                True if len(list(ranges.keys())[0]) == 2 else False
+            )
         elif ranges is None:
             self.rles = {}
 
         # Construct RleDict from ranges
         else:
-
             if stranded:
                 grpby_keys = "Chromosome Strand".split()
             else:
@@ -158,6 +157,7 @@ class RleDict():
 
             if nb_cpu > 1:
                 import ray
+
                 with m.suppress_stdout_stderr():
                     ray.init(num_cpus=nb_cpu)
 
@@ -173,10 +173,7 @@ class RleDict():
                 for k, cdf in grpby:
                     _rles[k] = m_coverage.remote(cdf, **kwargs)
 
-            _rles = {
-                k: v
-                for k, v in zip(_rles.keys(), get(list(_rles.values())))
-            }
+            _rles = {k: v for k, v in zip(_rles.keys(), get(list(_rles.values())))}
 
             if nb_cpu > 1:
                 ray.shutdown()
@@ -185,29 +182,23 @@ class RleDict():
 
             self.__dict__["stranded"] = stranded
 
-
     def __add__(self, other):
-
         if isinstance(other, Number):
             return RleDict({cs: v + other for cs, v in self.items()})
 
         return m.binary_operation("add", self, other)
 
-
     def __eq__(self, other):
-
         if not self.rles.keys() == other.rles.keys():
             return False
 
         for c in self.rles.keys():
-
             if self.rles[c] != other.rles[c]:
                 return False
 
         return True
 
     def __iter__(self):
-
         """Iterate over key and Rle.
 
         Examples
@@ -236,7 +227,6 @@ class RleDict():
         return iter(self.rles.items())
 
     def __getitem__(self, key):
-
         key_is_string = isinstance(key, str)
         key_is_int = isinstance(key, int)
 
@@ -262,11 +252,12 @@ class RleDict():
                 return list(to_return.values())[0]
 
         elif key_is_string:
-
             return self.rles.get(key, Rle())
 
-        elif "PyRanges" in str(type(key)): # hack to avoid isinstance(key, pr.PyRanges) so that we
-                                           # do not need a dep on PyRanges in this library
+        elif "PyRanges" in str(
+            type(key)
+        ):  # hack to avoid isinstance(key, pr.PyRanges) so that we
+            # do not need a dep on PyRanges in this library
 
             import pyranges as pr
             import pandas as pd
@@ -278,16 +269,23 @@ class RleDict():
 
             result = {}
             for k, v in key.dfs.items():
-
                 if k not in self.rles:
                     continue
 
+                v = v["Start End".split()].astype(np.int)
+                ids, starts, ends, runs, values = getitems(
+                    self.rles[k].runs, self.rles[k].values, v.Start.values, v.End.values
+                )
 
-                v = v["Start End".split()].astype(np.long)
-                ids, starts, ends, runs, values = getitems(self.rles[k].runs, self.rles[k].values,
-                                                           v.Start.values, v.End.values)
-
-                df = pd.DataFrame({"Start": starts, "End": ends, "ID": ids, "Run": runs, "Value": values})
+                df = pd.DataFrame(
+                    {
+                        "Start": starts,
+                        "End": ends,
+                        "ID": ids,
+                        "Run": runs,
+                        "Value": values,
+                    }
+                )
 
                 if isinstance(k, tuple):
                     df.insert(0, "Chromosome", k[0])
@@ -300,7 +298,6 @@ class RleDict():
             return pr.PyRanges(result)
 
         elif len(key) == 2:
-
             return self.rles.get(key, Rle([1], [0]))
 
         else:
@@ -313,38 +310,30 @@ class RleDict():
         return len(self.rles)
 
     def __mul__(self, other):
-
         if isinstance(other, Number):
             return RleDict({cs: v * other for cs, v in self.items()})
 
         return m.binary_operation("mul", self, other)
 
     def __radd__(self, other):
-
         return RleDict({cs: other + v for cs, v in self.items()})
 
     def __repr__(self):
-
         return str(self)
 
     def __rsub__(self, other):
-
         return RleDict({cs: other - v for cs, v in self.items()})
 
     def __rtruediv__(self, other):
-
         return RleDict({cs: other / v for cs, v in self.items()})
 
     def __rmul__(self, other):
-
         return RleDict({cs: other * v for cs, v in self.items()})
 
     def __setitem__(self, key, item):
-
         self.rles[key] = item
 
     def __str__(self):
-
         if not self.rles:
             return "Empty RleDict."
 
@@ -355,51 +344,68 @@ class RleDict():
             if len(keys) > 2:
                 str_list = [
                     keys[0],
-                    str(self.rles[keys[0]]), "...", keys[-1],
+                    str(self.rles[keys[0]]),
+                    "...",
+                    keys[-1],
                     str(self.rles[keys[-1]]),
                     "Unstranded RleDict object with {} chromosomes.".format(
-                        len(self.rles.keys()))
+                        len(self.rles.keys())
+                    ),
                 ]
             elif len(keys) == 2:
                 str_list = [
-                    keys[0], "-" * len(keys[0]),
-                    str(self.rles[keys[0]]), "", keys[-1], "-" * len(keys[-1]),
+                    keys[0],
+                    "-" * len(keys[0]),
+                    str(self.rles[keys[0]]),
+                    "",
+                    keys[-1],
+                    "-" * len(keys[-1]),
                     str(self.rles[keys[-1]]),
                     "Unstranded RleDict object with {} chromosomes.".format(
-                        len(self.rles.keys()))
+                        len(self.rles.keys())
+                    ),
                 ]
             else:
                 str_list = [
                     keys[0],
                     str(self.rles[keys[0]]),
                     "Unstranded RleDict object with {} chromosome.".format(
-                        len(self.rles.keys()))
+                        len(self.rles.keys())
+                    ),
                 ]
 
         else:
             if len(keys) > 2:
                 str_list = [
                     " ".join(keys[0]),
-                    str(self.rles[keys[0]]), "...", " ".join(keys[-1]),
+                    str(self.rles[keys[0]]),
+                    "...",
+                    " ".join(keys[-1]),
                     str(self.rles[keys[-1]]),
                     "RleDict object with {} chromosomes/strand pairs.".format(
-                        len(self.rles.keys()))
+                        len(self.rles.keys())
+                    ),
                 ]
             elif len(keys) == 2:
                 str_list = [
-                    " ".join(keys[0]), "-" * len(keys[0]),
-                    str(self.rles[keys[0]]), "", " ".join(keys[-1]),
+                    " ".join(keys[0]),
+                    "-" * len(keys[0]),
+                    str(self.rles[keys[0]]),
+                    "",
+                    " ".join(keys[-1]),
                     "-" * len(keys[-1]),
                     str(self.rles[keys[-1]]),
                     "RleDict object with {} chromosomes/strand pairs.".format(
-                        len(self.rles.keys()))
+                        len(self.rles.keys())
+                    ),
                 ]
             else:
                 str_list = [
                     " ".join(keys[0]),
                     str(self.rles[keys[0]]),
                     "RleDict object with {} chromosome/strand pairs.".format(
-                        len(self.rles.keys()))
+                        len(self.rles.keys())
+                    ),
                 ]
 
         outstr = "\n".join(str_list)
@@ -407,38 +413,29 @@ class RleDict():
         return outstr
 
     def __sub__(self, other):
-
         if isinstance(other, Number):
             return RleDict({cs: v - other for cs, v in self.items()})
 
         return m.binary_operation("sub", self, other)
 
     def __truediv__(self, other):
-
         if isinstance(other, Number):
             return RleDict({cs: v / other for cs, v in self.items()})
 
         return m.binary_operation("div", self, other)
 
-
     def add(self, other, nb_cpu=1):
-
         """Add two RleDicts.
 
         Same as +, but add takes nb_cpu argument."""
 
         return m.binary_operation("add", self, other, nb_cpu)
 
-
     def add_pseudocounts(self, pseudo=0.01):
-
         for k, rle in self.items():
-
             rle.values.loc[rle.values == 0] = pseudo
 
-
     def apply(self, f, defragment=True):
-
         """Apply function to each Rle.
 
         Parameters
@@ -492,7 +489,6 @@ class RleDict():
         new_rles = {}
 
         for k, r in self:
-
             new_rle = r.copy()
             # new_rle.runs = f(new_rle.runs).astype(np.int)
             new_rle = f(new_rle)
@@ -503,9 +499,7 @@ class RleDict():
 
         return RleDict(new_rles)
 
-
     def apply_runs(self, f, defragment=True):
-
         """Apply a function to the runs of RleDict.
 
         Parameters
@@ -558,7 +552,6 @@ class RleDict():
         new_rles = {}
 
         for k, r in self:
-
             new_rle = r.copy()
             new_rle.runs = f(new_rle.runs).astype(np.int)
 
@@ -568,9 +561,7 @@ class RleDict():
 
         return RleDict(new_rles)
 
-
     def apply_values(self, f, defragment=True, **kwargs):
-
         """Apply a function to the values of each Rle.
 
         Parameters
@@ -621,7 +612,6 @@ class RleDict():
         new_rles = {}
 
         for k, r in self:
-
             new_rle = r.copy()
             new_rle.values = f(new_rle.values, **kwargs).astype(np.double)
 
@@ -633,7 +623,6 @@ class RleDict():
 
     @property
     def chromosomes(self):
-
         cs = []
 
         for k in self.rles:
@@ -644,7 +633,6 @@ class RleDict():
 
         return natsorted(set(cs))
 
-
     def copy(self):
         d = {}
         for k, r in self:
@@ -652,10 +640,7 @@ class RleDict():
 
         return RleDict(d)
 
-
-
     def defragment(self, numbers_only=False):
-
         if not numbers_only:
             d = {k: v.defragment() for k, v in self.items()}
         else:
@@ -663,29 +648,22 @@ class RleDict():
 
         return RleDict(d)
 
-
     def div(self, other, nb_cpu=1):
-
         """Divide two RleDicts.
 
         Same as /, but div takes nb_cpu argument."""
 
         return m.binary_operation("div", self, other, nb_cpu)
 
-
     def items(self):
-
         _items = list(self.rles.items())
 
         return natsorted(_items, key=lambda x: x[0])
 
-
     def keys(self):
-
         return natsorted(list(self.rles.keys()))
 
     def make_strands_same_length(self, fill_value=0):
-
         self = self.copy()
 
         if not self.stranded:
@@ -713,47 +691,37 @@ class RleDict():
 
         return self
 
-
     def mul(self, other, nb_cpu=1):
-
         """Multiply two RleDicts.
 
         Same as *, but mul takes nb_cpu argument."""
 
         return m.binary_operation("mul", self, other, nb_cpu)
 
-
     def numbers_only(self):
-
         return RleDict({k: v.numbers_only() for k, v in self.items()})
-
 
     def shift(self, distance):
         return self.apply(lambda r: r.shift(distance))
 
     def sub(self, other, nb_cpu=1):
-
         """Subtract two RleDicts.
 
         Same as -, but sub takes nb_cpu argument."""
 
         return m.binary_operation("sub", self, other, nb_cpu)
 
-
     @property
     def stranded(self):
-
         if len(self) == 0:
             return True
 
         return isinstance(self.keys()[0], tuple)
 
     def to_csv(self, f, sep="\t"):
-
         self.to_table().to_csv(f, sep=sep, index=False)
 
     def to_ranges(self, dtype=np.int32, stranded=None):
-
         """Turn RleDict into PyRanges.
 
         Parameters
@@ -792,11 +760,9 @@ class RleDict():
 
         return m.to_ranges(self).apply(lambda df: df.astype(dtypes))
 
-
-
     def to_table(self):
-
         import pandas as pd
+
         dfs = []
         for k, r in self.rles.items():
             df = pd.DataFrame(data={"Runs": r.runs, "Values": r.values})
@@ -810,17 +776,11 @@ class RleDict():
 
         return pd.concat(dfs)
 
-
     def values(self):
-
         return [self.rles[k] for k in natsorted(self.rles.keys())]
 
 
-
-
-
 if __name__ == "__main__":
-
     # Must turn on macros in setup.py for line tracing to work
     "kernprof -l pyrle/rledict.py && python -m line_profiler coverage.py.lprof"
 
@@ -838,7 +798,8 @@ if __name__ == "__main__":
         usecols=[0, 1, 2, 5],
         header=None,
         names="Chromosome Start End Strand".split(),
-        nrows=nrows)
+        nrows=nrows,
+    )
 
     print("Done reading")
     start = time()
@@ -850,7 +811,7 @@ if __name__ == "__main__":
 
     total_dt = datetime.datetime.fromtimestamp(total)
 
-    minutes_seconds = total_dt.strftime('%M\t%S\n')
+    minutes_seconds = total_dt.strftime("%M\t%S\n")
 
     print(result)
     print(minutes_seconds)
