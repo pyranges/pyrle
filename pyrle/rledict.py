@@ -6,30 +6,29 @@ or chromosome and strand pairs.
 See the documentation for pyrle.Rle.
 """
 
-from pyrle.src.getitem import getitems
-
-from pyrle import Rle
-
 from numbers import Number
-import pyrle.methods as m
-
-from natsort import natsorted
 
 import numpy as np
+from natsort import natsorted  # type: ignore
 
-import logging
+import pyrle.methods as m  # type: ignore
+from pyrle import Rle  # type: ignore
+from pyrle.src.getitem import getitems  # type: ignore
 
 __all__ = ["RleDict"]
 
 
 def get_multithreaded_funcs(function, nb_cpu):
     if nb_cpu > 1:
-        import ray
+        import ray  # type: ignore
 
         get = ray.get
         function = ray.remote(function)
     else:
-        get = lambda x: x
+
+        def get(x):
+            return x
+
         function.remote = function
 
     return function, get
@@ -135,9 +134,7 @@ class RleDict:
         # Construct RleDict from dict of rles
         if isinstance(ranges, dict):
             self.rles = ranges
-            self.__dict__["stranded"] = (
-                True if len(list(ranges.keys())[0]) == 2 else False
-            )
+            self.__dict__["stranded"] = True if len(list(ranges.keys())[0]) == 2 else False
         elif ranges is None:
             self.rles = {}
 
@@ -150,13 +147,13 @@ class RleDict:
 
             try:
                 df = ranges.df
-            except:
+            except AttributeError:
                 df = ranges
 
             grpby = list(natsorted(df.groupby(grpby_keys)))
 
             if nb_cpu > 1:
-                import ray
+                import ray  # type: ignore
 
                 with m.suppress_stdout_stderr():
                     ray.init(num_cpus=nb_cpu)
@@ -254,15 +251,11 @@ class RleDict:
         elif key_is_string:
             return self.rles.get(key, Rle())
 
-        elif "PyRanges" in str(
-            type(key)
-        ):  # hack to avoid isinstance(key, pr.PyRanges) so that we
+        elif "PyRanges" in str(type(key)):  # hack to avoid isinstance(key, pr.PyRanges) so that we
             # do not need a dep on PyRanges in this library
 
-            import pyranges as pr
             import pandas as pd
-
-            from pyrle.rle import find_runs
+            import pyranges as pr  # type: ignore
 
             if not len(key):
                 return pd.DataFrame(columns="Chromosome Start End ID Run Value".split())
@@ -301,9 +294,7 @@ class RleDict:
             return self.rles.get(key, Rle([1], [0]))
 
         else:
-            raise IndexError(
-                "Must use chromosome, strand or (chromosome, strand) to get items from RleDict."
-            )
+            raise IndexError("Must use chromosome, strand or (chromosome, strand) to get items from RleDict.")
 
     def __len__(self):
         """Return number of keys in RleDict."""
@@ -348,9 +339,7 @@ class RleDict:
                     "...",
                     keys[-1],
                     str(self.rles[keys[-1]]),
-                    "Unstranded RleDict object with {} chromosomes.".format(
-                        len(self.rles.keys())
-                    ),
+                    "Unstranded RleDict object with {} chromosomes.".format(len(self.rles.keys())),
                 ]
             elif len(keys) == 2:
                 str_list = [
@@ -361,17 +350,13 @@ class RleDict:
                     keys[-1],
                     "-" * len(keys[-1]),
                     str(self.rles[keys[-1]]),
-                    "Unstranded RleDict object with {} chromosomes.".format(
-                        len(self.rles.keys())
-                    ),
+                    "Unstranded RleDict object with {} chromosomes.".format(len(self.rles.keys())),
                 ]
             else:
                 str_list = [
                     keys[0],
                     str(self.rles[keys[0]]),
-                    "Unstranded RleDict object with {} chromosome.".format(
-                        len(self.rles.keys())
-                    ),
+                    "Unstranded RleDict object with {} chromosome.".format(len(self.rles.keys())),
                 ]
 
         else:
@@ -382,9 +367,7 @@ class RleDict:
                     "...",
                     " ".join(keys[-1]),
                     str(self.rles[keys[-1]]),
-                    "RleDict object with {} chromosomes/strand pairs.".format(
-                        len(self.rles.keys())
-                    ),
+                    "RleDict object with {} chromosomes/strand pairs.".format(len(self.rles.keys())),
                 ]
             elif len(keys) == 2:
                 str_list = [
@@ -395,17 +378,13 @@ class RleDict:
                     " ".join(keys[-1]),
                     "-" * len(keys[-1]),
                     str(self.rles[keys[-1]]),
-                    "RleDict object with {} chromosomes/strand pairs.".format(
-                        len(self.rles.keys())
-                    ),
+                    "RleDict object with {} chromosomes/strand pairs.".format(len(self.rles.keys())),
                 ]
             else:
                 str_list = [
                     " ".join(keys[0]),
                     str(self.rles[keys[0]]),
-                    "RleDict object with {} chromosome/strand pairs.".format(
-                        len(self.rles.keys())
-                    ),
+                    "RleDict object with {} chromosome/strand pairs.".format(len(self.rles.keys())),
                 ]
 
         outstr = "\n".join(str_list)
@@ -553,7 +532,7 @@ class RleDict:
 
         for k, r in self:
             new_rle = r.copy()
-            new_rle.runs = f(new_rle.runs).astype(np.int)
+            new_rle.runs = f(new_rle.runs).astype(np.int64)
 
             new_rle = new_rle.defragment()
 
@@ -778,8 +757,8 @@ if __name__ == "__main__":
     # Must turn on macros in setup.py for line tracing to work
     "kernprof -l pyrle/rledict.py && python -m line_profiler coverage.py.lprof"
 
-    from time import time
     import datetime
+    from time import time
 
     import pandas as pd
 

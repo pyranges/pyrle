@@ -1,12 +1,10 @@
-from pyrle.rle import Rle
-from pyrle.version import __version__
-from pyrle.rledict import RleDict
-from pyrle.methods import coverage
-
 import pandas as pd
-import numpy as np
+import pkg_resources
 
-from collections import defaultdict, OrderedDict
+from pyrle.rle import Rle
+from pyrle.rledict import RleDict
+
+__version__ = pkg_resources.get_distribution("pyrle").version
 
 PyRles = RleDict
 

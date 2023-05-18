@@ -1,24 +1,15 @@
 """Data structure for run length encoding representation and arithmetic."""
 
-from pyrle.src.rle import (
-    sub_rles,
-    add_rles,
-    mul_rles,
-    div_rles_zeroes,
-    div_rles_nonzeroes,
-)
-from pyrle.src.coverage import _remove_dupes
-from pyrle.src.getitem import getitem, getlocs, getitems
-
-import pyrle as rle
-
-import pandas as pd
-import numpy as np
 import shutil
+from numbers import Number
 
+import numpy as np
+import pandas as pd
 from tabulate import tabulate
 
-from numbers import Number
+from pyrle.src.coverage import _remove_dupes  # type: ignore
+from pyrle.src.getitem import getitem, getitems, getlocs  # type: ignore
+from pyrle.src.rle import add_rles, div_rles_nonzeroes, div_rles_zeroes, mul_rles, sub_rles  # type: ignore
 
 __all__ = ["Rle"]
 
@@ -38,9 +29,6 @@ def _make_rles_equal_length(self, other, value=0):
             self = Rle(new_runs, new_values)
 
     return self, other
-
-
-import numpy as np
 
 
 def find_runs(x):
@@ -299,21 +287,17 @@ class Rle:
         elif isinstance(val, pd.DataFrame):
             intype = val.dtypes["Start"]
             val = val["Start End".split()].astype(np.int_)
-            ids, starts, ends, runs, values = getitems(
-                self.runs, self.values, val.Start.values, val.End.values
-            )
+            ids, starts, ends, runs, values = getitems(self.runs, self.values, val.Start.values, val.End.values)
 
-            df = pd.DataFrame(
-                {"Start": starts, "End": ends, "ID": ids, "Run": runs, "Value": values}
-            ).astype({"Start": intype, "End": intype})
+            df = pd.DataFrame({"Start": starts, "End": ends, "ID": ids, "Run": runs, "Value": values}).astype(
+                {"Start": intype, "End": intype}
+            )
             # val = val["Start End".split()].astype(np.int)
             # values = getitems(self.runs, self.values, val.Start.values, val.End.values)
             return df
-        elif "PyRanges" in str(
-            type(val)
-        ):  # hack to avoid isinstance(key, pr.PyRanges) so that we
+        elif "PyRanges" in str(type(val)):  # hack to avoid isinstance(key, pr.PyRanges) so that we
             # do not need a dep on PyRanges in this library
-            import pyranges as pr
+            import pyranges as pr  # type: ignore
 
             val = val.drop().df
             if val.empty:
@@ -329,9 +313,7 @@ class Rle:
                 strand = None
 
             val = val["Start End".split()].astype(np.int_)
-            ids, starts, ends, runs, values = getitems(
-                self.runs, self.values, val.Start.values, val.End.values
-            )
+            ids, starts, ends, runs, values = getitems(self.runs, self.values, val.Start.values, val.End.values)
 
             df = pd.DataFrame(
                 {
@@ -640,9 +622,7 @@ class Rle:
         entries = min(len(self.runs), 10)
         half_entries = int(entries / 2)
 
-        start_runs, end_runs = [str(i) for i in self.runs[:half_entries]], [
-            str(i) for i in self.runs[-half_entries:]
-        ]
+        start_runs, end_runs = [str(i) for i in self.runs[:half_entries]], [str(i) for i in self.runs[-half_entries:]]
         start_values, end_values = [str(i) for i in self.values[:half_entries]], [
             str(i) for i in self.values[-half_entries:]
         ]
@@ -659,9 +639,7 @@ class Rle:
         df.index = ["Values"]
         df.index.name = "Runs"
 
-        outstr = tabulate(
-            df, tablefmt="psql", showindex=True, headers="keys", disable_numparse=True
-        )
+        outstr = tabulate(df, tablefmt="psql", showindex=True, headers="keys", disable_numparse=True)
 
         while len(outstr.split("\n", 1)[0]) > terminal_width:
             half_entries -= 1
@@ -757,13 +735,9 @@ class Rle:
             self, other = _make_rles_equal_length(self, other)
 
         if (other.values == 0).any() or np.sum(other.runs) < np.sum(self.runs):
-            runs, values = div_rles_zeroes(
-                self.runs, self.values, other.runs, other.values
-            )
+            runs, values = div_rles_zeroes(self.runs, self.values, other.runs, other.values)
         else:
-            runs, values = div_rles_nonzeroes(
-                self.runs, self.values, other.runs, other.values
-            )
+            runs, values = div_rles_nonzeroes(self.runs, self.values, other.runs, other.values)
 
         return Rle(runs, values)
 
@@ -1018,9 +992,7 @@ class Rle:
         Rle of length 7 containing 5 elements (avg. length 1.4)
         """
 
-        return Rle(
-            self.runs, np.nan_to_num(self.values, nan=nan, posinf=posinf, neginf=neginf)
-        ).defragment()
+        return Rle(self.runs, np.nan_to_num(self.values, nan=nan, posinf=posinf, neginf=neginf)).defragment()
 
     def shift(self, dist=1, preserve_length=True, fill=0):
         """Shift values.
@@ -1150,15 +1122,13 @@ class Rle:
 
         >>> df = Rle([1, 5, 18], [0, 1, 0]).to_frame()
         >>> df
-        Runs  Values
+           Runs  Values
         0     1     0.0
         1     5     1.0
         2    18     0.0
         """
 
-        return pd.DataFrame(data={"Runs": self.runs, "Values": self.values})[
-            "Runs Values".split()
-        ]
+        return pd.DataFrame(data={"Runs": self.runs, "Values": self.values})["Runs Values".split()]
 
     def to_csv(self, **kwargs):
         """Return Rle as DataFrame.
@@ -1179,7 +1149,7 @@ class Rle:
 
         >>> df = Rle([1, 5, 18], [0, 1, 0]).to_frame()
         >>> df
-        Runs  Values
+           Runs  Values
         0     1     0.0
         1     5     1.0
         2    18     0.0

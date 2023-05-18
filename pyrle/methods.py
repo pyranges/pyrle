@@ -1,17 +1,13 @@
-import pandas as pd
-import numpy as np
-
-from pyrle import Rle
-from pyrle import rledict as rd
-from pyrle.src.coverage import _coverage
-
-from natsort import natsorted
-
-from sys import stderr
-
+import os
 from collections import defaultdict
 
-import os
+import numpy as np
+import pandas as pd
+from natsort import natsorted  # type: ignore
+
+from pyrle import Rle  # type: ignore
+from pyrle import rledict as rd  # type: ignore
+from pyrle.src.coverage import _coverage  # type: ignore
 
 
 class suppress_stdout_stderr(object):
@@ -70,15 +66,9 @@ def ensure_both_or_none_stranded(self, other):
 
 
 def chromosomes_in_both_self_other(self, other):
-    chromosomes_in_both = natsorted(
-        set(self.rles.keys()).intersection(other.rles.keys())
-    )
-    chromosomes_in_self_not_other = natsorted(
-        set(self.rles.keys()) - set(other.rles.keys())
-    )
-    chromosomes_in_other_not_self = natsorted(
-        set(other.rles.keys()) - set(self.rles.keys())
-    )
+    chromosomes_in_both = natsorted(set(self.rles.keys()).intersection(other.rles.keys()))
+    chromosomes_in_self_not_other = natsorted(set(self.rles.keys()) - set(other.rles.keys()))
+    chromosomes_in_other_not_self = natsorted(set(other.rles.keys()) - set(self.rles.keys()))
 
     return (
         chromosomes_in_both,
@@ -92,7 +82,7 @@ def binary_operation(operation, self, other, nb_cpu=1):
     func, get = rd.get_multithreaded_funcs(func, nb_cpu)
 
     if nb_cpu > 1:
-        import ray
+        import ray  # type: ignore
 
         with suppress_stdout_stderr():
             ray.init(num_cpus=nb_cpu)
@@ -123,9 +113,7 @@ def binary_operation(operation, self, other, nb_cpu=1):
     rles = {
         k: v
         for k, v in zip(
-            chromosomes_in_both
-            + chromosomes_in_self_not_other
-            + chromosomes_in_other_not_self,
+            chromosomes_in_both + chromosomes_in_self_not_other + chromosomes_in_other_not_self,
             get(both_results + self_results + other_results),
         )
     }
@@ -156,12 +144,8 @@ def coverage(df, **kwargs):
     else:
         values = np.ones(len(df))
 
-    starts_df = pd.DataFrame({"Position": df.Start, "Value": values})[
-        "Position Value".split()
-    ]
-    ends_df = pd.DataFrame({"Position": df.End, "Value": -1 * values})[
-        "Position Value".split()
-    ]
+    starts_df = pd.DataFrame({"Position": df.Start, "Value": values})["Position Value".split()]
+    ends_df = pd.DataFrame({"Position": df.End, "Value": -1 * values})["Position Value".split()]
     _df = pd.concat([starts_df, ends_df], ignore_index=True)
     _df = _df.sort_values("Position", kind="mergesort")
 
@@ -195,19 +179,21 @@ def to_ranges_df_no_strand(rle, k):
 
 
 def to_ranges(grles, nb_cpu=1):
-    from pyranges import PyRanges
+    from pyranges import PyRanges  # type: ignore
 
     func = to_ranges_df_strand if grles.stranded else to_ranges_df_no_strand
 
     if nb_cpu > 1:
-        import ray
+        import ray  # type: ignore
 
         ray.init(num_cpus=nb_cpu)
         func = ray.remote(func)
         get = ray.get
     else:
         func.remote = func
-        get = lambda x: x
+
+        def get(x):
+            return x
 
     dfs, keys = [], []
     for k, v in grles.items():

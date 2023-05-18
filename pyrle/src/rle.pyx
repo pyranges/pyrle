@@ -6,8 +6,8 @@ cimport cython
 
 from numpy import nan
 
+from libc.math cimport INFINITY, NAN, copysign
 
-from libc.math cimport copysign, INFINITY, NAN
 
 cdef float inf = INFINITY
 

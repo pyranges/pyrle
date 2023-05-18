@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 cimport cython
-
 from libc.math cimport isnan
+
 
 cdef extern from "math.h":
     float INFINITY
