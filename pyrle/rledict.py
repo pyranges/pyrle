@@ -721,15 +721,11 @@ class RleDict:
     def to_csv(self, f, sep="\t"):
         self.to_table().to_csv(f, sep=sep, index=False)
 
-    def to_ranges(self, dtype=np.int32, stranded=None):
+    def to_ranges(self, stranded=None):
         """Turn RleDict into PyRanges.
 
         Parameters
         ----------
-        dtype : {np.int32 or np.int64}
-
-            Type of starts and ends in PyRanges.
-
         stranded : bool, default None, i.e. auto
 
             Whether to return stranded PyRanges.
@@ -741,7 +737,7 @@ class RleDict:
         >>> r.to_ranges()
         +--------------+-----------+-----------+-------------+--------------+
         | Chromosome   |     Start |       End |       Score | Strand       |
-        | (category)   |   (int32) |   (int32) |   (float64) | (category)   |
+        | (category)   |   (int64) |   (int64) |   (float64) | (category)   |
         |--------------+-----------+-----------+-------------+--------------|
         | chr1         |         0 |         1 |           1 | +            |
         | chr1         |         1 |         2 |           2 | +            |
@@ -752,9 +748,7 @@ class RleDict:
         For printing, the PyRanges was sorted on Chromosome and Strand.
         """
 
-        assert dtype in [np.int32, np.int64]
-
-        dtypes = {"Chromosome": "category", "Start": dtype, "End": dtype}
+        dtypes = {"Chromosome": "category", "Start": np.int64, "End": np.int64}
         if self.stranded:
             dtypes["Strand"] = "category"
 

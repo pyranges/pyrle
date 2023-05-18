@@ -165,8 +165,7 @@ def coverage(df, **kwargs):
     _df = pd.concat([starts_df, ends_df], ignore_index=True)
     _df = _df.sort_values("Position", kind="mergesort")
 
-    if _df.Position.dtype.name == "int32":
-        _df.Position = _df.Position.astype(np.int64)
+    _df.Position = _df.Position.astype(np.int64)
 
     runs, values = _coverage(_df.Position.values, _df.Value.values)
 
