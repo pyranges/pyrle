@@ -179,22 +179,14 @@ def to_ranges_df_no_strand(rle, k):
 
 
 def to_ranges(grles, nb_cpu=1):
-    from pyranges import PyRanges  # type: ignore
+    import pyranges as pr# type: ignore
 
     func = to_ranges_df_strand if grles.stranded else to_ranges_df_no_strand
 
-    if nb_cpu > 1:
-        import ray  # type: ignore
+    func.remote = func
 
-        ray.init(num_cpus=nb_cpu)
-        func = ray.remote(func)
-        get = ray.get
-    else:
-        func.remote = func
-
-        def get(x):
-            return x
-
+    def get(x):
+        return x
     dfs, keys = [], []
     for k, v in grles.items():
         result = func.remote(v, k)
@@ -203,10 +195,10 @@ def to_ranges(grles, nb_cpu=1):
 
     dfs = {k: v for (k, v) in zip(keys, get(dfs))}
 
-    if nb_cpu > 1:
-        ray.shutdown()
-
-    return PyRanges(dfs)
+    try:
+        return pr.from_dfs(dfs)
+    except:
+        return pd.concat(dfs.values())
 
 
 def _to_ranges(rle):

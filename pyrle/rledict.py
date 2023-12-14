@@ -288,7 +288,10 @@ class RleDict:
 
                 result[k] = df
 
-            return pr.PyRanges(result)
+            try:
+                return pr.PyRanges(result)
+            except:
+                return pd.concat(result.values())
 
         elif len(key) == 2:
             return self.rles.get(key, Rle([1], [0]))
@@ -695,7 +698,7 @@ class RleDict:
         if len(self) == 0:
             return True
 
-        return isinstance(self.keys()[0], tuple)
+        return isinstance(self.keys()[0], tuple) and len(self.keys()[0]) == 2
 
     def to_csv(self, f, sep="\t"):
         self.to_table().to_csv(f, sep=sep, index=False)
@@ -731,7 +734,10 @@ class RleDict:
         if self.stranded:
             dtypes["Strand"] = "category"
 
-        return m.to_ranges(self).apply(lambda df: df.astype(dtypes))
+        try:
+            return m.to_ranges(self).apply(lambda df: df.astype(dtypes))
+        except:
+            return m.to_ranges(self).astype(dtypes)
 
     def to_table(self):
         import pandas as pd
