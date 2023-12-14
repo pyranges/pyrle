@@ -329,7 +329,10 @@ class Rle:
             if strand:
                 df.insert(3, "Strand", strand)
 
-            return pr.PyRanges(df)
+            try:
+                return pr.PyRanges(df)
+            except:
+                return df
 
         else:
             locs = np.sort(np.array(val, dtype=np.int_))
