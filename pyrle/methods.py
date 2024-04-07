@@ -1,3 +1,4 @@
+import logging
 import os
 from collections import defaultdict
 
@@ -8,6 +9,8 @@ from natsort import natsorted  # type: ignore
 from pyrle import Rle  # type: ignore
 from pyrle import rledict as rd  # type: ignore
 from pyrle.src.coverage import _coverage  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 class suppress_stdout_stderr(object):
@@ -179,7 +182,7 @@ def to_ranges_df_no_strand(rle, k):
 
 
 def to_ranges(grles, nb_cpu=1):
-    import pyranges as pr# type: ignore
+    import pyranges as pr  # type: ignore
 
     func = to_ranges_df_strand if grles.stranded else to_ranges_df_no_strand
 
@@ -187,6 +190,7 @@ def to_ranges(grles, nb_cpu=1):
 
     def get(x):
         return x
+
     dfs, keys = [], []
     for k, v in grles.items():
         result = func.remote(v, k)
@@ -196,8 +200,9 @@ def to_ranges(grles, nb_cpu=1):
     dfs = {k: v for (k, v) in zip(keys, get(dfs))}
 
     try:
-        return pr.from_dfs(dfs)
-    except:
+        return pr.PyRanges(dfs)
+    except Exception:
+        logger.exception("It was not possible to return a PyRanges object. Returning a pandas Dataframe.")
         return pd.concat(dfs.values())
 
 

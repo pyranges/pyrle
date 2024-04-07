@@ -1,3 +1,7 @@
+# 0.0.38 (08.04.2024) (@Isy89)
+- Fix `AttributeError: module 'pyranges' has no attribute 'from_dfs'` causing to_ranges function to return a pandas 
+  Dataframe instead of PyRanges object (#9)
+  
 # 0.0.37 (18.05.23)
 - remove option to return 32-bit PyRanges
 
