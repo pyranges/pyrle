@@ -1,3 +1,6 @@
+# 0.0.40 (01.05.24)
+- add support for new pyranges
+
 # 0.0.37 (18.05.23)
 - remove option to return 32-bit PyRanges
 

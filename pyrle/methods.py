@@ -183,22 +183,12 @@ def to_ranges(grles, nb_cpu=1):
 
     func = to_ranges_df_strand if grles.stranded else to_ranges_df_no_strand
 
-    func.remote = func
+    dfs = {k: func(v, k) for k, v in grles.items()}
 
-    def get(x):
-        return x
-    dfs, keys = [], []
-    for k, v in grles.items():
-        result = func.remote(v, k)
-        dfs.append(result)
-        keys.append(k)
-
-    dfs = {k: v for (k, v) in zip(keys, get(dfs))}
-
-    try:
+    try:  # new pyranges
         return pr.from_dfs(dfs)
-    except:
-        return pd.concat(dfs.values())
+    except:  # legacy pyranges
+        return pr.PyRanges(pd.concat(dfs.values()))
 
 
 def _to_ranges(rle):

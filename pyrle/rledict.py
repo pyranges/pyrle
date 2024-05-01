@@ -734,9 +734,9 @@ class RleDict:
         if self.stranded:
             dtypes["Strand"] = "category"
 
-        try:
+        try:  # legacy pyranges
             return m.to_ranges(self).apply(lambda df: df.astype(dtypes))
-        except:
+        except:  # new pyranges
             return m.to_ranges(self).astype(dtypes)
 
     def to_table(self):
