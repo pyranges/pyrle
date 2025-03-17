@@ -1,3 +1,6 @@
+# 0.0.41 (17.03.25)
+- use importlib not pkg_resources
+
 # 0.0.40 (01.05.24)
 - add support for new pyranges
 

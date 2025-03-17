@@ -1,10 +1,11 @@
 import pandas as pd
-import pkg_resources
+from importlib.metadata import version
 
 from pyrle.rle import Rle
 from pyrle.rledict import RleDict
 
-__version__ = pkg_resources.get_distribution("pyrle").version
+
+__version__ = version("pyrle")
 
 PyRles = RleDict
 
