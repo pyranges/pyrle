@@ -8,6 +8,8 @@ jobs:
   build:
     name: Build wheels (matrix)
     runs-on: ${{ matrix.os }}
+    env:
+      CIBW_BUILD: "cp311-*"
     strategy:
       fail-fast: false
       matrix:
