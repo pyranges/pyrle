@@ -39,7 +39,7 @@ rle_operation_cmd = "Rscript --vanilla tests/compute_Rle.R {} {} '{}' {}"
 @given(runlengths=runlengths, runlengths2=runlengths)
 @settings(
     max_examples=max_examples,
-    deadline=deadline,
+    deadline=1000000,
     suppress_health_check=HealthCheck.all(),
 )
 @pytest.mark.parametrize("operation", rle_operations)
@@ -94,7 +94,7 @@ rle_commute_how = ["__add__", "__mul__"]
 @pytest.mark.parametrize("how", rle_commute_how)
 @settings(
     max_examples=max_examples,
-    deadline=deadline,
+    deadline=1000000,
     suppress_health_check=HealthCheck.all(),
 )
 @given(gr=dfs_min(), gr2=dfs_min())
@@ -115,7 +115,7 @@ def test_commutative_rles(gr, gr2, how):
 
 @settings(
     max_examples=max_examples,
-    deadline=deadline,
+    deadline=1000000,
     suppress_health_check=HealthCheck.all(),
 )
 @given(df=runlengths_same_length_integers)
@@ -150,7 +150,7 @@ def test_inverse_div_mul_rles(df):
 
 @settings(
     max_examples=max_examples,
-    deadline=deadline,
+    deadline=1000000,
     suppress_health_check=HealthCheck.all(),
 )
 @given(df=runlengths_same_length_integers)

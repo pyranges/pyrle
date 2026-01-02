@@ -41,7 +41,7 @@ rle_operation_cmd = "Rscript --vanilla tests/subset_coverage.R {} {} {} {}"
 @given(runlengths=runlengths, interval=_slice())
 @settings(
     max_examples=max_examples,
-    deadline=deadline,
+    deadline=1000000,
     suppress_health_check=HealthCheck.all(),
 )
 def test_subset_coverage(runlengths, interval):

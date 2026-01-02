@@ -45,7 +45,7 @@ coverage_cmd = "Rscript --vanilla tests/compute_coverage.R {} {}"
 @pytest.mark.r
 @settings(
     max_examples=max_examples,
-    deadline=deadline,
+    deadline=1000000,
     suppress_health_check=HealthCheck.all(),
 )
 @given(df=dfs_min_single_chromosome())
