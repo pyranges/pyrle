@@ -190,7 +190,9 @@ class RleDict:
             return False
 
         for c in self.rles.keys():
-            if self.rles[c] != other.rles[c]:
+            if not np.array_equal(self.rles[c].runs, other.rles[c].runs):
+                return False
+            if not np.allclose(self.rles[c].values, other.rles[c].values, equal_nan=True):
                 return False
 
         return True
