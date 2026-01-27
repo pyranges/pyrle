@@ -1,3 +1,4 @@
+import logging
 import os
 from collections import defaultdict
 
@@ -9,6 +10,7 @@ from pyrle import Rle  # type: ignore
 from pyrle import rledict as rd  # type: ignore
 from pyrle.src.coverage import _coverage  # type: ignore
 
+logger = logging.getLogger(__name__)
 
 class suppress_stdout_stderr(object):
     """
@@ -188,8 +190,11 @@ def to_ranges(grles, nb_cpu=1):
 
     dfs_list = [func(v, k) for k, v in grles.items()]
 
-    return pr.PyRanges(pd.concat(dfs_list))
-
+    try:
+        return pr.PyRanges(pd.concat(dfs_list))
+    except Exception:
+        logger.exception("It was not possible to return a PyRanges object. Returning a pandas Dataframe.")
+        return pd.concat(dfs_list)
 
 
 def _to_ranges(rle):
