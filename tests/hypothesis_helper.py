@@ -5,7 +5,10 @@ from hypothesis.extra.pandas import data_frames, columns, range_indexes, column,
 from hypothesis.extra.numpy import arrays
 import hypothesis.strategies as st
 
-from pyranges import PyRanges
+try:
+    from pyranges1 import PyRanges
+except ModuleNotFoundError:
+    from pyranges import PyRanges
 
 import numpy as np
 

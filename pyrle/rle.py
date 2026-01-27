@@ -297,7 +297,10 @@ class Rle:
             return df
         elif "PyRanges" in str(type(val)):  # hack to avoid isinstance(key, pr.PyRanges) so that we
             # do not need a dep on PyRanges in this library
-            import pyranges as pr  # type: ignore
+            try:
+                import pyranges1 as pr  # type: ignore
+            except ModuleNotFoundError:
+                import pyranges as pr  # type: ignore
 
             val = val.drop().df
             if val.empty:

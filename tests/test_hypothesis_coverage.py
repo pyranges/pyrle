@@ -11,7 +11,10 @@ import subprocess
 from io import StringIO
 
 from pyrle import Rle
-import pyranges as pr
+try:
+    import pyranges1 as pr  # type: ignore
+except ModuleNotFoundError:
+    import pyranges as pr  # type: ignore
 
 import pandas as pd
 import numpy as np

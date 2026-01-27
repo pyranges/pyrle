@@ -179,16 +179,17 @@ def to_ranges_df_no_strand(rle, k):
 
 
 def to_ranges(grles, nb_cpu=1):
-    import pyranges as pr# type: ignore
+    try:
+        import pyranges1 as pr # type: ignore
+    except ModuleNotFoundError:
+        import pyranges as pr  # type: ignore
 
     func = to_ranges_df_strand if grles.stranded else to_ranges_df_no_strand
 
-    dfs = {k: func(v, k) for k, v in grles.items()}
+    dfs_list = [func(v, k) for k, v in grles.items()]
 
-    try:  # new pyranges
-        return pr.from_dfs(dfs)
-    except:  # legacy pyranges
-        return pr.PyRanges(pd.concat(dfs.values()))
+    return pr.PyRanges(pd.concat(dfs_list))
+
 
 
 def _to_ranges(rle):
