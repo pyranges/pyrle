@@ -87,9 +87,9 @@ class RleDict:
     Rle of length 10 containing 6 elements (avg. length 1.667)
     Unstranded RleDict object with 2 chromosomes.
 
-    >>> import pyranges as pr
-    >>> gr = pr.data.chipseq()
-    >>> df = pr.data.chipseq_background().df
+    >>> import pyranges1 as pr
+    >>> gr = pr.example_data.chipseq
+    >>> df = pr.example_data.chipseq_background
     >>> cs = RleDict(gr, stranded=True)
     >>> bg = RleDict(df, stranded=True)
 
@@ -257,7 +257,10 @@ class RleDict:
             # do not need a dep on PyRanges in this library
 
             import pandas as pd
-            import pyranges as pr  # type: ignore
+            try:
+                import pyranges1 as pr  # type: ignore
+            except ModuleNotFoundError:
+                import pyranges as pr  # type: ignore
 
             if not len(key):
                 return pd.DataFrame(columns="Chromosome Start End ID Run Value".split())
