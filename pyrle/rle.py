@@ -914,7 +914,11 @@ class Rle:
         """
 
         runs, values = _remove_dupes(self.runs, self.values, len(self))
-        values[values == -0] = 0
+        runs, values = np.asarray(runs), np.asarray(values)
+        # Normalise negative zero. This must operate on an array: a boolean
+        # mask indexes elementwise, whereas a scalar `False` would assign to
+        # element 0 and silently overwrite a real value.
+        values[values == 0] = 0.0
         return Rle(runs, values)
 
     @property
