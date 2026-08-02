@@ -161,7 +161,11 @@ def _remove_dupes(long [::1] runs, double [::1] values, int length):
 
     if len(values) == 1:
         ##print("len value series one")
-        return runs, values
+        # Return arrays, not the typed memoryviews we were handed. Every other
+        # exit from this function returns numpy arrays, and callers rely on
+        # that: `arr == x` on a memoryview compares the object rather than its
+        # elements, yielding a scalar bool that then indexes instead of masking.
+        return np.asarray(runs), np.asarray(values)
 
     # if np.isclose(value, old_val, equal_nan=True) and counter > 0:
 
