@@ -1,9 +1,9 @@
-import pandas as pd
 from importlib.metadata import version
+
+import pandas as pd
 
 from pyrle.rle import Rle
 from pyrle.rledict import RleDict
-
 
 __version__ = version("pyrle")
 

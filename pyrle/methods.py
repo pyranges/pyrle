@@ -12,6 +12,7 @@ from pyrle.src.coverage import _coverage  # type: ignore
 
 logger = logging.getLogger(__name__)
 
+
 class suppress_stdout_stderr(object):
     """
     A context manager for doing a "deep suppression" of stdout and stderr in
@@ -182,7 +183,7 @@ def to_ranges_df_no_strand(rle, k):
 
 def to_ranges(grles, nb_cpu=1):
     try:
-        import pyranges1 as pr # type: ignore
+        import pyranges1 as pr  # type: ignore
     except ModuleNotFoundError:
         import pyranges as pr  # type: ignore
 

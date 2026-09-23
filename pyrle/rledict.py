@@ -35,7 +35,6 @@ def get_multithreaded_funcs(function, nb_cpu):
 
 
 class RleDict:
-
     """Data structure to represent and manipulate a genomic collection of Rles.
 
     Parameters
@@ -257,6 +256,7 @@ class RleDict:
             # do not need a dep on PyRanges in this library
 
             import pandas as pd
+
             try:
                 import pyranges1 as pr  # type: ignore
             except ModuleNotFoundError:
@@ -295,7 +295,7 @@ class RleDict:
 
             try:
                 return pr.PyRanges(result)
-            except:
+            except Exception:
                 return pd.concat(result.values())
 
         elif len(key) == 2:
@@ -741,7 +741,7 @@ class RleDict:
 
         try:  # legacy pyranges
             return m.to_ranges(self).apply(lambda df: df.astype(dtypes))
-        except:  # new pyranges
+        except Exception:  # new pyranges
             return m.to_ranges(self).astype(dtypes)
 
     def to_table(self):
