@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 cimport cython
 from libc.math cimport isnan
@@ -25,7 +24,7 @@ def insort(a, b, kind='mergesort'):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-def _coverage(long [::1] positions, double [::1] values):
+def _coverage(const long [::1] positions, const double [::1] values):
 
     d = {}
 
@@ -63,31 +62,29 @@ def _coverage(long [::1] positions, double [::1] values):
         outvalue[j] += values[i]
         i += 1
 
-    value_series = pd.Series(values_arr)
-    runs = pd.Series(unique, dtype=np.int_)
+    # numpy rather than pandas: pandas 3 raises spurious ChainedAssignmentErrors
+    # for Series setitem inside Cython functions
+    value_arr = np.empty(outlength)
+    value_arr[0] = first_value
+    value_arr[1:] = np.cumsum(values_arr)[:-1]
 
-    value_series = value_series.cumsum().shift()
-    value_series[0] = first_value
+    runs = np.diff(unique, prepend=0)
 
-    shifted = runs.shift()
-    shifted[0] = 0
-    runs = (runs - shifted)
-
-    if len(value_series) > 1 and first_value == value_series[1]:
+    if len(value_arr) > 1 and first_value == value_arr[1]:
         runs[1] += runs[0]
-        value_series = value_series[1:]
+        value_arr = value_arr[1:]
         runs = runs[1:]
 
-    return runs.values, value_series.values
+    return runs, value_arr
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-def _remove_dupes(long [::1] runs, double [::1] values, int length):
+def _remove_dupes(const long [::1] runs, const double [::1] values, int length):
 
-    cdef long[::1] _runs
-    cdef double[::1] _vals
+    cdef const long[::1] _runs
+    cdef const double[::1] _vals
 
     _runs = runs
     _vals = values
