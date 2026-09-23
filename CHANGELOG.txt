@@ -1,6 +1,7 @@
 # 0.0.45 (23.09.26)
 - support pandas 3: `_coverage` and `_remove_dupes` accept read-only arrays (pandas 3 Copy-on-Write makes `Series.values` read-only), fixing `ValueError: buffer source array is read-only` in `coverage`
 - `_coverage` post-processes with numpy instead of pandas, avoiding spurious `ChainedAssignmentError` warnings under pandas 3
+- `_coverage` returns empty arrays for empty input instead of reading out of bounds
 
 # 0.0.44 (30.07.26)
 - fix `Rle.defragment` overwriting the value with 0 whenever the result collapses to a single run; `_remove_dupes` returned typed memoryviews on its single-element path while every other path returned arrays, so `values[values == -0] = 0` compared the object rather than its elements and the resulting scalar `False` indexed element 0 instead of masking

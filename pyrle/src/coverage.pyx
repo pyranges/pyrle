@@ -26,6 +26,9 @@ def insort(a, b, kind='mergesort'):
 @cython.initializedcheck(False)
 def _coverage(const long [::1] positions, const double [::1] values):
 
+    if len(positions) == 0:
+        return np.array([], dtype=np.int_), np.array([], dtype=np.float64)
+
     d = {}
 
     cdef int i = 0
