@@ -18,6 +18,10 @@ from pyrle.src.getitem import getitems  # type: ignore
 __all__ = ["RleDict"]
 
 
+def _is_stranded_key(key):
+    return isinstance(key, tuple) and len(key) == 2
+
+
 def get_multithreaded_funcs(function, nb_cpu):
     if nb_cpu > 1:
         import ray  # type: ignore
@@ -134,7 +138,7 @@ class RleDict:
         # Construct RleDict from dict of rles
         if isinstance(ranges, dict):
             self.rles = ranges
-            self.__dict__["stranded"] = True if len(list(ranges.keys())[0]) == 2 else False
+            self.__dict__["stranded"] = _is_stranded_key(next(iter(ranges))) if ranges else stranded
         elif ranges is None:
             self.rles = {}
 
@@ -337,32 +341,32 @@ class RleDict:
             return "Empty RleDict."
 
         keys = natsorted(self.rles.keys())
-        stranded = True if len(list(keys)[0]) == 2 else False
+        stranded = _is_stranded_key(keys[0])
 
         if not stranded:
             if len(keys) > 2:
                 str_list = [
-                    keys[0],
+                    str(keys[0]),
                     str(self.rles[keys[0]]),
                     "...",
-                    keys[-1],
+                    str(keys[-1]),
                     str(self.rles[keys[-1]]),
                     "Unstranded RleDict object with {} chromosomes.".format(len(self.rles.keys())),
                 ]
             elif len(keys) == 2:
                 str_list = [
-                    keys[0],
-                    "-" * len(keys[0]),
+                    str(keys[0]),
+                    "-" * len(str(keys[0])),
                     str(self.rles[keys[0]]),
                     "",
-                    keys[-1],
-                    "-" * len(keys[-1]),
+                    str(keys[-1]),
+                    "-" * len(str(keys[-1])),
                     str(self.rles[keys[-1]]),
                     "Unstranded RleDict object with {} chromosomes.".format(len(self.rles.keys())),
                 ]
             else:
                 str_list = [
-                    keys[0],
+                    str(keys[0]),
                     str(self.rles[keys[0]]),
                     "Unstranded RleDict object with {} chromosome.".format(len(self.rles.keys())),
                 ]
@@ -370,27 +374,27 @@ class RleDict:
         else:
             if len(keys) > 2:
                 str_list = [
-                    " ".join(keys[0]),
+                    " ".join(map(str, keys[0])),
                     str(self.rles[keys[0]]),
                     "...",
-                    " ".join(keys[-1]),
+                    " ".join(map(str, keys[-1])),
                     str(self.rles[keys[-1]]),
                     "RleDict object with {} chromosomes/strand pairs.".format(len(self.rles.keys())),
                 ]
             elif len(keys) == 2:
                 str_list = [
-                    " ".join(keys[0]),
-                    "-" * len(keys[0]),
+                    " ".join(map(str, keys[0])),
+                    "-" * len(" ".join(map(str, keys[0]))),
                     str(self.rles[keys[0]]),
                     "",
-                    " ".join(keys[-1]),
-                    "-" * len(keys[-1]),
+                    " ".join(map(str, keys[-1])),
+                    "-" * len(" ".join(map(str, keys[-1]))),
                     str(self.rles[keys[-1]]),
                     "RleDict object with {} chromosomes/strand pairs.".format(len(self.rles.keys())),
                 ]
             else:
                 str_list = [
-                    " ".join(keys[0]),
+                    " ".join(map(str, keys[0])),
                     str(self.rles[keys[0]]),
                     "RleDict object with {} chromosome/strand pairs.".format(len(self.rles.keys())),
                 ]
@@ -703,7 +707,7 @@ class RleDict:
         if len(self) == 0:
             return True
 
-        return isinstance(self.keys()[0], tuple) and len(self.keys()[0]) == 2
+        return _is_stranded_key(self.keys()[0])
 
     def to_csv(self, f, sep="\t"):
         self.to_table().to_csv(f, sep=sep, index=False)
