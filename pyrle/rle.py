@@ -65,7 +65,6 @@ def find_runs(x):
 
 
 class Rle:
-
     """Data structure to represent and manipulate Run Length Encodings.
 
     An Rle contains two vectors, one with runs (int) and one with values
@@ -334,7 +333,7 @@ class Rle:
 
             try:
                 return pr.PyRanges(df)
-            except:
+            except Exception:
                 return df
 
         else:
