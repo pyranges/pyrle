@@ -1,3 +1,6 @@
+# 0.0.46 (25.10.26)
+- accept non-contiguous (strided) arrays, as pandas >= 3.1 can return from Series.values, fixing `ValueError: ndarray is not C-contiguous` in `coverage` and `Rle[df]`
+
 # 0.0.45 (23.09.26)
 - support pandas 3: `_coverage` and `_remove_dupes` accept read-only arrays (pandas 3 Copy-on-Write makes `Series.values` read-only), fixing `ValueError: buffer source array is read-only` in `coverage`
 - `_coverage` post-processes with numpy instead of pandas, avoiding spurious `ChainedAssignmentError` warnings under pandas 3
