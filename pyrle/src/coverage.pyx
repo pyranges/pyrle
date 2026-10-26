@@ -24,7 +24,7 @@ def insort(a, b, kind='mergesort'):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-def _coverage(const long [::1] positions, const double [::1] values):
+def _coverage(const long [:] positions, const double [:] values):
 
     if len(positions) == 0:
         return np.array([], dtype=np.int_), np.array([], dtype=np.float64)
@@ -84,10 +84,10 @@ def _coverage(const long [::1] positions, const double [::1] values):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-def _remove_dupes(const long [::1] runs, const double [::1] values, int length):
+def _remove_dupes(const long [:] runs, const double [:] values, int length):
 
-    cdef const long[::1] _runs
-    cdef const double[::1] _vals
+    cdef const long [:] _runs
+    cdef const double [:] _vals
 
     _runs = runs
     _vals = values

@@ -8,7 +8,7 @@ cimport cython
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef getitem(const long [::1] runs, const double [::1] values, int start, int end):
+cpdef getitem(const long [:] runs, const double [:] values, int start, int end):
 
     cdef:
         int i = 0
@@ -86,7 +86,7 @@ cpdef getitem(const long [::1] runs, const double [::1] values, int start, int e
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-def getlocs(const long [::1] runs, const double [::1] values, const long [::1] locs):
+def getlocs(const long [:] runs, const double [:] values, const long [:] locs):
 
     cdef:
         int i = 0
@@ -113,7 +113,7 @@ def getlocs(const long [::1] runs, const double [::1] values, const long [::1] l
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef _getitem(const long [::1] runs, const double [::1] values, const long [::1] run_cumsum, int start, int end):
+cpdef _getitem(const long [:] runs, const double [:] values, const long [:] run_cumsum, int start, int end):
 
     cdef:
         int i = 0
@@ -198,7 +198,7 @@ cpdef _getitem(const long [::1] runs, const double [::1] values, const long [::1
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef getitems(const long [::1] runs, const double [::1] values, const long [::1] starts, const long [::1] ends):
+cpdef getitems(const long [:] runs, const double [:] values, const long [:] starts, const long [:] ends):
 
     cdef:
         long i = 0

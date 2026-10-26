@@ -17,7 +17,7 @@ cdef float inf = INFINITY
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef add_rles(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
+cpdef add_rles(const long [:] runs1, const double [:] values1, const long [:] runs2, const double [:] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -84,7 +84,7 @@ cpdef add_rles(const long [::1] runs1, const double [::1] values1, const long [:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef sub_rles(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
+cpdef sub_rles(const long [:] runs1, const double [:] values1, const long [:] runs2, const double [:] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -151,7 +151,7 @@ cpdef sub_rles(const long [::1] runs1, const double [::1] values1, const long [:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef div_rles_nonzeroes(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
+cpdef div_rles_nonzeroes(const long [:] runs1, const double [:] values1, const long [:] runs2, const double [:] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -217,7 +217,7 @@ cpdef div_rles_nonzeroes(const long [::1] runs1, const double [::1] values1, con
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef div_rles_zeroes(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
+cpdef div_rles_zeroes(const long [:] runs1, const double [:] values1, const long [:] runs2, const double [:] values2):
 
     cdef int x1 = 0
     cdef int x2 = 0
@@ -292,7 +292,7 @@ cpdef div_rles_zeroes(const long [::1] runs1, const double [::1] values1, const 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
-cpdef mul_rles(const long [::1] runs1, const double [::1] values1, const long [::1] runs2, const double [::1] values2):
+cpdef mul_rles(const long [:] runs1, const double [:] values1, const long [:] runs2, const double [:] values2):
     cdef int x1 = 0
     cdef int x2 = 0
     cdef int xn = 0
